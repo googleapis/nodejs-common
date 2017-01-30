@@ -19,9 +19,6 @@
 var assert = require('assert');
 var proxyquire = require('proxyquire');
 
-var fakeGrpcOperation = {};
-var fakeGrpcService = {};
-var fakeGrpcServiceObject = {};
 var fakeLogger = {};
 var fakeOperation = {};
 var fakePaginator = {};
@@ -34,9 +31,6 @@ describe('common', function() {
 
   before(function() {
     common = proxyquire('../src/index.js', {
-      './grpc-operation.js': fakeGrpcOperation,
-      './grpc-service.js': fakeGrpcService,
-      './grpc-service-object.js': fakeGrpcServiceObject,
       './logger.js': fakeLogger,
       './operation.js': fakeOperation,
       './paginator.js': fakePaginator,
@@ -48,9 +42,6 @@ describe('common', function() {
 
   it('should correctly export the common modules', function() {
     assert.deepEqual(common, {
-      GrpcOperation: fakeGrpcOperation,
-      GrpcService: fakeGrpcService,
-      GrpcServiceObject: fakeGrpcServiceObject,
       logger: fakeLogger,
       Operation: fakeOperation,
       paginator: fakePaginator,

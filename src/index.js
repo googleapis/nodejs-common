@@ -15,24 +15,6 @@
  */
 
 /**
- * @type {module:common/grpcOperation}
- * @private
- */
-exports.GrpcOperation = require('./grpc-operation.js');
-
-/**
- * @type {module:common/grpcService}
- * @private
- */
-exports.GrpcService = require('./grpc-service.js');
-
-/**
- * @type {module:common/grpcServiceObject}
- * @private
- */
-exports.GrpcServiceObject = require('./grpc-service-object.js');
-
-/**
  * @type {module:common/logger}
  * @private
  */
