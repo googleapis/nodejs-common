@@ -44,7 +44,7 @@ var LEVELS = [
  *     treated as `options.level`.
  * @param {string=} options.level - The minimum log level that will print to the
  *     console. (Default: `error`)
- * @param {string[]=} options.levels - The list of levels to use. (Default:
+ * @param {Array.<string>=} options.levels - The list of levels to use. (Default:
  *     logger.LEVELS)
  * @param {string=} options.tag - A tag to use in log messages.
  */
