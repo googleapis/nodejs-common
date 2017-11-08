@@ -34,7 +34,8 @@
   "scripts": {
     "publish-module": "node ../../scripts/publish.js common",
     "test": "mocha test/*.js",
-    "generate-scaffolding": "repo-tools generate all"
+    "generate-scaffolding": "repo-tools generate all",
+    "docs": "repo-tools exec -- jsdoc -c .jsdoc.js"
   },
   "dependencies": {
     "array-uniq": "^1.0.3",
@@ -58,6 +59,8 @@
   },
   "devDependencies": {
     "@google-cloud/nodejs-repo-tools": "^2.1.1",
+    "ink-docstrap": "^1.3.0",
+    "jsdoc": "^3.5.5",
     "mocha": "^4.0.0",
     "proxyquire": "^1.7.10",
     "uuid": "^3.0.1"
