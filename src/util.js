@@ -84,7 +84,7 @@ util.ApiError = createErrorClass('ApiError', function(errorBody) {
   try {
     this.errors = JSON.parse(this.response.body).error.errors;
   } catch (e) {
-    this.errors = 'Cannot parse errors.';
+    this.errors = errorBody.errors;
   }
 
   var messages = [];
