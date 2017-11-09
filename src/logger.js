@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
- 'use strict';
+'use strict';
 
 /*!
  * @module common/logger
@@ -28,14 +28,7 @@ var logDriver = require('log-driver');
  * The default list of log levels.
  * @type {string[]}
  */
-var LEVELS = [
-  'silent',
-  'error',
-  'warn',
-  'info',
-  'debug',
-  'silly'
-];
+var LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
 /**
  * Create a logger to print output to the console.
@@ -51,7 +44,7 @@ var LEVELS = [
 function logger(options) {
   if (is.string(options)) {
     options = {
-      level: options
+      level: options,
     };
   }
 
@@ -68,9 +61,9 @@ function logger(options) {
       return format('{level}{tag} {message}', {
         level: args.shift().toUpperCase(),
         tag: options.tag ? ':' + options.tag + ':' : '',
-        message: args.join(' ')
+        message: args.join(' '),
       });
-    }
+    },
   });
 }
 

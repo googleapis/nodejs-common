@@ -28,7 +28,7 @@ var fakeUtil = extend({}, util, {
     if (Class.name === 'ServiceObject') {
       promisified = true;
     }
-  }
+  },
 });
 
 describe('ServiceObject', function() {
@@ -40,12 +40,12 @@ describe('ServiceObject', function() {
     baseUrl: 'base-url',
     parent: {},
     id: 'id',
-    createMethod: util.noop
+    createMethod: util.noop,
   };
 
   before(function() {
     ServiceObject = proxyquire('../src/service-object.js', {
-      './util.js': fakeUtil
+      './util.js': fakeUtil,
     });
 
     originalRequest = ServiceObject.prototype.request;
@@ -85,7 +85,7 @@ describe('ServiceObject', function() {
       var methods = {};
 
       var config = extend({}, CONFIG, {
-        methods: methods
+        methods: methods,
       });
 
       var serviceObject = new ServiceObject(config);
@@ -100,8 +100,8 @@ describe('ServiceObject', function() {
     it('should clear out methods that are not asked for', function() {
       var config = extend({}, CONFIG, {
         methods: {
-          create: true
-        }
+          create: true,
+        },
       });
 
       var serviceObject = new ServiceObject(config);
@@ -114,8 +114,8 @@ describe('ServiceObject', function() {
       var FakePromise = function() {};
       var config = extend({}, CONFIG, {
         parent: {
-          Promise: FakePromise
-        }
+          Promise: FakePromise,
+        },
       });
 
       var serviceObject = new ServiceObject(config);
@@ -127,7 +127,7 @@ describe('ServiceObject', function() {
   describe('create', function() {
     it('should call createMethod', function(done) {
       var config = extend({}, CONFIG, {
-        createMethod: createMethod
+        createMethod: createMethod,
       });
       var options = {};
 
@@ -143,7 +143,7 @@ describe('ServiceObject', function() {
 
     it('should not require options', function(done) {
       var config = extend({}, CONFIG, {
-        createMethod: createMethod
+        createMethod: createMethod,
       });
 
       function createMethod(id, options, callback) {
@@ -159,7 +159,7 @@ describe('ServiceObject', function() {
 
     it('should pass error to callback', function(done) {
       var config = extend({}, CONFIG, {
-        createMethod: createMethod
+        createMethod: createMethod,
       });
       var options = {};
 
@@ -181,7 +181,7 @@ describe('ServiceObject', function() {
 
     it('should return instance and apiResponse to callback', function(done) {
       var config = extend({}, CONFIG, {
-        createMethod: createMethod
+        createMethod: createMethod,
       });
       var options = {};
 
@@ -202,12 +202,12 @@ describe('ServiceObject', function() {
 
     it('should assign metadata', function(done) {
       var config = extend({}, CONFIG, {
-        createMethod: createMethod
+        createMethod: createMethod,
       });
       var options = {};
 
       var instance = {
-        metadata: {}
+        metadata: {},
       };
 
       function createMethod(id, options_, callback) {
@@ -224,7 +224,7 @@ describe('ServiceObject', function() {
 
     it('should execute callback with any amount of arguments', function(done) {
       var config = extend({}, CONFIG, {
-        createMethod: createMethod
+        createMethod: createMethod,
       });
       var options = {};
 
@@ -263,9 +263,9 @@ describe('ServiceObject', function() {
         reqOpts: {
           method: 'override',
           qs: {
-            custom: true
-          }
-        }
+            custom: true,
+          },
+        },
       };
 
       ServiceObject.prototype.request = function(reqOpts_) {
@@ -317,7 +317,7 @@ describe('ServiceObject', function() {
 
     it('should execute callback with false if 404', function(done) {
       serviceObject.get = function(callback) {
-        callback({ code: 404 });
+        callback({code: 404});
       };
 
       serviceObject.exists(function(err, exists) {
@@ -328,7 +328,7 @@ describe('ServiceObject', function() {
     });
 
     it('should execute callback with error if not 404', function(done) {
-      var error = { code: 500 };
+      var error = {code: 500};
 
       serviceObject.get = function(callback) {
         callback(error);
@@ -407,12 +407,12 @@ describe('ServiceObject', function() {
     describe('autoCreate', function() {
       var AUTO_CREATE_CONFIG;
 
-      var ERROR = { code: 404 };
+      var ERROR = {code: 404};
       var METADATA = {};
 
       beforeEach(function() {
         AUTO_CREATE_CONFIG = {
-          autoCreate: true
+          autoCreate: true,
         };
 
         serviceObject.getMetadata = function(callback) {
@@ -431,7 +431,7 @@ describe('ServiceObject', function() {
 
       it('should pass config to create if it was provided', function(done) {
         var config = extend({}, AUTO_CREATE_CONFIG, {
-          maxResults: 5
+          maxResults: 5,
         });
 
         serviceObject.create = function(config_) {
@@ -474,7 +474,7 @@ describe('ServiceObject', function() {
 
         it('should refresh the metadata after a 409', function(done) {
           var error = {
-            code: 409
+            code: 409,
           };
 
           serviceObject.create = function(callback) {
@@ -508,9 +508,9 @@ describe('ServiceObject', function() {
         reqOpts: {
           method: 'override',
           qs: {
-            custom: true
-          }
-        }
+            custom: true,
+          },
+        },
       };
 
       ServiceObject.prototype.request = function(reqOpts_) {
@@ -587,21 +587,21 @@ describe('ServiceObject', function() {
 
     it('should extend the request options with defaults', function(done) {
       var metadataDefault = {
-        a: 'b'
+        a: 'b',
       };
 
       var metadata = {
-        c: 'd'
+        c: 'd',
       };
 
       var method = {
         reqOpts: {
           method: 'override',
           qs: {
-            custom: true
+            custom: true,
           },
-          json: metadataDefault
-        }
+          json: metadataDefault,
+        },
       };
 
       var expectedJson = extend(true, {}, metadataDefault, metadata);
@@ -667,7 +667,7 @@ describe('ServiceObject', function() {
 
     beforeEach(function() {
       reqOpts = {
-        uri: 'uri'
+        uri: 'uri',
       };
     });
 
@@ -675,7 +675,7 @@ describe('ServiceObject', function() {
       var expectedUri = [
         serviceObject.baseUrl,
         serviceObject.id,
-        reqOpts.uri
+        reqOpts.uri,
       ].join('/');
 
       serviceObject.parent.request = function(reqOpts_, callback) {
@@ -689,10 +689,7 @@ describe('ServiceObject', function() {
     });
 
     it('should not require a service object ID', function(done) {
-      var expectedUri = [
-        serviceObject.baseUrl,
-        reqOpts.uri
-      ].join('/');
+      var expectedUri = [serviceObject.baseUrl, reqOpts.uri].join('/');
 
       serviceObject.parent.request = function(reqOpts) {
         assert.strictEqual(reqOpts.uri, expectedUri);
@@ -712,17 +709,17 @@ describe('ServiceObject', function() {
         done();
       };
 
-      serviceObject.request_({ uri: expectedUri }, assert.ifError);
+      serviceObject.request_({uri: expectedUri}, assert.ifError);
     });
 
     it('should remove empty components', function(done) {
       var reqOpts = {
-        uri: ''
+        uri: '',
       };
 
       var expectedUri = [
         serviceObject.baseUrl,
-        serviceObject.id
+        serviceObject.id,
         // reqOpts.uri (reqOpts.uri is an empty string, so it should be removed)
       ].join('/');
 
@@ -736,14 +733,12 @@ describe('ServiceObject', function() {
 
     it('should trim slashes', function(done) {
       var reqOpts = {
-        uri: '//1/2//'
+        uri: '//1/2//',
       };
 
-      var expectedUri = [
-        serviceObject.baseUrl,
-        serviceObject.id,
-        '1/2'
-      ].join('/');
+      var expectedUri = [serviceObject.baseUrl, serviceObject.id, '1/2'].join(
+        '/'
+      );
 
       serviceObject.parent.request = function(reqOpts_) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
@@ -759,30 +754,30 @@ describe('ServiceObject', function() {
         request: function(reqOpts) {
           reqOpts.parent = true;
           return reqOpts;
-        }
+        },
       });
 
-      var child = new ServiceObject(extend({}, CONFIG, { parent: parent }));
+      var child = new ServiceObject(extend({}, CONFIG, {parent: parent}));
       child.interceptors.push({
         request: function(reqOpts) {
           reqOpts.child = true;
           return reqOpts;
-        }
+        },
       });
 
       parent.parent.request = function(reqOpts) {
         assert.deepEqual(reqOpts.interceptors_[0].request({}), {
-          child: true
+          child: true,
         });
 
         assert.deepEqual(reqOpts.interceptors_[1].request({}), {
-          parent: true
+          parent: true,
         });
 
         done();
       };
 
-      child.request_({ uri: '' }, assert.ifError);
+      child.request_({uri: ''}, assert.ifError);
     });
 
     it('should pass a clone of the interceptors', function(done) {
@@ -790,7 +785,7 @@ describe('ServiceObject', function() {
         request: function(reqOpts) {
           reqOpts.one = true;
           return reqOpts;
-        }
+        },
       });
 
       serviceObject.parent.request = function(reqOpts) {
@@ -800,7 +795,7 @@ describe('ServiceObject', function() {
         done();
       };
 
-      serviceObject.request_({ uri: '' }, assert.ifError);
+      serviceObject.request_({uri: ''}, assert.ifError);
     });
 
     it('should call the parent requestStream method', function() {
@@ -809,7 +804,7 @@ describe('ServiceObject', function() {
       var expectedUri = [
         serviceObject.baseUrl,
         serviceObject.id,
-        reqOpts.uri
+        reqOpts.uri,
       ].join('/');
 
       serviceObject.parent.requestStream = function(reqOpts_) {

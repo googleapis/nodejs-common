@@ -37,11 +37,7 @@
     "generate-scaffolding": "repo-tools generate all",
     "docs": "repo-tools exec -- jsdoc -c .jsdoc.js",
     "lint": "repo-tools lint --cmd eslint -- src/ samples/ system-test/ test/",
-    "prettier": "repo-tools exec -- prettier --write
-        src/*.js src/*/*.js
-        samples/*.js samples/*/*.js
-        test/*.js test/*/*.js
-        system-test/*.js system-test/*/*.js"
+    "prettier": "repo-tools exec -- prettier --write src/*.js src/*/*.js samples/*.js samples/*/*.js test/*.js test/*/*.js system-test/*.js system-test/*/*.js"
   },
   "dependencies": {
     "array-uniq": "^1.0.3",

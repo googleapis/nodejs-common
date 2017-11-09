@@ -64,13 +64,17 @@ describe('paginator', function() {
   before(function() {
     override('util', util);
     paginator = proxyquire('../src/paginator.js', {
-      './util.js': util
+      './util.js': util,
     });
     override('paginator', paginator);
   });
 
   beforeEach(function() {
-    FakeClass.prototype = { methodToExtend: function() { return UUID; } };
+    FakeClass.prototype = {
+      methodToExtend: function() {
+        return UUID;
+      },
+    };
     resetOverrides();
   });
 
@@ -121,7 +125,7 @@ describe('paginator', function() {
 
     it('should call router when the original method is called', function(done) {
       var expectedReturnValue = FakeClass.prototype.methodToExtend();
-      var parsedArguments = { a: 'b', c: 'd' };
+      var parsedArguments = {a: 'b', c: 'd'};
 
       overrides.paginator.parseArguments_ = function() {
         return parsedArguments;
@@ -138,7 +142,9 @@ describe('paginator', function() {
     });
 
     it('should maintain `this` context', function(done) {
-      FakeClass.prototype.methodToExtend = function() { return this.uuid; };
+      FakeClass.prototype.methodToExtend = function() {
+        return this.uuid;
+      };
 
       var cls = new FakeClass();
       cls.uuid = uuid.v1();
@@ -186,7 +192,7 @@ describe('paginator', function() {
     });
 
     it('should run the method as a stream', function(done) {
-      var parsedArguments = { a: 'b', c: 'd' };
+      var parsedArguments = {a: 'b', c: 'd'};
 
       overrides.paginator.parseArguments_ = function() {
         return parsedArguments;
@@ -202,9 +208,11 @@ describe('paginator', function() {
     });
 
     it('should apply the proper context', function(done) {
-      var parsedArguments = { a: 'b', c: 'd' };
+      var parsedArguments = {a: 'b', c: 'd'};
 
-      FakeClass.prototype.methodToExtend = function() { return this; };
+      FakeClass.prototype.methodToExtend = function() {
+        return this;
+      };
 
       overrides.paginator.parseArguments_ = function() {
         return parsedArguments;
@@ -219,10 +227,12 @@ describe('paginator', function() {
     });
 
     it('should check for a private member', function(done) {
-      var parsedArguments = { a: 'b', c: 'd' };
+      var parsedArguments = {a: 'b', c: 'd'};
       var fakeValue = 123;
 
-      FakeClass.prototype.methodToExtend_ = function() { return fakeValue; };
+      FakeClass.prototype.methodToExtend_ = function() {
+        return fakeValue;
+      };
 
       overrides.paginator.parseArguments_ = function() {
         return parsedArguments;
@@ -263,42 +273,42 @@ describe('paginator', function() {
     });
 
     it('should detect a callback if first argument is a function', function() {
-      var args = [ util.noop ];
+      var args = [util.noop];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.callback, args[0]);
     });
 
     it('should use any other first argument as query', function() {
-      var args = [ 'string' ];
+      var args = ['string'];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.query, args[0]);
     });
 
     it('should not make an undefined value the query', function() {
-      var args = [ undefined, util.noop ];
+      var args = [undefined, util.noop];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.deepEqual(parsedArguments.query, {});
     });
 
     it('should detect a callback if last argument is a function', function() {
-      var args = [ 'string', util.noop ];
+      var args = ['string', util.noop];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.callback, args[1]);
     });
 
     it('should not assign a callback if a fn is not provided', function() {
-      var args = [ 'string' ];
+      var args = ['string'];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.callback, undefined);
     });
 
     it('should set maxApiCalls from query.maxApiCalls', function() {
-      var args = [ { maxApiCalls: 10 } ];
+      var args = [{maxApiCalls: 10}];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.maxApiCalls, args[0].maxApiCalls);
@@ -306,28 +316,28 @@ describe('paginator', function() {
     });
 
     it('should set maxResults from query.maxResults', function() {
-      var args = [ { maxResults: 10 } ];
+      var args = [{maxResults: 10}];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.maxResults, args[0].maxResults);
     });
 
     it('should set maxResults from query.pageSize', function() {
-      var args = [ { pageSize: 10 } ];
+      var args = [{pageSize: 10}];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.maxResults, args[0].pageSize);
     });
 
     it('should set autoPaginate: false if there is a maxResults', function() {
-      var args = [ { maxResults: 10 }, util.noop ];
+      var args = [{maxResults: 10}, util.noop];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.autoPaginate, false);
     });
 
     it('should set autoPaginate: false query.autoPaginate', function() {
-      var args = [ { autoPaginate: false }, util.noop ];
+      var args = [{autoPaginate: false}, util.noop];
       var parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.autoPaginate, false);
@@ -343,7 +353,7 @@ describe('paginator', function() {
       it('should call runAsStream_ when autoPaginate:true', function(done) {
         var parsedArguments = {
           autoPaginate: true,
-          callback: util.noop
+          callback: util.noop,
         };
 
         overrides.paginator.runAsStream_ = function(args, originalMethod) {
@@ -363,7 +373,7 @@ describe('paginator', function() {
           callback: function(err) {
             assert.strictEqual(err, error);
             done();
-          }
+          },
         };
 
         overrides.paginator.runAsStream_ = function() {
@@ -385,7 +395,7 @@ describe('paginator', function() {
           callback: function(err, results_) {
             assert.deepEqual(results_.toString().split(''), results);
             done();
-          }
+          },
         };
 
         overrides.paginator.runAsStream_ = function() {
@@ -412,9 +422,9 @@ describe('paginator', function() {
           autoPaginate: false,
           query: {
             a: 'b',
-            c: 'd'
+            c: 'd',
           },
-          callback: done
+          callback: done,
         };
 
         paginator.run_(parsedArguments, function(query, callback) {
@@ -429,13 +439,14 @@ describe('paginator', function() {
   describe('runAsStream_', function() {
     var PARSED_ARGUMENTS = {
       query: {
-        a: 'b', c: 'd'
-      }
+        a: 'b',
+        c: 'd',
+      },
     };
 
     beforeEach(function() {
       overrides.util.createLimiter = function(makeRequest) {
-        var transformStream = new stream.Transform({ objectMode: true });
+        var transformStream = new stream.Transform({objectMode: true});
         transformStream.destroy = through.obj().destroy.bind(transformStream);
 
         setImmediate(function() {
@@ -444,7 +455,7 @@ describe('paginator', function() {
 
         return {
           makeRequest: makeRequest,
-          stream: transformStream
+          stream: transformStream,
         };
       };
     });
@@ -504,11 +515,11 @@ describe('paginator', function() {
           setImmediate(done);
 
           return {
-            stream: through.obj()
+            stream: through.obj(),
           };
         };
 
-        paginator.runAsStream_({ maxApiCalls: maxApiCalls }, util.noop);
+        paginator.runAsStream_({maxApiCalls: maxApiCalls}, util.noop);
       });
     });
 
@@ -524,8 +535,11 @@ describe('paginator', function() {
       it('should respect maxResults', function(done) {
         var numResultsReceived = 0;
 
-        paginator.runAsStream_({ maxResults: limit }, originalMethod)
-          .on('data', function() { numResultsReceived++; })
+        paginator
+          .runAsStream_({maxResults: limit}, originalMethod)
+          .on('data', function() {
+            numResultsReceived++;
+          })
           .on('end', function() {
             assert.strictEqual(numResultsReceived, limit);
             done();
@@ -534,7 +548,7 @@ describe('paginator', function() {
     });
 
     it('should get more results if nextQuery exists', function(done) {
-      var nextQuery = { a: 'b', c: 'd' };
+      var nextQuery = {a: 'b', c: 'd'};
       var nextQuerySent = false;
 
       function originalMethod(query, callback) {
