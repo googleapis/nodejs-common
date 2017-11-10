@@ -7,7 +7,7 @@
   "engines": {
     "node": ">=4.0.0"
   },
-  "repository": "googlecloudplatform/google-cloud-node",
+  "repository": "googleapis/nodejs-common",
   "main": "./src/index.js",
   "files": [
     "src",
