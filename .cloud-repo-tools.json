@@ -1,0 +1,16 @@
+{
+  "requiresKeyFile": true,
+  "requiresProjectId": true,
+  "client_reference_url": 
+    "https://cloud.google.com/nodejs/docs/reference/common/latest/",
+  "release_quality": "alpha",
+  "samples": [],
+
+  "_product": "common",
+  "id": "common",
+  "name": "Google Cloud Common Module",
+  "short_name": "Common",
+  "docs_url": "https://cloud.google.com/nodejs/docs/reference/common/",
+  "description": "Google Cloud Common node.js module contains stuff used by other Cloud API modules.",
+  "api_id": "common.googleapis.com"
+}

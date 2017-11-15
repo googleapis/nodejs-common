@@ -19,14 +19,7 @@
 var assert = require('assert');
 var proxyquire = require('proxyquire');
 
-var LEVELS = [
-  'silent',
-  'error',
-  'warn',
-  'info',
-  'debug',
-  'silly'
-];
+var LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
 function fakeLogDriver(config) {
   return config;
@@ -37,7 +30,7 @@ describe('logger base-functionality', function() {
 
   before(function() {
     logger = proxyquire('../src/logger.js', {
-      'log-driver': fakeLogDriver
+      'log-driver': fakeLogDriver,
     });
   });
 
@@ -50,13 +43,13 @@ describe('logger base-functionality', function() {
   });
 
   it('should create a logger with custom levels', function() {
-    var customLevels = [ 'level-1', 'level-2', 'level-3' ];
-    assert.deepEqual(logger({ levels: customLevels }).levels, customLevels);
+    var customLevels = ['level-1', 'level-2', 'level-3'];
+    assert.deepEqual(logger({levels: customLevels}).levels, customLevels);
   });
 
   it('should use a specified level', function() {
     var level = 'level';
-    assert.strictEqual(logger({ level: level }).level, level);
+    assert.strictEqual(logger({level: level}).level, level);
   });
 
   it('should treat a single arguments as the level', function() {
@@ -71,10 +64,7 @@ describe('logger base-functionality', function() {
   describe('formatting', function() {
     var LEVEL = 'level-name';
     var TAG = 'tag-name';
-    var MESSAGES = [
-      'message-1',
-      'message-2'
-    ];
+    var MESSAGES = ['message-1', 'message-2'];
 
     it('should correctly format without a tag', function() {
       var formatted = logger().format(LEVEL, MESSAGES[0], MESSAGES[1]);
@@ -84,7 +74,7 @@ describe('logger base-functionality', function() {
 
     it('should correctly format with a tag', function() {
       var formatted = logger({
-        tag: TAG
+        tag: TAG,
       }).format(LEVEL, MESSAGES[0], MESSAGES[1]);
 
       assert.strictEqual(formatted, 'LEVEL-NAME:tag-name: message-1 message-2');

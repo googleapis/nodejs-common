@@ -64,7 +64,7 @@ describe('common/util', function() {
       'google-auto-auth': fakeGoogleAutoAuth,
       request: fakeRequest,
       'retry-request': fakeRetryRequest,
-      'stream-events': fakeStreamEvents
+      'stream-events': fakeStreamEvents,
     });
     var utilCached = extend(true, {}, util);
 
@@ -76,8 +76,10 @@ describe('common/util', function() {
       }
 
       util[utilMethod] = function() {
-        return (utilOverrides[utilMethod] || utilCached[utilMethod])
-          .apply(this, arguments);
+        return (utilOverrides[utilMethod] || utilCached[utilMethod]).apply(
+          this,
+          arguments
+        );
       };
     });
 
@@ -98,21 +100,24 @@ describe('common/util', function() {
       gzip: true,
       forever: true,
       pool: {
-        maxSockets: Infinity
-      }
+        maxSockets: Infinity,
+      },
     });
   });
 
   it('should export an error for module instantiation errors', function() {
-    var errorMessage = format([
-      'Sorry, we cannot connect to Cloud Services without a project ID.',
-      'You may specify one with an environment variable named',
-      '"GCLOUD_PROJECT". See {baseUrl}/{path} for a detailed guide on creating',
-      'an authenticated connection.'
-    ].join(' '), {
-      baseUrl: 'https://googlecloudplatform.github.io/google-cloud-node/#',
-      path: 'docs/guides/authentication'
-    });
+    var errorMessage = format(
+      [
+        'Sorry, we cannot connect to Cloud Services without a project ID.',
+        'You may specify one with an environment variable named',
+        '"GCLOUD_PROJECT". See {baseUrl}/{path} for a detailed guide on creating',
+        'an authenticated connection.',
+      ].join(' '),
+      {
+        baseUrl: 'https://googlecloudplatform.github.io/google-cloud-node/#',
+        path: 'docs/guides/authentication',
+      }
+    );
 
     var missingProjectIdError = new Error(errorMessage);
     assert.deepEqual(util.missingProjectIdError, missingProjectIdError);
@@ -121,10 +126,10 @@ describe('common/util', function() {
   describe('ApiError', function() {
     it('should build correct ApiError', function() {
       var error = {
-        errors: [ new Error(), new Error() ],
+        errors: [new Error(), new Error()],
         code: 100,
         message: 'Uh oh',
-        response: { a: 'b', c: 'd' }
+        response: {a: 'b', c: 'd'},
       };
 
       var apiError = new util.ApiError(error);
@@ -139,9 +144,9 @@ describe('common/util', function() {
       var errorMessage = 'API error message';
 
       var error = {
-        errors: [ new Error(errorMessage) ],
+        errors: [new Error(errorMessage)],
         code: 100,
-        response: { a: 'b', c: 'd' }
+        response: {a: 'b', c: 'd'},
       };
 
       var apiError = new util.ApiError(error);
@@ -157,10 +162,10 @@ describe('common/util', function() {
         response: {
           body: JSON.stringify({
             error: {
-              errors: errors
-            }
-          })
-        }
+              errors: errors,
+            },
+          }),
+        },
       };
 
       var apiError = new util.ApiError(errorBody);
@@ -174,10 +179,10 @@ describe('common/util', function() {
       var expectedErrorMessage = [customErrorMessage, errorMessage].join(' - ');
 
       var error = {
-        errors: [ new Error(errorMessage) ],
+        errors: [new Error(errorMessage)],
         code: 100,
-        response: { a: 'b', c: 'd' },
-        message: customErrorMessage
+        response: {a: 'b', c: 'd'},
+        message: customErrorMessage,
       };
 
       var apiError = new util.ApiError(error);
@@ -188,17 +193,16 @@ describe('common/util', function() {
     it('should parse and append the decoded response body', function() {
       var errorMessage = 'API error message';
       var responseBodyMsg = 'Response body message &lt;';
-      var expectedErrorMessage = [
-        errorMessage,
-        'Response body message <'
-      ].join(' - ');
+      var expectedErrorMessage = [errorMessage, 'Response body message <'].join(
+        ' - '
+      );
 
       var error = {
         message: errorMessage,
         code: 100,
         response: {
-          body: new Buffer(responseBodyMsg)
-        }
+          body: Buffer.from(responseBodyMsg),
+        },
       };
 
       var apiError = new util.ApiError(error);
@@ -211,7 +215,7 @@ describe('common/util', function() {
 
       var error = {
         code: 100,
-        response: { a: 'b', c: 'd' }
+        response: {a: 'b', c: 'd'},
       };
 
       var apiError = new util.ApiError(error);
@@ -223,9 +227,9 @@ describe('common/util', function() {
       var expectedErrorMessage = 'Error during request.';
 
       var error = {
-        errors: [ new Error(), new Error() ],
+        errors: [new Error(), new Error()],
         code: 100,
-        response: { a: 'b', c: 'd' }
+        response: {a: 'b', c: 'd'},
       };
 
       var apiError = new util.ApiError(error);
@@ -240,8 +244,8 @@ describe('common/util', function() {
         code: 100,
         message: expectedErrorMessage,
         response: {
-          body: expectedErrorMessage
-        }
+          body: expectedErrorMessage,
+        },
       };
 
       var apiError = new util.ApiError(error);
@@ -253,9 +257,9 @@ describe('common/util', function() {
   describe('PartialFailureError', function() {
     it('should build correct PartialFailureError', function() {
       var error = {
-        errors: [ new Error(), new Error() ],
-        response: { a: 'b', c: 'd' },
-        message: 'Partial failure occurred'
+        errors: [new Error(), new Error()],
+        response: {a: 'b', c: 'd'},
+        message: 'Partial failure occurred',
       };
 
       var partialFailureError = new util.PartialFailureError(error);
@@ -270,7 +274,7 @@ describe('common/util', function() {
 
       var error = {
         errors: [],
-        response: { a: 'b', c: 'd' }
+        response: {a: 'b', c: 'd'},
       };
 
       var partialFailureError = new util.PartialFailureError(error);
@@ -281,16 +285,16 @@ describe('common/util', function() {
 
   describe('extendGlobalConfig', function() {
     it('should favor `keyFilename` when `credentials` is global', function() {
-      var globalConfig = { credentials: {} };
+      var globalConfig = {credentials: {}};
       var options = util.extendGlobalConfig(globalConfig, {
-        keyFilename: 'key.json'
+        keyFilename: 'key.json',
       });
       assert.strictEqual(options.credentials, undefined);
     });
 
     it('should favor `credentials` when `keyFilename` is global', function() {
-      var globalConfig = { keyFilename: 'key.json' };
-      var options = util.extendGlobalConfig(globalConfig, { credentials: {} });
+      var globalConfig = {keyFilename: 'key.json'};
+      var options = util.extendGlobalConfig(globalConfig, {credentials: {}});
       assert.strictEqual(options.keyFilename, undefined);
     });
 
@@ -300,7 +304,7 @@ describe('common/util', function() {
       process.env.GCLOUD_PROJECT = newProjectId;
 
       // No projectId specified:
-      var globalConfig = { keyFilename: 'key.json' };
+      var globalConfig = {keyFilename: 'key.json'};
       var overrides = {};
 
       var options = util.extendGlobalConfig(globalConfig, overrides);
@@ -315,14 +319,14 @@ describe('common/util', function() {
     });
 
     it('should not modify original object', function() {
-      var globalConfig = { keyFilename: 'key.json' };
-      util.extendGlobalConfig(globalConfig, { credentials: {} });
-      assert.deepEqual(globalConfig, { keyFilename: 'key.json' });
+      var globalConfig = {keyFilename: 'key.json'};
+      util.extendGlobalConfig(globalConfig, {credentials: {}});
+      assert.deepEqual(globalConfig, {keyFilename: 'key.json'});
     });
 
     it('should link the original interceptors_', function() {
       var interceptors = [];
-      var globalConfig = { interceptors_: interceptors };
+      var globalConfig = {interceptors_: interceptors};
       util.extendGlobalConfig(globalConfig, {});
       assert.strictEqual(globalConfig.interceptors_, interceptors);
     });
@@ -343,19 +347,19 @@ describe('common/util', function() {
     });
 
     it('should parse response', function(done) {
-      var err = { a: 'b', c: 'd' };
-      var resp = { a: 'b', c: 'd' };
-      var body = { a: 'b', c: 'd' };
+      var err = {a: 'b', c: 'd'};
+      var resp = {a: 'b', c: 'd'};
+      var body = {a: 'b', c: 'd'};
 
-      var returnedErr = { a: 'b', c: 'd' };
-      var returnedBody = { a: 'b', c: 'd' };
-      var returnedResp = { a: 'b', c: 'd' };
+      var returnedErr = {a: 'b', c: 'd'};
+      var returnedBody = {a: 'b', c: 'd'};
+      var returnedResp = {a: 'b', c: 'd'};
 
       utilOverrides.parseHttpRespMessage = function(resp_) {
         assert.strictEqual(resp_, resp);
 
         return {
-          resp: returnedResp
+          resp: returnedResp,
         };
       };
 
@@ -363,7 +367,7 @@ describe('common/util', function() {
         assert.strictEqual(body_, body);
 
         return {
-          body: returnedBody
+          body: returnedBody,
         };
       };
 
@@ -379,7 +383,7 @@ describe('common/util', function() {
       var error = new Error('Error.');
 
       utilOverrides.parseHttpRespMessage = function() {
-        return { err: error };
+        return {err: error};
       };
 
       util.handleResp(null, {}, {}, function(err) {
@@ -392,7 +396,7 @@ describe('common/util', function() {
       var error = new Error('Error.');
 
       utilOverrides.parseHttpRespBody = function() {
-        return { err: error };
+        return {err: error};
       };
 
       util.handleResp(null, {}, {}, function(err) {
@@ -420,7 +424,7 @@ describe('common/util', function() {
 
   describe('parseHttpRespMessage', function() {
     it('should build ApiError with non-200 status and message', function(done) {
-      var httpRespMessage = { statusCode: 400, statusMessage: 'Not Good' };
+      var httpRespMessage = {statusCode: 400, statusMessage: 'Not Good'};
 
       utilOverrides.ApiError = function(error_) {
         assert.strictEqual(error_.code, httpRespMessage.statusCode);
@@ -443,15 +447,15 @@ describe('common/util', function() {
   describe('parseHttpRespBody', function() {
     it('should detect body errors', function() {
       var apiErr = {
-        errors: [{ message: 'bar' }],
+        errors: [{message: 'bar'}],
         code: 400,
-        message: 'an error occurred'
+        message: 'an error occurred',
       };
 
-      var parsedHttpRespBody = util.parseHttpRespBody({ error: apiErr });
+      var parsedHttpRespBody = util.parseHttpRespBody({error: apiErr});
       var expectedErrorMessage = [
         apiErr.message,
-        apiErr.errors[0].message
+        apiErr.errors[0].message,
       ].join(' - ');
 
       assert.deepEqual(parsedHttpRespBody.err.errors, apiErr.errors);
@@ -477,7 +481,7 @@ describe('common/util', function() {
   describe('makeWritableStream', function() {
     it('should use defaults', function(done) {
       var dup = duplexify();
-      var metadata = { a: 'b', c: 'd' };
+      var metadata = {a: 'b', c: 'd'};
 
       util.makeWritableStream(dup, {
         metadata: metadata,
@@ -497,7 +501,7 @@ describe('common/util', function() {
           assert.strictEqual(typeof mp[1].body._writableState, 'object');
 
           done();
-        }
+        },
       });
     });
 
@@ -507,14 +511,14 @@ describe('common/util', function() {
       var req = {
         method: 'PUT',
         qs: {
-          uploadType: 'media'
+          uploadType: 'media',
         },
-        something: 'else'
+        something: 'else',
       };
 
       util.makeWritableStream(dup, {
         metadata: {
-          contentType: 'application/json'
+          contentType: 'application/json',
         },
         makeAuthenticatedRequest: function(request) {
           assert.equal(request.method, req.method);
@@ -527,7 +531,7 @@ describe('common/util', function() {
           done();
         },
 
-        request: req
+        request: req,
       });
     });
 
@@ -543,7 +547,7 @@ describe('common/util', function() {
       util.makeWritableStream(ws, {
         makeAuthenticatedRequest: function(request, opts) {
           opts.onAuthenticated(error);
-        }
+        },
       });
     });
 
@@ -555,7 +559,7 @@ describe('common/util', function() {
       };
 
       util.makeWritableStream(dup, {
-        makeAuthenticatedRequest: function() {}
+        makeAuthenticatedRequest: function() {},
       });
     });
 
@@ -583,7 +587,7 @@ describe('common/util', function() {
       util.makeWritableStream(dup, {
         makeAuthenticatedRequest: function(request, opts) {
           opts.onAuthenticated();
-        }
+        },
       });
 
       setImmediate(function() {
@@ -609,7 +613,7 @@ describe('common/util', function() {
       var options = {
         makeAuthenticatedRequest: function(request, opts) {
           opts.onAuthenticated();
-        }
+        },
       };
 
       dup.on('response', function(resp) {
@@ -638,7 +642,7 @@ describe('common/util', function() {
       var options = {
         makeAuthenticatedRequest: function(request, opts) {
           opts.onAuthenticated();
-        }
+        },
       };
 
       util.makeWritableStream(dup, options, function(data) {
@@ -655,7 +659,7 @@ describe('common/util', function() {
   describe('makeAuthenticatedRequestFactory', function() {
     var authClient = {
       getCredentials: function() {},
-      projectId: 'project-id'
+      projectId: 'project-id',
     };
 
     beforeEach(function() {
@@ -686,7 +690,7 @@ describe('common/util', function() {
       }
 
       googleAutoAuthOverride = function() {
-        return { getCredentials: getCredentials };
+        return {getCredentials: getCredentials};
       };
 
       var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
@@ -694,7 +698,7 @@ describe('common/util', function() {
     });
 
     it('should return the authClient', function() {
-      var authClient = { getCredentials: function() {} };
+      var authClient = {getCredentials: function() {}};
 
       googleAutoAuthOverride = function() {
         return authClient;
@@ -707,7 +711,7 @@ describe('common/util', function() {
     describe('customEndpoint (no authentication attempted)', function() {
       var makeAuthenticatedRequest;
       var config = {
-        customEndpoint: true
+        customEndpoint: true,
       };
       var expectedProjectId = authClient.projectId;
 
@@ -716,7 +720,7 @@ describe('common/util', function() {
       });
 
       it('should decorate the request', function(done) {
-        var reqOpts = { a: 'b', c: 'd' };
+        var reqOpts = {a: 'b', c: 'd'};
         var decoratedRequest = {};
 
         utilOverrides.decorateRequest = function(reqOpts_, projectId) {
@@ -730,12 +734,12 @@ describe('common/util', function() {
             assert.ifError(err);
             assert.strictEqual(authenticatedReqOpts, decoratedRequest);
             done();
-          }
+          },
         });
       });
 
       it('should return missing projectId error', function(done) {
-        var reqOpts = { a: 'b', c: 'd' };
+        var reqOpts = {a: 'b', c: 'd'};
 
         utilOverrides.decorateRequest = function() {
           throw util.missingProjectIdError;
@@ -745,24 +749,24 @@ describe('common/util', function() {
           onAuthenticated: function(err) {
             assert.strictEqual(err, util.missingProjectIdError);
             done();
-          }
+          },
         });
       });
 
       it('should pass options back to callback', function(done) {
-        var reqOpts = { a: 'b', c: 'd' };
+        var reqOpts = {a: 'b', c: 'd'};
 
         makeAuthenticatedRequest(reqOpts, {
           onAuthenticated: function(err, authenticatedReqOpts) {
             assert.ifError(err);
             assert.deepEqual(reqOpts, authenticatedReqOpts);
             done();
-          }
+          },
         });
       });
 
       it('should not authenticate requests with a custom API', function(done) {
-        var reqOpts = { a: 'b', c: 'd' };
+        var reqOpts = {a: 'b', c: 'd'};
 
         utilOverrides.makeRequest = function(rOpts) {
           assert.deepEqual(rOpts, reqOpts);
@@ -775,7 +779,7 @@ describe('common/util', function() {
 
     describe('needs authentication', function() {
       it('should pass correct args to authorizeRequest', function(done) {
-        var reqOpts = { e: 'f', g: 'h' };
+        var reqOpts = {e: 'f', g: 'h'};
 
         authClient.authorizeRequest = function(rOpts) {
           assert.deepEqual(rOpts, reqOpts);
@@ -803,12 +807,15 @@ describe('common/util', function() {
           };
 
           var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({
-            customEndpoint: true
+            customEndpoint: true,
           });
 
-          makeAuthenticatedRequest({}, {
-            onAuthenticated: assert.ifError
-          });
+          makeAuthenticatedRequest(
+            {},
+            {
+              onAuthenticated: assert.ifError,
+            }
+          );
         });
 
         it('should use user-provided projectId', function(done) {
@@ -816,7 +823,7 @@ describe('common/util', function() {
 
           var config = {
             customEndpoint: true,
-            projectId: 'project-id'
+            projectId: 'project-id',
           };
 
           utilOverrides.decorateRequest = function(reqOpts, projectId) {
@@ -828,9 +835,12 @@ describe('common/util', function() {
             config
           );
 
-          makeAuthenticatedRequest({}, {
-            onAuthenticated: assert.ifError
-          });
+          makeAuthenticatedRequest(
+            {},
+            {
+              onAuthenticated: assert.ifError,
+            }
+          );
         });
       });
 
@@ -864,7 +874,7 @@ describe('common/util', function() {
               assert.notStrictEqual(reqOpts, incorrectReqOpts);
 
               done();
-            }
+            },
           });
         });
 
@@ -875,13 +885,16 @@ describe('common/util', function() {
           };
 
           var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          makeAuthenticatedRequest({}, {
-            onAuthenticated: function(err) {
-              assert.notStrictEqual(err, decorateRequestError);
-              assert.strictEqual(err, error);
-              done();
+          makeAuthenticatedRequest(
+            {},
+            {
+              onAuthenticated: function(err) {
+                assert.notStrictEqual(err, decorateRequestError);
+                assert.strictEqual(err, error);
+                done();
+              },
             }
-          });
+          );
         });
 
         it('should invoke the callback with error', function(done) {
@@ -894,12 +907,15 @@ describe('common/util', function() {
 
         it('should exec onAuthenticated callback with error', function(done) {
           var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          makeAuthenticatedRequest({}, {
-            onAuthenticated: function(err) {
-              assert.strictEqual(err, error);
-              done();
+          makeAuthenticatedRequest(
+            {},
+            {
+              onAuthenticated: function(err) {
+                assert.strictEqual(err, error);
+                done();
+              },
             }
-          });
+          );
         });
 
         it('should emit an error and end the stream', function(done) {
@@ -917,7 +933,7 @@ describe('common/util', function() {
       });
 
       describe('authentication success', function() {
-        var reqOpts = { a: 'b', c: 'd' };
+        var reqOpts = {a: 'b', c: 'd'};
 
         beforeEach(function() {
           authClient.authorizeRequest = function(rOpts, callback) {
@@ -936,12 +952,12 @@ describe('common/util', function() {
             onAuthenticated: function(err, authenticatedReqOpts) {
               assert.strictEqual(authenticatedReqOpts, reqOpts);
               done();
-            }
+            },
           });
         });
 
         it('should make request with correct options', function(done) {
-          var config = { a: 'b', c: 'd' };
+          var config = {a: 'b', c: 'd'};
 
           utilOverrides.decorateRequest = function(reqOpts_) {
             assert.strictEqual(reqOpts_, reqOpts);
@@ -954,14 +970,15 @@ describe('common/util', function() {
             cb();
           };
 
-          var makeAuthenticatedRequest =
-            util.makeAuthenticatedRequestFactory(config);
+          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+            config
+          );
           makeAuthenticatedRequest(reqOpts, done);
         });
 
         it('should return abort() from the active request', function(done) {
           var retryRequest = {
-            abort: done
+            abort: done,
           };
 
           utilOverrides.makeRequest = function() {
@@ -974,7 +991,7 @@ describe('common/util', function() {
 
         it('should only abort() once', function(done) {
           var retryRequest = {
-            abort: done // Will throw if called more than once.
+            abort: done, // Will throw if called more than once.
           };
 
           utilOverrides.makeRequest = function() {
@@ -998,8 +1015,9 @@ describe('common/util', function() {
             });
           };
 
-          var makeAuthenticatedRequest =
-            util.makeAuthenticatedRequestFactory({});
+          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+            {}
+          );
           stream = makeAuthenticatedRequest(reqOpts);
         });
       });
@@ -1047,14 +1065,14 @@ describe('common/util', function() {
 
     it('should detect rateLimitExceeded reason', function() {
       var rateLimitError = new Error('Rate limit error without code.');
-      rateLimitError.errors = [{ reason: 'rateLimitExceeded' }];
+      rateLimitError.errors = [{reason: 'rateLimitExceeded'}];
 
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
     });
 
     it('should detect userRateLimitExceeded reason', function() {
       var rateLimitError = new Error('Rate limit error without code.');
-      rateLimitError.errors = [{ reason: 'userRateLimitExceeded' }];
+      rateLimitError.errors = [{reason: 'userRateLimitExceeded'}];
 
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
     });
@@ -1062,7 +1080,7 @@ describe('common/util', function() {
 
   describe('makeRequest', function() {
     var reqOpts = {
-      method: 'GET'
+      method: 'GET',
     };
 
     function testDefaultRetryRequestConfig(done) {
@@ -1073,7 +1091,7 @@ describe('common/util', function() {
 
         var error = new Error('Error.');
         utilOverrides.parseHttpRespMessage = function() {
-          return { err: error };
+          return {err: error};
         };
         utilOverrides.shouldRetryRequest = function(err) {
           assert.strictEqual(err, error);
@@ -1084,7 +1102,7 @@ describe('common/util', function() {
       };
     }
 
-    var noRetryRequestConfig = { autoRetry: false };
+    var noRetryRequestConfig = {autoRetry: false};
     function testNoRetryRequestConfig(done) {
       return function(reqOpts, config) {
         assert.strictEqual(config.retries, 0);
@@ -1092,7 +1110,7 @@ describe('common/util', function() {
       };
     }
 
-    var customRetryRequestConfig = { maxRetries: 10 };
+    var customRetryRequestConfig = {maxRetries: 10};
     function testCustomRetryRequestConfig(done) {
       return function(reqOpts, config) {
         assert.strictEqual(config.retries, customRetryRequestConfig.maxRetries);
@@ -1159,7 +1177,7 @@ describe('common/util', function() {
           return requestStream;
         };
 
-        util.makeRequest(reqOpts, { stream: userStream });
+        util.makeRequest(reqOpts, {stream: userStream});
       });
 
       describe('GET requests', function() {
@@ -1172,7 +1190,7 @@ describe('common/util', function() {
             return new stream.Stream();
           };
 
-          util.makeRequest(reqOpts, { stream: userStream });
+          util.makeRequest(reqOpts, {stream: userStream});
         });
 
         it('should set the readable stream', function(done) {
@@ -1188,7 +1206,7 @@ describe('common/util', function() {
             done();
           };
 
-          util.makeRequest(reqOpts, { stream: userStream });
+          util.makeRequest(reqOpts, {stream: userStream});
         });
 
         it('should expose the abort method from retryRequest', function(done) {
@@ -1200,7 +1218,7 @@ describe('common/util', function() {
             return requestStream;
           };
 
-          util.makeRequest(reqOpts, { stream: userStream });
+          util.makeRequest(reqOpts, {stream: userStream});
           userStream.abort();
         });
       });
@@ -1209,7 +1227,7 @@ describe('common/util', function() {
         it('should not use retryRequest', function(done) {
           var userStream = duplexify();
           var reqOpts = {
-            method: 'POST'
+            method: 'POST',
           };
 
           retryRequestOverride = done; // will throw.
@@ -1219,7 +1237,7 @@ describe('common/util', function() {
             return userStream;
           };
 
-          util.makeRequest(reqOpts, { stream: userStream });
+          util.makeRequest(reqOpts, {stream: userStream});
         });
 
         it('should set the writable stream', function(done) {
@@ -1235,7 +1253,7 @@ describe('common/util', function() {
             done();
           };
 
-          util.makeRequest({ method: 'POST' }, { stream: userStream });
+          util.makeRequest({method: 'POST'}, {stream: userStream});
         });
 
         it('should expose the abort method from request', function(done) {
@@ -1247,7 +1265,7 @@ describe('common/util', function() {
             return requestStream;
           };
 
-          util.makeRequest(reqOpts, { stream: userStream });
+          util.makeRequest(reqOpts, {stream: userStream});
           userStream.abort();
         });
       });
@@ -1276,7 +1294,7 @@ describe('common/util', function() {
 
       it('should let handleResp handle the response', function(done) {
         var error = new Error('Error.');
-        var response = { a: 'b', c: 'd' };
+        var response = {a: 'b', c: 'd'};
         var body = response.a;
 
         retryRequestOverride = function(rOpts, opts, callback) {
@@ -1298,7 +1316,7 @@ describe('common/util', function() {
   describe('decorateRequest', function() {
     it('should delete qs.autoPaginate', function() {
       var decoratedReqOpts = util.decorateRequest({
-        autoPaginate: true
+        autoPaginate: true,
       });
 
       assert.strictEqual(decoratedReqOpts.autoPaginate, undefined);
@@ -1306,7 +1324,7 @@ describe('common/util', function() {
 
     it('should delete qs.autoPaginateVal', function() {
       var decoratedReqOpts = util.decorateRequest({
-        autoPaginateVal: true
+        autoPaginateVal: true,
       });
 
       assert.strictEqual(decoratedReqOpts.autoPaginateVal, undefined);
@@ -1314,7 +1332,7 @@ describe('common/util', function() {
 
     it('should delete objectMode', function() {
       var decoratedReqOpts = util.decorateRequest({
-        objectMode: true
+        objectMode: true,
       });
 
       assert.strictEqual(decoratedReqOpts.objectMode, undefined);
@@ -1323,8 +1341,8 @@ describe('common/util', function() {
     it('should delete qs.autoPaginate', function() {
       var decoratedReqOpts = util.decorateRequest({
         qs: {
-          autoPaginate: true
-        }
+          autoPaginate: true,
+        },
       });
 
       assert.strictEqual(decoratedReqOpts.qs.autoPaginate, undefined);
@@ -1333,8 +1351,8 @@ describe('common/util', function() {
     it('should delete qs.autoPaginateVal', function() {
       var decoratedReqOpts = util.decorateRequest({
         qs: {
-          autoPaginateVal: true
-        }
+          autoPaginateVal: true,
+        },
       });
 
       assert.strictEqual(decoratedReqOpts.qs.autoPaginateVal, undefined);
@@ -1343,8 +1361,8 @@ describe('common/util', function() {
     it('should delete json.autoPaginate', function() {
       var decoratedReqOpts = util.decorateRequest({
         json: {
-          autoPaginate: true
-        }
+          autoPaginate: true,
+        },
       });
 
       assert.strictEqual(decoratedReqOpts.json.autoPaginate, undefined);
@@ -1353,8 +1371,8 @@ describe('common/util', function() {
     it('should delete json.autoPaginateVal', function() {
       var decoratedReqOpts = util.decorateRequest({
         json: {
-          autoPaginateVal: true
-        }
+          autoPaginateVal: true,
+        },
       });
 
       assert.strictEqual(decoratedReqOpts.json.autoPaginateVal, undefined);
@@ -1364,7 +1382,7 @@ describe('common/util', function() {
       var projectId = 'project-id';
       var reqOpts = {
         uri: 'http://',
-        qs: {}
+        qs: {},
       };
       var decoratedQs = {};
 
@@ -1383,7 +1401,7 @@ describe('common/util', function() {
       var projectId = 'project-id';
       var reqOpts = {
         uri: 'http://',
-        json: {}
+        json: {},
       };
       var decoratedJson = {};
 
@@ -1401,7 +1419,7 @@ describe('common/util', function() {
     it('should decorate the request', function() {
       var projectId = 'project-id';
       var reqOpts = {
-        uri: 'http://'
+        uri: 'http://',
       };
       var decoratedUri = 'http://decorated';
 
@@ -1411,10 +1429,9 @@ describe('common/util', function() {
         return decoratedUri;
       };
 
-      assert.deepEqual(
-        util.decorateRequest(reqOpts, projectId),
-        { uri: decoratedUri }
-      );
+      assert.deepEqual(util.decorateRequest(reqOpts, projectId), {
+        uri: decoratedUri,
+      });
     });
   });
 
@@ -1422,71 +1439,81 @@ describe('common/util', function() {
     var PROJECT_ID = 'project-id';
 
     it('should replace any {{projectId}} it finds', function() {
-      assert.deepEqual(util.replaceProjectIdToken({
-        here: 'A {{projectId}} Z',
-        nested: {
-          here: 'A {{projectId}} Z',
-          nested: {
-            here: 'A {{projectId}} Z'
-          }
-        },
-        array: [
+      assert.deepEqual(
+        util.replaceProjectIdToken(
           {
             here: 'A {{projectId}} Z',
             nested: {
-              here: 'A {{projectId}} Z'
+              here: 'A {{projectId}} Z',
+              nested: {
+                here: 'A {{projectId}} Z',
+              },
             },
-            nestedArray: [
+            array: [
               {
                 here: 'A {{projectId}} Z',
                 nested: {
-                  here: 'A {{projectId}} Z'
-                }
-              }
-            ]
-          }
-        ]
-      }, PROJECT_ID),
-      {
-        here: 'A ' + PROJECT_ID + ' Z',
-        nested: {
+                  here: 'A {{projectId}} Z',
+                },
+                nestedArray: [
+                  {
+                    here: 'A {{projectId}} Z',
+                    nested: {
+                      here: 'A {{projectId}} Z',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          PROJECT_ID
+        ),
+        {
           here: 'A ' + PROJECT_ID + ' Z',
           nested: {
-            here: 'A ' + PROJECT_ID + ' Z'
-          }
-        },
-        array: [
-          {
             here: 'A ' + PROJECT_ID + ' Z',
             nested: {
-              here: 'A ' + PROJECT_ID + ' Z'
+              here: 'A ' + PROJECT_ID + ' Z',
             },
-            nestedArray: [
-              {
+          },
+          array: [
+            {
+              here: 'A ' + PROJECT_ID + ' Z',
+              nested: {
                 here: 'A ' + PROJECT_ID + ' Z',
-                nested: {
-                  here: 'A ' + PROJECT_ID + ' Z'
-                }
-              }
-            ]
-          }
-        ]
-      });
+              },
+              nestedArray: [
+                {
+                  here: 'A ' + PROJECT_ID + ' Z',
+                  nested: {
+                    here: 'A ' + PROJECT_ID + ' Z',
+                  },
+                },
+              ],
+            },
+          ],
+        }
+      );
     });
 
     it('should replace more than one {{projectId}}', function() {
-      assert.deepEqual(util.replaceProjectIdToken({
-        here: 'A {{projectId}} M {{projectId}} Z',
-      }, PROJECT_ID),
-      {
-        here: 'A ' + PROJECT_ID + ' M ' + PROJECT_ID + ' Z'
-      });
+      assert.deepEqual(
+        util.replaceProjectIdToken(
+          {
+            here: 'A {{projectId}} M {{projectId}} Z',
+          },
+          PROJECT_ID
+        ),
+        {
+          here: 'A ' + PROJECT_ID + ' M ' + PROJECT_ID + ' Z',
+        }
+      );
     });
 
     it('should throw if it needs a projectId and cannot find it', function() {
       assert.throws(function() {
         util.replaceProjectIdToken({
-          here: '{{projectId}}'
+          here: '{{projectId}}',
         });
       }, new RegExp(util.missingProjectIdError));
     });
@@ -1495,12 +1522,12 @@ describe('common/util', function() {
   describe('normalizeArguments', function() {
     var fakeContext = {
       config_: {
-        projectId: 'grapespaceship911'
-      }
+        projectId: 'grapespaceship911',
+      },
     };
 
     it('should return an extended object', function() {
-      var local = { a: 'b' };
+      var local = {a: 'b'};
       var config;
 
       utilOverrides.extendGlobalConfig = function(globalConfig, localConfig) {
@@ -1561,21 +1588,22 @@ describe('common/util', function() {
         var callsMade = 0;
         var maxApiCalls = 10;
 
-        var limiter = util.createLimiter(function() {
-          callsMade++;
-          limiter.makeRequest();
-        }, {
-          maxApiCalls: maxApiCalls
-        });
+        var limiter = util.createLimiter(
+          function() {
+            callsMade++;
+            limiter.makeRequest();
+          },
+          {
+            maxApiCalls: maxApiCalls,
+          }
+        );
 
         limiter.makeRequest();
 
-        limiter.stream
-          .on('data', util.noop)
-          .on('end', function() {
-            assert.strictEqual(callsMade, maxApiCalls);
-            done();
-          });
+        limiter.stream.on('data', util.noop).on('end', function() {
+          assert.strictEqual(callsMade, maxApiCalls);
+          done();
+        });
       });
     });
   });
@@ -1631,7 +1659,7 @@ describe('common/util', function() {
     it('should format a User Agent string from a package.json', function() {
       var userAgent = util.getUserAgentFromPackageJson({
         name: '@google-cloud/storage',
-        version: '0.1.0'
+        version: '0.1.0',
       });
 
       assert.strictEqual(userAgent, 'gcloud-node-storage/0.1.0');
@@ -1643,26 +1671,19 @@ describe('common/util', function() {
     var fakeError = new Error('err.');
 
     var FakeClass;
-    var instance;
-    var context;
 
     beforeEach(function() {
-      context = null;
-
       FakeClass = function() {};
 
       FakeClass.prototype.methodName = function(callback) {
-        context = this;
         callback.apply(null, fakeArgs);
       };
 
       FakeClass.prototype.methodSingle = function(callback) {
-        context = this;
         callback(null, fakeArgs[1]);
       };
 
       FakeClass.prototype.methodError = function(callback) {
-        context = this;
         callback(fakeError);
       };
 
@@ -1672,7 +1693,7 @@ describe('common/util', function() {
       FakeClass.prototype.promise = util.noop;
 
       util.promisifyAll(FakeClass);
-      instance = new FakeClass();
+      new FakeClass();
     });
 
     it('should promisify the correct method', function() {
@@ -1693,7 +1714,7 @@ describe('common/util', function() {
       FakeClass2.prototype.method = function() {};
 
       util.promisifyAll(FakeClass2, {
-        exclude: ['methodSync']
+        exclude: ['methodSync'],
       });
 
       assert.strictEqual(FakeClass2.prototype.methodSync, util.noop);
@@ -1703,7 +1724,7 @@ describe('common/util', function() {
     it('should pass the options object to promisify', function(done) {
       var promisify = util.promisify;
       var fakeOptions = {
-        a: 'a'
+        a: 'a',
       };
 
       util.promisify = function(method, options) {
@@ -1771,16 +1792,19 @@ describe('common/util', function() {
 
       fakeArgs = [error];
 
-      return func().then(function() {
-        throw new Error('Should have gone to failure block');
-      }, function(err) {
-        assert.strictEqual(err, error);
-      });
+      return func().then(
+        function() {
+          throw new Error('Should have gone to failure block');
+        },
+        function(err) {
+          assert.strictEqual(err, error);
+        }
+      );
     });
 
     it('should allow the Promise object to be overridden', function() {
       var FakePromise = function() {};
-      var promise = func.call({ Promise: FakePromise });
+      var promise = func.call({Promise: FakePromise});
 
       assert(promise instanceof FakePromise);
     });
@@ -1788,11 +1812,14 @@ describe('common/util', function() {
     it('should resolve singular arguments', function() {
       var fakeArg = 'hi';
 
-      func = util.promisify(function(callback) {
-        callback.apply(this, [null, fakeArg]);
-      }, {
-        singular: true
-      });
+      func = util.promisify(
+        function(callback) {
+          callback.apply(this, [null, fakeArg]);
+        },
+        {
+          singular: true,
+        }
+      );
 
       return func().then(function(arg) {
         assert.strictEqual(arg, fakeArg);
@@ -1802,11 +1829,14 @@ describe('common/util', function() {
     it('should ignore singular when multiple args are present', function() {
       var fakeArgs = ['a', 'b'];
 
-      func = util.promisify(function(callback) {
-        callback.apply(this, [null].concat(fakeArgs));
-      }, {
-        singular: true
-      });
+      func = util.promisify(
+        function(callback) {
+          callback.apply(this, [null].concat(fakeArgs));
+        },
+        {
+          singular: true,
+        }
+      );
 
       return func().then(function(args) {
         assert.deepEqual(args, fakeArgs);

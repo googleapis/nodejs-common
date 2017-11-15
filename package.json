@@ -1,34 +1,13 @@
 {
   "name": "@google-cloud/common",
-  "version": "0.14.0",
-  "author": "Google Inc.",
   "description": "Common components for Cloud APIs Node.js Client Libraries",
-  "contributors": [
-    {
-      "name": "Burcu Dogan",
-      "email": "jbd@google.com"
-    },
-    {
-      "name": "Johan Euphrosine",
-      "email": "proppy@google.com"
-    },
-    {
-      "name": "Patrick Costello",
-      "email": "pcostell@google.com"
-    },
-    {
-      "name": "Ryan Seys",
-      "email": "ryan@ryanseys.com"
-    },
-    {
-      "name": "Silvano Luciani",
-      "email": "silvano@google.com"
-    },
-    {
-      "name": "Stephen Sawchuk",
-      "email": "sawchuk@gmail.com"
-    }
-  ],
+  "version": "0.14.0",
+  "license": "Apache-2.0",
+  "author": "Google Inc.",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "repository": "googleapis/nodejs-common",
   "main": "./src/index.js",
   "files": [
     "src",
@@ -36,7 +15,33 @@
     "CONTRIBUTORS",
     "LICENSE"
   ],
-  "repository": "googlecloudplatform/google-cloud-node",
+  "contributors": [
+    "Ali Ijaz Sheikh <ofrobots@google.com>",
+    "Austin Peterson <austin@akpwebdesign.com>",
+    "Dave Gramlich <callmehiphop@gmail.com>",
+    "Eric Uldall <ericuldall@gmail.com>",
+    "Ernest Landrito <landrito@google.com>",
+    "Jason Dobry <jdobry@google.com>",
+    "Justin King <jcking@mtu.edu>",
+    "Karolis Narkevicius <karolis.n@gmail.com>",
+    "Kelvin Jin <kelvinjin@google.com>",
+    "Luke Sneeringer <lukesneeringer@google.com>",
+    "Matthew Loring <matthewloring@users.noreply.github.com>",
+    "Michael Prentice <splaktar@gmail.com>",
+    "Stephen Sawchuk <sawchuk@gmail.com>",
+    "Tim Swast <swast@google.com>"
+  ],
+  "scripts": {
+    "publish-module": "node ../../scripts/publish.js common",
+    "generate-scaffolding": "repo-tools generate all",
+    "docs": "repo-tools exec -- jsdoc -c .jsdoc.js",
+    "lint": "repo-tools lint --cmd eslint -- src/ samples/ system-test/ test/",
+    "prettier": "repo-tools exec -- prettier --write src/*.js src/*/*.js samples/*.js samples/*/*.js test/*.js test/*/*.js system-test/*.js system-test/*/*.js",
+    "cover": "nyc --reporter=lcov mocha --require intelli-espower-loader test/*.js && nyc report",
+    "samples-test": "cd samples/ && npm link ../ && npm test && cd ../",
+    "test-no-cover": "repo-tools test run --cmd mocha -- test/*.js --no-timeouts",
+    "test": "repo-tools test run --cmd npm -- run cover"
+  },
   "dependencies": {
     "array-uniq": "^1.0.3",
     "arrify": "^1.0.1",
@@ -44,7 +49,7 @@
     "create-error-class": "^3.0.2",
     "duplexify": "^3.5.0",
     "ent": "^2.2.0",
-    "extend": "^3.0.0",
+    "extend": "^3.0.1",
     "google-auto-auth": "^0.7.1",
     "is": "^3.2.0",
     "log-driver": "^1.2.5",
@@ -58,16 +63,21 @@
     "through2": "^2.0.3"
   },
   "devDependencies": {
-    "mocha": "^4.0.0",
+    "@google-cloud/nodejs-repo-tools": "^2.1.1",
+    "async": "^2.6.0",
+    "codecov": "^3.0.0",
+    "eslint": "^4.10.0",
+    "eslint-config-prettier": "^2.7.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-prettier": "^2.3.1",
+    "ink-docstrap": "^1.3.0",
+    "intelli-espower-loader": "^1.0.1",
+    "jsdoc": "^3.5.5",
+    "mocha": "^4.0.1",
+    "nyc": "^11.3.0",
+    "power-assert": "^1.4.4",
+    "prettier": "^1.8.1",
     "proxyquire": "^1.7.10",
     "uuid": "^3.0.1"
-  },
-  "scripts": {
-    "publish-module": "node ../../scripts/publish.js common",
-    "test": "mocha test/*.js"
-  },
-  "license": "Apache-2.0",
-  "engines": {
-    "node": ">=4.0.0"
   }
 }

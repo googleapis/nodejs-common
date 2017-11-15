@@ -26,7 +26,7 @@ var fakeModelo = {
   inherits: function() {
     this.calledWith_ = arguments;
     return require('modelo').inherits.apply(this, arguments);
-  }
+  },
 };
 
 function FakeServiceObject() {
@@ -43,14 +43,14 @@ describe('Operation', function() {
   before(function() {
     Operation = proxyquire('../src/operation.js', {
       modelo: fakeModelo,
-      './service-object.js': FakeServiceObject
+      './service-object.js': FakeServiceObject,
     });
   });
 
   beforeEach(function() {
     operation = new Operation({
       parent: FAKE_SERVICE,
-      id: OPERATION_ID
+      id: OPERATION_ID,
     });
     operation.Promise = Promise;
   });
@@ -76,9 +76,9 @@ describe('Operation', function() {
         get: true,
         getMetadata: {
           reqOpts: {
-            name: OPERATION_ID
-          }
-        }
+            name: OPERATION_ID,
+          },
+        },
       });
     });
 
@@ -86,7 +86,7 @@ describe('Operation', function() {
       var baseUrl = 'baseUrl';
 
       var operation = new Operation({
-        baseUrl: baseUrl
+        baseUrl: baseUrl,
       });
 
       assert.strictEqual(operation.serviceObjectArguments_[0].baseUrl, baseUrl);
@@ -117,7 +117,7 @@ describe('Operation', function() {
     });
 
     it('should return an instance of the localized Promise', function() {
-      var FakePromise = operation.Promise = function() {};
+      var FakePromise = (operation.Promise = function() {});
       var promise = operation.promise();
 
       assert(promise instanceof FakePromise);
@@ -130,11 +130,14 @@ describe('Operation', function() {
         operation.emit('error', error);
       });
 
-      return operation.promise().then(function() {
-        throw new Error('Promise should have been rejected.');
-      }, function(err) {
-        assert.strictEqual(err, error);
-      });
+      return operation.promise().then(
+        function() {
+          throw new Error('Promise should have been rejected.');
+        },
+        function(err) {
+          assert.strictEqual(err, error);
+        }
+      );
     });
 
     it('should resolve the promise on complete', function() {
@@ -224,7 +227,7 @@ describe('Operation', function() {
 
       it('should callback with the operation error', function(done) {
         var apiResponse = {
-          error: {}
+          error: {},
         };
 
         operation.getMetadata = function(callback) {
@@ -239,7 +242,7 @@ describe('Operation', function() {
     });
 
     describe('operation incomplete', function() {
-      var apiResponse = { done: false };
+      var apiResponse = {done: false};
 
       beforeEach(function() {
         operation.getMetadata = function(callback) {
@@ -257,7 +260,7 @@ describe('Operation', function() {
     });
 
     describe('operation complete', function() {
-      var apiResponse = { done: true };
+      var apiResponse = {done: true};
 
       beforeEach(function() {
         operation.getMetadata = function(callback) {
@@ -334,7 +337,7 @@ describe('Operation', function() {
     });
 
     describe('operation pending', function() {
-      var apiResponse = { done: false };
+      var apiResponse = {done: false};
       var setTimeoutCached = global.setTimeout;
 
       beforeEach(function() {
@@ -374,7 +377,7 @@ describe('Operation', function() {
     });
 
     describe('operation complete', function() {
-      var apiResponse = { done: true };
+      var apiResponse = {done: true};
 
       beforeEach(function() {
         operation.getMetadata = function(callback) {

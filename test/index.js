@@ -36,7 +36,7 @@ describe('common', function() {
       './paginator.js': fakePaginator,
       './service.js': fakeService,
       './service-object.js': fakeServiceObject,
-      './util.js': fakeUtil
+      './util.js': fakeUtil,
     });
   });
 
@@ -47,7 +47,7 @@ describe('common', function() {
       paginator: fakePaginator,
       Service: fakeService,
       ServiceObject: fakeServiceObject,
-      util: fakeUtil
+      util: fakeUtil,
     });
   });
 });

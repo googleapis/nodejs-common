@@ -42,8 +42,8 @@ describe('Service', function() {
     projectIdRequired: false,
     packageJson: {
       name: '@google-cloud/service',
-      version: '0.2.0'
-    }
+      version: '0.2.0',
+    },
   };
 
   var OPTIONS = {
@@ -55,7 +55,7 @@ describe('Service', function() {
 
   before(function() {
     Service = proxyquire('../src/service.js', {
-      './util.js': util
+      './util.js': util,
     });
   });
 
@@ -80,7 +80,7 @@ describe('Service', function() {
           keyFile: OPTIONS.keyFilename,
           email: OPTIONS.email,
           projectIdRequired: CONFIG.projectIdRequired,
-          projectId: OPTIONS.projectId
+          projectId: OPTIONS.projectId,
         });
 
         assert.deepEqual(config, expectedConfig);
@@ -97,7 +97,7 @@ describe('Service', function() {
 
       makeAuthenticatedRequestFactoryOverride = function() {
         return {
-          authClient: authClient
+          authClient: authClient,
         };
       };
 
@@ -115,7 +115,7 @@ describe('Service', function() {
       makeAuthenticatedRequestFactoryOverride = function() {
         return {
           authClient: {},
-          getCredentials: getCredentials
+          getCredentials: getCredentials,
         };
       };
 
@@ -165,7 +165,7 @@ describe('Service', function() {
 
     it('should localize the Promise object', function() {
       var FakePromise = function() {};
-      var service = new Service({}, { promise: FakePromise });
+      var service = new Service({}, {promise: FakePromise});
 
       assert.strictEqual(service.Promise, FakePromise);
     });
@@ -181,7 +181,7 @@ describe('Service', function() {
 
       var interceptor = service.interceptors[0];
 
-      var modifiedReqOpts = interceptor.request({ forever: true });
+      var modifiedReqOpts = interceptor.request({forever: true});
       assert.strictEqual(modifiedReqOpts.forever, false);
     });
   });
@@ -191,7 +191,7 @@ describe('Service', function() {
       service.authClient = {
         getProjectId: function() {
           done();
-        }
+        },
       };
 
       service.getProjectId(assert.ifError);
@@ -203,7 +203,7 @@ describe('Service', function() {
       service.authClient = {
         getProjectId: function(callback) {
           callback(error);
-        }
+        },
       };
 
       service.getProjectId(function(err) {
@@ -219,7 +219,7 @@ describe('Service', function() {
       service.authClient = {
         getProjectId: function(callback) {
           callback(null, projectId);
-        }
+        },
       };
 
       service.getProjectId(function(err, projectId_) {
@@ -236,15 +236,12 @@ describe('Service', function() {
 
     beforeEach(function() {
       reqOpts = {
-        uri: 'uri'
+        uri: 'uri',
       };
     });
 
     it('should compose the correct request', function(done) {
-      var expectedUri = [
-        service.baseUrl,
-        reqOpts.uri
-      ].join('/');
+      var expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
       service.makeAuthenticatedRequest = function(reqOpts_, callback) {
         assert.notStrictEqual(reqOpts_, reqOpts);
@@ -264,18 +261,15 @@ describe('Service', function() {
         done();
       };
 
-      service.request_({ uri: expectedUri }, assert.ifError);
+      service.request_({uri: expectedUri}, assert.ifError);
     });
 
     it('should trim slashes', function(done) {
       var reqOpts = {
-        uri: '//1/2//'
+        uri: '//1/2//',
       };
 
-      var expectedUri = [
-        service.baseUrl,
-        '1/2'
-      ].join('/');
+      var expectedUri = [service.baseUrl, '1/2'].join('/');
 
       service.makeAuthenticatedRequest = function(reqOpts_) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
@@ -287,7 +281,7 @@ describe('Service', function() {
 
     it('should replace path/:subpath with path:subpath', function(done) {
       var reqOpts = {
-        uri: ':test'
+        uri: ':test',
       };
 
       var expectedUri = service.baseUrl + reqOpts.uri;
@@ -334,13 +328,10 @@ describe('Service', function() {
     describe('projectIdRequired', function() {
       describe('false', function() {
         it('should include the projectId', function(done) {
-          var config = extend({}, CONFIG, { projectIdRequired: false });
+          var config = extend({}, CONFIG, {projectIdRequired: false});
           var service = new Service(config, OPTIONS);
 
-          var expectedUri = [
-            service.baseUrl,
-            reqOpts.uri
-          ].join('/');
+          var expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
           service.makeAuthenticatedRequest = function(reqOpts_) {
             assert.strictEqual(reqOpts_.uri, expectedUri);
@@ -354,14 +345,14 @@ describe('Service', function() {
 
       describe('true', function() {
         it('should not include the projectId', function(done) {
-          var config = extend({}, CONFIG, { projectIdRequired: true });
+          var config = extend({}, CONFIG, {projectIdRequired: true});
           var service = new Service(config, OPTIONS);
 
           var expectedUri = [
             service.baseUrl,
             'projects',
             service.projectId,
-            reqOpts.uri
+            reqOpts.uri,
           ].join('/');
 
           service.makeAuthenticatedRequest = function(reqOpts_) {
@@ -379,7 +370,7 @@ describe('Service', function() {
       it('should call the request interceptors in order', function(done) {
         var reqOpts = {
           uri: '',
-          interceptors_: []
+          interceptors_: [],
         };
 
         // Called first.
@@ -387,7 +378,7 @@ describe('Service', function() {
           request: function(reqOpts) {
             reqOpts.order = '1';
             return reqOpts;
-          }
+          },
         });
 
         // Called third.
@@ -395,7 +386,7 @@ describe('Service', function() {
           request: function(reqOpts) {
             reqOpts.order += '3';
             return reqOpts;
-          }
+          },
         });
 
         // Called second.
@@ -403,7 +394,7 @@ describe('Service', function() {
           request: function(reqOpts) {
             reqOpts.order += '2';
             return reqOpts;
-          }
+          },
         });
 
         // Called fifth.
@@ -411,7 +402,7 @@ describe('Service', function() {
           request: function(reqOpts) {
             reqOpts.order += '5';
             return reqOpts;
-          }
+          },
         });
 
         // Called fourth.
@@ -419,7 +410,7 @@ describe('Service', function() {
           request: function(reqOpts) {
             reqOpts.order += '4';
             return reqOpts;
-          }
+          },
         });
 
         // Called sixth.
@@ -427,7 +418,7 @@ describe('Service', function() {
           request: function(reqOpts) {
             reqOpts.order += '6';
             return reqOpts;
-          }
+          },
         });
 
         service.makeAuthenticatedRequest = function(reqOpts) {
@@ -439,11 +430,13 @@ describe('Service', function() {
       });
 
       it('should not affect original interceptor arrays', function(done) {
-        function request(reqOpts) { return reqOpts; }
+        function request(reqOpts) {
+          return reqOpts;
+        }
 
-        var globalInterceptors = [{ request: request }];
-        var localInterceptors = [{ request: request }];
-        var requestInterceptors = [{ request: request }];
+        var globalInterceptors = [{request: request}];
+        var localInterceptors = [{request: request}];
+        var requestInterceptors = [{request: request}];
 
         var originalGlobalInterceptors = [].slice.call(globalInterceptors);
         var originalLocalInterceptors = [].slice.call(localInterceptors);
@@ -456,10 +449,13 @@ describe('Service', function() {
           done();
         };
 
-        service.request_({
-          uri: '',
-          interceptors_: requestInterceptors
-        }, assert.ifError);
+        service.request_(
+          {
+            uri: '',
+            interceptors_: requestInterceptors,
+          },
+          assert.ifError
+        );
       });
 
       it('should not call unrelated interceptors', function(done) {
@@ -470,12 +466,12 @@ describe('Service', function() {
           request: function() {
             setImmediate(done);
             return {};
-          }
+          },
         });
 
         service.makeAuthenticatedRequest = util.noop;
 
-        service.request_({ uri: '' }, assert.ifError);
+        service.request_({uri: ''}, assert.ifError);
       });
     });
   });
