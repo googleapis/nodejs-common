@@ -59,28 +59,10 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - system_tests:
-          requires:
-            - lint
-            - docs
-          filters:
-            branches:
-              only: master
-            tags:
-              only: /^v[\d.]+$/
-      - sample_tests:
-          requires:
-            - lint
-            - docs
-          filters:
-            branches:
-              only: master
-            tags:
-              only: /^v[\d.]+$/
       - publish_npm:
           requires:
-            - system_tests
-            - sample_tests
+            - lint
+            - docs
           filters:
             branches:
               ignore: /.*/
@@ -143,65 +125,6 @@ jobs:
       - run:
           name: Build documentation.
           command: npm run docs
-
-  sample_tests:
-    docker:
-      - image: node:8
-    steps:
-      - checkout
-      - run:
-          name: Decrypt credentials.
-          command: |
-            openssl aes-256-cbc -d -in .circleci/key.json.enc \
-                -out .circleci/key.json \
-                -k "${SYSTEM_TESTS_ENCRYPTION_KEY}"
-      - run:
-          name: Install and link the module.
-          command: |
-            npm install
-            npm link
-      - run:
-          name: Link the module being tested to the samples.
-          command: |
-            cd samples/
-            npm link @google-cloud/common
-            npm install
-            cd ..
-      - run:
-          name: Run sample tests.
-          command: npm run samples-test
-          environment:
-            GCLOUD_PROJECT: long-door-651
-            GOOGLE_APPLICATION_CREDENTIALS: /var/common/.circleci/key.json
-      - run:
-          name: Remove unencrypted key.
-          command: rm .circleci/key.json
-          when: always
-    working_directory: /var/common/
-
-  system_tests:
-    docker:
-      - image: node:8
-    steps:
-      - checkout
-      - run:
-          name: Decrypt credentials.
-          command: |
-            openssl aes-256-cbc -d -in .circleci/key.json.enc \
-                -out .circleci/key.json \
-                -k "${SYSTEM_TESTS_ENCRYPTION_KEY}"
-      - run:
-          name: Install modules and dependencies.
-          command: npm install
-      - run:
-          name: Run system tests.
-          command: npm run system-test
-          environment:
-            GOOGLE_APPLICATION_CREDENTIALS: .circleci/key.json
-      - run:
-          name: Remove unencrypted key.
-          command: rm .circleci/key.json
-          when: always
 
   publish_npm:
     docker:
