@@ -3,9 +3,9 @@
 # [Google Cloud Common Module: Node.js Client](https://github.com/googlecloudplatform/google-cloud-node)
 
 [![release level](https://img.shields.io/badge/release%20level-alpha-orange.svg?style&#x3D;flat)](https://cloud.google.com/terms/launch-stages)
-[![CircleCI](https://img.shields.io/circleci/project/github/googlecloudplatform/google-cloud-node.svg?style=flat)](https://circleci.com/gh/googlecloudplatform/google-cloud-node)
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/github/googlecloudplatform/google-cloud-node?branch=master&svg=true)](https://ci.appveyor.com/project/googlecloudplatform/google-cloud-node)
-[![codecov](https://img.shields.io/codecov/c/github/googlecloudplatform/google-cloud-node/master.svg?style=flat)](https://codecov.io/gh/googlecloudplatform/google-cloud-node)
+[![CircleCI](https://img.shields.io/circleci/project/github/googleapis/nodejs-common.svg?style=flat)](https://circleci.com/gh/googleapis/nodejs-common)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/github/googleapis/nodejs-common?branch=master&svg=true)](https://ci.appveyor.com/project/googleapis/nodejs-common)
+[![codecov](https://img.shields.io/codecov/c/github/googleapis/nodejs-common/master.svg?style=flat)](https://codecov.io/gh/googleapis/nodejs-common)
 
 > Node.js idiomatic client for [Common][product-docs].
 
