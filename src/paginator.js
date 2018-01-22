@@ -107,6 +107,7 @@ paginator.parseArguments_ = function(args) {
   var autoPaginate = true;
   var maxApiCalls = -1;
   var maxResults = -1;
+  var streamOptions;
   var callback;
 
   var firstArgument = args[0];
@@ -148,13 +149,21 @@ paginator.parseArguments_ = function(args) {
     }
   }
 
-  return {
+  var parsedArguments = {
     query: query || {},
     autoPaginate: autoPaginate,
     maxApiCalls: maxApiCalls,
     maxResults: maxResults,
     callback: callback,
   };
+
+  parsedArguments.streamOptions = extend(true, {}, parsedArguments.query);
+  delete parsedArguments.streamOptions.autoPaginate;
+  delete parsedArguments.streamOptions.maxApiCalls;
+  delete parsedArguments.streamOptions.maxResults;
+  delete parsedArguments.streamOptions.pageSize;
+
+  return parsedArguments;
 };
 
 /**
@@ -215,6 +224,7 @@ paginator.runAsStream_ = function(parsedArguments, originalMethod) {
 
   var limiter = util.createLimiter(makeRequest, {
     maxApiCalls: parsedArguments.maxApiCalls,
+    streamOptions: parsedArguments.streamOptions,
   });
 
   var stream = limiter.stream;
