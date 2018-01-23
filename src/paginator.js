@@ -107,7 +107,6 @@ paginator.parseArguments_ = function(args) {
   var autoPaginate = true;
   var maxApiCalls = -1;
   var maxResults = -1;
-  var streamOptions;
   var callback;
 
   var firstArgument = args[0];
@@ -159,7 +158,6 @@ paginator.parseArguments_ = function(args) {
 
   parsedArguments.streamOptions = extend(true, {}, parsedArguments.query);
   delete parsedArguments.streamOptions.autoPaginate;
-  delete parsedArguments.streamOptions.maxApiCalls;
   delete parsedArguments.streamOptions.maxResults;
   delete parsedArguments.streamOptions.pageSize;
 
