@@ -1543,7 +1543,11 @@ describe('common/util', function() {
 
   describe('createLimiter', function() {
     function REQUEST_FN() {}
-    var OPTIONS = {};
+    var OPTIONS = {
+      streamOptions: {
+        highWaterMark: 8,
+      },
+    };
 
     it('should create an object stream with stream-events', function(done) {
       streamEventsOverride = function(stream) {
@@ -1569,6 +1573,15 @@ describe('common/util', function() {
 
       var limiter = util.createLimiter(REQUEST_FN, OPTIONS);
       assert.strictEqual(limiter.stream, streamEventsStream);
+    });
+
+    it('should pass stream options to through', function() {
+      var limiter = util.createLimiter(REQUEST_FN, OPTIONS);
+
+      assert.strictEqual(
+        limiter.stream._readableState.highWaterMark,
+        OPTIONS.streamOptions.highWaterMark
+      );
     });
 
     describe('makeRequest', function() {

@@ -342,6 +342,16 @@ describe('paginator', function() {
 
       assert.strictEqual(parsedArguments.autoPaginate, false);
     });
+
+    it('should parse streamOptions', function() {
+      var args = [{maxResults: 10, highWaterMark: 8}];
+      var parsedArguments = paginator.parseArguments_(args);
+
+      assert.strictEqual(parsedArguments.maxResults, 10);
+      assert.deepStrictEqual(parsedArguments.streamOptions, {
+        highWaterMark: 8,
+      });
+    });
   });
 
   describe('run_', function() {
@@ -520,6 +530,32 @@ describe('paginator', function() {
         };
 
         paginator.runAsStream_({maxApiCalls: maxApiCalls}, util.noop);
+      });
+    });
+
+    describe('streamOptions', function() {
+      var streamOptions = {
+        highWaterMark: 8,
+      };
+
+      it('should pass through stream options', function(done) {
+        overrides.util.createLimiter = function(makeRequest, options) {
+          assert.strictEqual(options.streamOptions, streamOptions);
+
+          setImmediate(done);
+
+          return {
+            stream: through.obj(),
+          };
+        };
+
+        paginator.runAsStream_(
+          {
+            maxApiCalls: 100,
+            streamOptions: streamOptions,
+          },
+          util.noop
+        );
       });
     });
 

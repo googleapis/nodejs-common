@@ -635,14 +635,16 @@ util.normalizeArguments = normalizeArguments;
  * @param {object=} options - Configuration object.
  * @param {number} options.maxApiCalls - The maximum number of API calls to
  *     make.
+ * @param {object} options.streamOptions - Options to pass to the Stream
+ *     constructor.
  */
 function createLimiter(makeRequestFn, options) {
-  var stream = streamEvents(through.obj());
+  options = options || {};
+
+  var stream = streamEvents(through.obj(options.streamOptions));
 
   var requestsMade = 0;
   var requestsToMake = -1;
-
-  options = options || {};
 
   if (is.number(options.maxApiCalls)) {
     requestsToMake = options.maxApiCalls;
