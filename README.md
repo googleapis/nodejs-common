@@ -7,14 +7,11 @@
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/googleapis/nodejs-common?branch=master&svg=true)](https://ci.appveyor.com/project/googleapis/nodejs-common)
 [![codecov](https://img.shields.io/codecov/c/github/googleapis/nodejs-common/master.svg?style=flat)](https://codecov.io/gh/googleapis/nodejs-common)
 
-> Node.js idiomatic client for [Common][product-docs].
+> Node.js Common package
 
 Google Cloud Common node.js module contains stuff used by other Cloud API modules.
 
-
-* [Common Node.js Client API Reference][client-docs]
 * [github.com/googlecloudplatform/google-cloud-node](https://github.com/googlecloudplatform/google-cloud-node)
-* [Common Documentation][product-docs]
 
 Read more about the client libraries for Cloud APIs, including the older
 Google APIs Client Libraries, in [Client Libraries Explained][explained].
@@ -43,26 +40,19 @@ Google APIs Client Libraries, in [Client Libraries Explained][explained].
 
     [Enable billing][billing]
 
-1.  Enable the Google Cloud Common Module API.
-
-    [Enable the API][enable_api]
-
 1.  [Set up authentication with a service account][auth] so you can access the
     API from your local workstation.
 
 [projects]: https://console.cloud.google.com/project
 [billing]: https://support.google.com/cloud/answer/6293499#enable-billing
-[enable_api]: https://console.cloud.google.com/flows/enableapi?apiid=common.googleapis.com
 [auth]: https://cloud.google.com/docs/authentication/getting-started
 
-### Installing the client library
+### Installing the package
 
     npm install --save @google-cloud/common
 
-
-
-The [Common Node.js Client API Reference][client-docs] documentation
-also contains samples.
+It's unlikely you will need to install this package directly, as it will be
+installed as a dependency when you install other `@google-cloud` packages.
 
 ## Versioning
 
@@ -86,6 +76,4 @@ Apache Version 2.0
 
 See [LICENSE](https://github.com/googlecloudplatform/google-cloud-node/blob/master/LICENSE)
 
-[client-docs]: https://cloud.google.com/nodejs/docs/reference/common/latest/
-[product-docs]: https://cloud.google.com/nodejs/docs/reference/common/
 [shell_img]: http://gstatic.com/cloudssh/images/open-btn.png
