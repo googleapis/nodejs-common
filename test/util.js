@@ -701,7 +701,7 @@ describe('common/util', function() {
         projectId: '{{projectId}}',
       };
 
-      googleAutoAuthOverride = function(config_) {
+      googleAutoAuthOverride = function() {
         assert.strictEqual(config.projectId, '{{projectId}}');
         setImmediate(done);
         return authClient;
