@@ -689,6 +689,19 @@ describe('common/util', function() {
 
       googleAutoAuthOverride = function(config_) {
         assert.strictEqual(config_.projectId, undefined);
+        setImmediate(done);
+        return authClient;
+      };
+
+      util.makeAuthenticatedRequestFactory(config);
+    });
+
+    it('should not remove projectId from config object', function(done) {
+      var config = {
+        projectId: '{{projectId}}',
+      };
+
+      googleAutoAuthOverride = function(config_) {
         assert.strictEqual(config.projectId, '{{projectId}}');
         setImmediate(done);
         return authClient;
