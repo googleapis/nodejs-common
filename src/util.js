@@ -330,7 +330,13 @@ util.shouldRetryRequest = shouldRetryRequest;
 function makeAuthenticatedRequestFactory(config) {
   config = config || {};
 
-  var authClient = googleAuth(config);
+  var googleAutoAuthConfig = extend({}, config);
+
+  if (googleAutoAuthConfig.projectId === '{{projectId}}') {
+    delete googleAutoAuthConfig.projectId;
+  }
+
+  var authClient = googleAuth(googleAutoAuthConfig);
 
   /**
    * The returned function that will make an authenticated request.
