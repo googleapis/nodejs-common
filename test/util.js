@@ -669,10 +669,40 @@ describe('common/util', function() {
     });
 
     it('should create an authClient', function(done) {
-      var config = {};
+      var config = {
+        test: true,
+      };
 
       googleAutoAuthOverride = function(config_) {
-        assert.strictEqual(config_, config);
+        assert.deepStrictEqual(config_, config);
+        setImmediate(done);
+        return authClient;
+      };
+
+      util.makeAuthenticatedRequestFactory(config);
+    });
+
+    it('should not pass projectId token to google-auto-auth', function(done) {
+      var config = {
+        projectId: '{{projectId}}',
+      };
+
+      googleAutoAuthOverride = function(config_) {
+        assert.strictEqual(config_.projectId, undefined);
+        setImmediate(done);
+        return authClient;
+      };
+
+      util.makeAuthenticatedRequestFactory(config);
+    });
+
+    it('should not remove projectId from config object', function(done) {
+      var config = {
+        projectId: '{{projectId}}',
+      };
+
+      googleAutoAuthOverride = function() {
+        assert.strictEqual(config.projectId, '{{projectId}}');
         setImmediate(done);
         return authClient;
       };
