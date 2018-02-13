@@ -64,10 +64,8 @@ workflows:
             - lint
             - docs
           filters:
-            branches:
-              ignore: /.*/
             tags:
-              only: /^v[\d.]+$/
+              only: /.*/
 
 jobs:
   node4:
