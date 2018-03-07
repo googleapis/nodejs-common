@@ -77,12 +77,14 @@ function ServiceObject(config) {
     var allMethodNames = Object.keys(ServiceObject.prototype);
     allMethodNames
       .filter(function(methodName) {
-        return (// All ServiceObjects need `request`.
+        return (
+          // All ServiceObjects need `request`.
           !/^request/.test(methodName) &&
           // The ServiceObject didn't redefine the method.
           self[methodName] === ServiceObject.prototype[methodName] &&
           // This method isn't wanted.
-          !config.methods[methodName] );
+          !config.methods[methodName]
+        );
       })
       .forEach(function(methodName) {
         self[methodName] = undefined;
