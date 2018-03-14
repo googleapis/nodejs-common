@@ -20,15 +20,15 @@
  * @module common/logger
  */
 
-var format = require('string-format-obj');
-var is = require('is');
-var logDriver = require('log-driver');
+const format = require('string-format-obj');
+const is = require('is');
+const logDriver = require('log-driver');
 
 /**
  * The default list of log levels.
  * @type {string[]}
  */
-var LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
+const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
 /**
  * Create a logger to print output to the console.
@@ -56,7 +56,7 @@ function logger(options) {
     level: options.level || 'error',
 
     format: function() {
-      var args = [].slice.call(arguments);
+      const args = [].slice.call(arguments);
 
       return format('{level}{tag} {message}', {
         level: args.shift().toUpperCase(),

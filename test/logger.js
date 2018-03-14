@@ -16,17 +16,17 @@
 
 'use strict';
 
-var assert = require('assert');
-var proxyquire = require('proxyquire');
+const assert = require('assert');
+const proxyquire = require('proxyquire');
 
-var LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
+const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
 function fakeLogDriver(config) {
   return config;
 }
 
 describe('logger base-functionality', function() {
-  var logger;
+  let logger;
 
   before(function() {
     logger = proxyquire('../src/logger.js', {
@@ -43,17 +43,17 @@ describe('logger base-functionality', function() {
   });
 
   it('should create a logger with custom levels', function() {
-    var customLevels = ['level-1', 'level-2', 'level-3'];
+    const customLevels = ['level-1', 'level-2', 'level-3'];
     assert.deepEqual(logger({levels: customLevels}).levels, customLevels);
   });
 
   it('should use a specified level', function() {
-    var level = 'level';
+    const level = 'level';
     assert.strictEqual(logger({level: level}).level, level);
   });
 
   it('should treat a single arguments as the level', function() {
-    var level = 'level';
+    const level = 'level';
     assert.strictEqual(logger(level).level, level);
   });
 
@@ -62,18 +62,18 @@ describe('logger base-functionality', function() {
   });
 
   describe('formatting', function() {
-    var LEVEL = 'level-name';
-    var TAG = 'tag-name';
-    var MESSAGES = ['message-1', 'message-2'];
+    const LEVEL = 'level-name';
+    const TAG = 'tag-name';
+    const MESSAGES = ['message-1', 'message-2'];
 
     it('should correctly format without a tag', function() {
-      var formatted = logger().format(LEVEL, MESSAGES[0], MESSAGES[1]);
+      const formatted = logger().format(LEVEL, MESSAGES[0], MESSAGES[1]);
 
       assert.strictEqual(formatted, 'LEVEL-NAME message-1 message-2');
     });
 
     it('should correctly format with a tag', function() {
-      var formatted = logger({
+      const formatted = logger({
         tag: TAG,
       }).format(LEVEL, MESSAGES[0], MESSAGES[1]);
 

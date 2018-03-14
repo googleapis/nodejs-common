@@ -16,13 +16,13 @@
 
 'use strict';
 
-var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
-var proxyquire = require('proxyquire');
+const assert = require('assert');
+const EventEmitter = require('events').EventEmitter;
+const proxyquire = require('proxyquire');
 
-var util = require('../src/util.js');
+const util = require('../src/util.js');
 
-var fakeModelo = {
+const fakeModelo = {
   inherits: function() {
     this.calledWith_ = arguments;
     return require('modelo').inherits.apply(this, arguments);
@@ -34,11 +34,11 @@ function FakeServiceObject() {
 }
 
 describe('Operation', function() {
-  var FAKE_SERVICE = {};
-  var OPERATION_ID = '/a/b/c/d';
+  const FAKE_SERVICE = {};
+  const OPERATION_ID = '/a/b/c/d';
 
-  var Operation;
-  var operation;
+  let Operation;
+  let operation;
 
   before(function() {
     Operation = proxyquire('../src/operation.js', {
@@ -57,7 +57,7 @@ describe('Operation', function() {
 
   describe('instantiation', function() {
     it('should extend ServiceObject and EventEmitter', function() {
-      var args = fakeModelo.calledWith_;
+      const args = fakeModelo.calledWith_;
 
       assert.strictEqual(args[0], Operation);
       assert.strictEqual(args[1], FakeServiceObject);
@@ -65,7 +65,7 @@ describe('Operation', function() {
     });
 
     it('should pass ServiceObject the correct config', function() {
-      var config = operation.serviceObjectArguments_[0];
+      const config = operation.serviceObjectArguments_[0];
 
       assert.strictEqual(config.baseUrl, '');
       assert.strictEqual(config.parent, FAKE_SERVICE);
@@ -83,9 +83,9 @@ describe('Operation', function() {
     });
 
     it('should allow overriding baseUrl', function() {
-      var baseUrl = 'baseUrl';
+      const baseUrl = 'baseUrl';
 
-      var operation = new Operation({
+      const operation = new Operation({
         baseUrl: baseUrl,
       });
 
@@ -98,8 +98,8 @@ describe('Operation', function() {
     });
 
     it('should call listenForEvents_', function() {
-      var listenForEvents = Operation.prototype.listenForEvents_;
-      var called = false;
+      const listenForEvents = Operation.prototype.listenForEvents_;
+      let called = false;
 
       Operation.prototype.listenForEvents_ = function() {
         called = true;
@@ -117,14 +117,14 @@ describe('Operation', function() {
     });
 
     it('should return an instance of the localized Promise', function() {
-      var FakePromise = (operation.Promise = function() {});
-      var promise = operation.promise();
+      const FakePromise = (operation.Promise = function() {});
+      const promise = operation.promise();
 
       assert(promise instanceof FakePromise);
     });
 
     it('should reject the promise if an error occurs', function() {
-      var error = new Error('err');
+      const error = new Error('err');
 
       setImmediate(function() {
         operation.emit('error', error);
@@ -141,7 +141,7 @@ describe('Operation', function() {
     });
 
     it('should resolve the promise on complete', function() {
-      var metadata = {};
+      const metadata = {};
 
       setImmediate(function() {
         operation.emit('complete', metadata);
@@ -177,7 +177,7 @@ describe('Operation', function() {
     });
 
     it('should only run a single pulling loop', function() {
-      var startPollingCallCount = 0;
+      let startPollingCallCount = 0;
 
       operation.startPolling_ = function() {
         startPollingCallCount++;
@@ -213,7 +213,7 @@ describe('Operation', function() {
 
     describe('could not get metadata', function() {
       it('should callback with an error', function(done) {
-        var error = new Error('Error.');
+        const error = new Error('Error.');
 
         operation.getMetadata = function(callback) {
           callback(error);
@@ -226,7 +226,7 @@ describe('Operation', function() {
       });
 
       it('should callback with the operation error', function(done) {
-        var apiResponse = {
+        const apiResponse = {
           error: {},
         };
 
@@ -242,7 +242,7 @@ describe('Operation', function() {
     });
 
     describe('operation incomplete', function() {
-      var apiResponse = {done: false};
+      const apiResponse = {done: false};
 
       beforeEach(function() {
         operation.getMetadata = function(callback) {
@@ -260,7 +260,7 @@ describe('Operation', function() {
     });
 
     describe('operation complete', function() {
-      var apiResponse = {done: true};
+      const apiResponse = {done: true};
 
       beforeEach(function() {
         operation.getMetadata = function(callback) {
@@ -279,7 +279,7 @@ describe('Operation', function() {
   });
 
   describe('startPolling_', function() {
-    var listenForEvents_;
+    let listenForEvents_;
 
     before(function() {
       listenForEvents_ = Operation.prototype.listenForEvents_;
@@ -318,7 +318,7 @@ describe('Operation', function() {
     });
 
     describe('API error', function() {
-      var error = new Error('Error.');
+      const error = new Error('Error.');
 
       beforeEach(function() {
         operation.getMetadata = function(callback) {
@@ -337,8 +337,8 @@ describe('Operation', function() {
     });
 
     describe('operation pending', function() {
-      var apiResponse = {done: false};
-      var setTimeoutCached = global.setTimeout;
+      const apiResponse = {done: false};
+      const setTimeoutCached = global.setTimeout;
 
       beforeEach(function() {
         operation.getMetadata = function(callback) {
@@ -351,8 +351,8 @@ describe('Operation', function() {
       });
 
       it('should call startPolling_ after 500 ms', function(done) {
-        var startPolling_ = operation.startPolling_;
-        var startPollingCalled = false;
+        const startPolling_ = operation.startPolling_;
+        let startPollingCalled = false;
 
         global.setTimeout = function(fn, timeoutMs) {
           fn(); // should call startPolling_
@@ -377,7 +377,7 @@ describe('Operation', function() {
     });
 
     describe('operation complete', function() {
-      var apiResponse = {done: true};
+      const apiResponse = {done: true};
 
       beforeEach(function() {
         operation.getMetadata = function(callback) {

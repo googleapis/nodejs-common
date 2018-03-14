@@ -20,16 +20,16 @@
 
 'use strict';
 
-var arrify = require('arrify');
-var extend = require('extend');
+const arrify = require('arrify');
+const extend = require('extend');
 
 /**
  * @type {module:common/util}
  * @private
  */
-var util = require('./util.js');
+const util = require('./util.js');
 
-var PROJECT_ID_TOKEN = '{{projectId}}';
+const PROJECT_ID_TOKEN = '{{projectId}}';
 
 /**
  * Service is a base class, meant to be inherited from by a "service," like
@@ -56,7 +56,7 @@ function Service(config, options) {
   this.projectIdRequired = config.projectIdRequired !== false;
   this.Promise = options.promise || Promise;
 
-  var reqCfg = extend({}, config, {
+  const reqCfg = extend({}, config, {
     projectIdRequired: this.projectIdRequired,
     projectId: this.projectId,
     credentials: options.credentials,
@@ -68,7 +68,7 @@ function Service(config, options) {
   this.authClient = this.makeAuthenticatedRequest.authClient;
   this.getCredentials = this.makeAuthenticatedRequest.getCredentials;
 
-  var isCloudFunctionEnv = !!process.env.FUNCTION_NAME;
+  const isCloudFunctionEnv = !!process.env.FUNCTION_NAME;
 
   if (isCloudFunctionEnv) {
     this.interceptors.push({
@@ -86,7 +86,7 @@ function Service(config, options) {
  * @param {function} callback - The callback function.
  */
 Service.prototype.getProjectId = function(callback) {
-  var self = this;
+  const self = this;
 
   this.authClient.getProjectId(function(err, projectId) {
     if (err) {
@@ -114,9 +114,9 @@ Service.prototype.getProjectId = function(callback) {
 Service.prototype.request_ = function(reqOpts, callback) {
   reqOpts = extend(true, {}, reqOpts);
 
-  var isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
+  const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
 
-  var uriComponents = [this.baseUrl];
+  const uriComponents = [this.baseUrl];
 
   if (this.projectIdRequired) {
     uriComponents.push('projects');
@@ -131,7 +131,7 @@ Service.prototype.request_ = function(reqOpts, callback) {
 
   reqOpts.uri = uriComponents
     .map(function(uriComponent) {
-      var trimSlashesRegex = /^\/*|\/*$/g;
+      const trimSlashesRegex = /^\/*|\/*$/g;
       return uriComponent.replace(trimSlashesRegex, '');
     })
     .join('/')
@@ -141,12 +141,12 @@ Service.prototype.request_ = function(reqOpts, callback) {
     .replace(/\/:/g, ':');
 
   // Interceptors should be called in the order they were assigned.
-  var combinedInterceptors = [].slice
+  const combinedInterceptors = [].slice
     .call(this.globalInterceptors)
     .concat(this.interceptors)
     .concat(arrify(reqOpts.interceptors_));
 
-  var interceptor;
+  let interceptor;
 
   while ((interceptor = combinedInterceptors.shift()) && interceptor.request) {
     reqOpts = interceptor.request(reqOpts);
@@ -154,7 +154,7 @@ Service.prototype.request_ = function(reqOpts, callback) {
 
   delete reqOpts.interceptors_;
 
-  var pkg = this.packageJson;
+  const pkg = this.packageJson;
   reqOpts.headers = extend({}, reqOpts.headers, {
     'User-Agent': util.getUserAgentFromPackageJson(pkg),
     'x-goog-api-client': `gl-node/${process.versions.node} gccl/${pkg.version}`,

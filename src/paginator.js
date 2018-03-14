@@ -20,17 +20,17 @@
 
 'use strict';
 
-var arrify = require('arrify');
-var concat = require('concat-stream');
-var extend = require('extend');
-var is = require('is');
-var split = require('split-array-stream');
+const arrify = require('arrify');
+const concat = require('concat-stream');
+const extend = require('extend');
+const is = require('is');
+const split = require('split-array-stream');
 
 /**
  * @type {module:common/util}
  * @private
  */
-var util = require('./util.js');
+const util = require('./util.js');
 
 /*! Developer Documentation
  *
@@ -50,7 +50,7 @@ var util = require('./util.js');
  * Methods to extend should be written to accept callbacks and return a
  * `nextQuery`.
  */
-var paginator = {};
+const paginator = {};
 
 /**
  * Cache the original method, then overwrite it on the Class's prototype.
@@ -62,14 +62,14 @@ paginator.extend = function(Class, methodNames) {
   methodNames = arrify(methodNames);
 
   methodNames.forEach(function(methodName) {
-    var originalMethod = Class.prototype[methodName];
+    const originalMethod = Class.prototype[methodName];
 
     // map the original method to a private member
     Class.prototype[methodName + '_'] = originalMethod;
 
     // overwrite the original to auto-paginate
     Class.prototype[methodName] = function() {
-      var parsedArguments = paginator.parseArguments_(arguments);
+      const parsedArguments = paginator.parseArguments_(arguments);
       return paginator.run_(parsedArguments, originalMethod.bind(this));
     };
   });
@@ -89,8 +89,8 @@ paginator.extend = function(Class, methodNames) {
  */
 paginator.streamify = function(methodName) {
   return function() {
-    var parsedArguments = paginator.parseArguments_(arguments);
-    var originalMethod = this[methodName + '_'] || this[methodName];
+    const parsedArguments = paginator.parseArguments_(arguments);
+    const originalMethod = this[methodName + '_'] || this[methodName];
 
     return paginator.runAsStream_(parsedArguments, originalMethod.bind(this));
   };
@@ -103,14 +103,14 @@ paginator.streamify = function(methodName) {
  *     method received.
  */
 paginator.parseArguments_ = function(args) {
-  var query;
-  var autoPaginate = true;
-  var maxApiCalls = -1;
-  var maxResults = -1;
-  var callback;
+  let query;
+  let autoPaginate = true;
+  let maxApiCalls = -1;
+  let maxResults = -1;
+  let callback;
 
-  var firstArgument = args[0];
-  var lastArgument = args[args.length - 1];
+  const firstArgument = args[0];
+  const lastArgument = args[args.length - 1];
 
   if (is.fn(firstArgument)) {
     callback = firstArgument;
@@ -148,7 +148,7 @@ paginator.parseArguments_ = function(args) {
     }
   }
 
-  var parsedArguments = {
+  const parsedArguments = {
     query: query || {},
     autoPaginate: autoPaginate,
     maxApiCalls: maxApiCalls,
@@ -181,9 +181,9 @@ paginator.parseArguments_ = function(args) {
  *     and returns `nextQuery` to receive more results.
  */
 paginator.run_ = function(parsedArguments, originalMethod) {
-  var query = parsedArguments.query;
-  var callback = parsedArguments.callback;
-  var autoPaginate = parsedArguments.autoPaginate;
+  const query = parsedArguments.query;
+  const callback = parsedArguments.callback;
+  const autoPaginate = parsedArguments.autoPaginate;
 
   if (autoPaginate) {
     this.runAsStream_(parsedArguments, originalMethod)
@@ -217,15 +217,15 @@ paginator.run_ = function(parsedArguments, originalMethod) {
  * @return {stream} - Readable object stream.
  */
 paginator.runAsStream_ = function(parsedArguments, originalMethod) {
-  var query = parsedArguments.query;
-  var resultsToSend = parsedArguments.maxResults;
+  let query = parsedArguments.query;
+  let resultsToSend = parsedArguments.maxResults;
 
-  var limiter = util.createLimiter(makeRequest, {
+  const limiter = util.createLimiter(makeRequest, {
     maxApiCalls: parsedArguments.maxApiCalls,
     streamOptions: parsedArguments.streamOptions,
   });
 
-  var stream = limiter.stream;
+  const stream = limiter.stream;
 
   stream.once('reading', function() {
     makeRequest(query);

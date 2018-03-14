@@ -20,15 +20,15 @@
 
 'use strict';
 
-var events = require('events');
-var extend = require('extend');
-var modelo = require('modelo');
+const events = require('events');
+const extend = require('extend');
+const modelo = require('modelo');
 
 /**
  * @type {module:common/serviceObject}
  * @private
  */
-var ServiceObject = require('./service-object.js');
+const ServiceObject = require('./service-object.js');
 
 // jscs:disable maximumLineLength
 /**
@@ -45,7 +45,7 @@ var ServiceObject = require('./service-object.js');
  */
 // jscs:enable maximumLineLength
 function Operation(config) {
-  var methods = {
+  const methods = {
     /**
      * Checks to see if an operation exists.
      */
@@ -92,7 +92,7 @@ modelo.inherits(Operation, ServiceObject, events.EventEmitter);
  * @return {promise}
  */
 Operation.prototype.promise = function() {
-  var self = this;
+  const self = this;
 
   return new self.Promise(function(resolve, reject) {
     self.on('error', reject).on('complete', function(metadata) {
@@ -112,7 +112,7 @@ Operation.prototype.promise = function() {
  * @private
  */
 Operation.prototype.listenForEvents_ = function() {
-  var self = this;
+  const self = this;
 
   this.on('newListener', function(event) {
     if (event === 'complete') {
@@ -169,7 +169,7 @@ Operation.prototype.poll_ = function(callback) {
  * @private
  */
 Operation.prototype.startPolling_ = function() {
-  var self = this;
+  const self = this;
 
   if (!this.hasActiveListeners) {
     return;
