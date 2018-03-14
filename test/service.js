@@ -16,14 +16,15 @@
 
 'use strict';
 
-var assert = require('assert');
-var extend = require('extend');
-var proxyquire = require('proxyquire').noPreserveCache();
+const assert = require('assert');
+const extend = require('extend');
+const proxyquire = require('proxyquire').noPreserveCache();
 
-var util = require('../src/util.js');
+const util = require('../src/util.js');
 
-var makeAuthenticatedRequestFactoryCache = util.makeAuthenticatedRequestFactory;
-var makeAuthenticatedRequestFactoryOverride;
+const makeAuthenticatedRequestFactoryCache =
+  util.makeAuthenticatedRequestFactory;
+let makeAuthenticatedRequestFactoryOverride;
 util.makeAuthenticatedRequestFactory = function() {
   if (makeAuthenticatedRequestFactoryOverride) {
     return makeAuthenticatedRequestFactoryOverride.apply(this, arguments);
@@ -33,10 +34,10 @@ util.makeAuthenticatedRequestFactory = function() {
 };
 
 describe('Service', function() {
-  var Service;
-  var service;
+  let Service;
+  let service;
 
-  var CONFIG = {
+  const CONFIG = {
     scopes: [],
     baseUrl: 'base-url',
     projectIdRequired: false,
@@ -46,7 +47,7 @@ describe('Service', function() {
     },
   };
 
-  var OPTIONS = {
+  const OPTIONS = {
     credentials: {},
     keyFile: {},
     email: 'email',
@@ -72,10 +73,10 @@ describe('Service', function() {
     });
 
     it('should create an authenticated request factory', function() {
-      var authenticatedRequest = {};
+      const authenticatedRequest = {};
 
       makeAuthenticatedRequestFactoryOverride = function(config) {
-        var expectedConfig = extend({}, CONFIG, {
+        const expectedConfig = extend({}, CONFIG, {
           credentials: OPTIONS.credentials,
           keyFile: OPTIONS.keyFilename,
           email: OPTIONS.email,
@@ -88,12 +89,12 @@ describe('Service', function() {
         return authenticatedRequest;
       };
 
-      var svc = new Service(CONFIG, OPTIONS);
+      const svc = new Service(CONFIG, OPTIONS);
       assert.strictEqual(svc.makeAuthenticatedRequest, authenticatedRequest);
     });
 
     it('should localize the authClient', function() {
-      var authClient = {};
+      const authClient = {};
 
       makeAuthenticatedRequestFactoryOverride = function() {
         return {
@@ -101,7 +102,7 @@ describe('Service', function() {
         };
       };
 
-      var service = new Service(CONFIG, OPTIONS);
+      const service = new Service(CONFIG, OPTIONS);
       assert.strictEqual(service.authClient, authClient);
     });
 
@@ -119,7 +120,7 @@ describe('Service', function() {
         };
       };
 
-      var service = new Service(CONFIG, OPTIONS);
+      const service = new Service(CONFIG, OPTIONS);
       assert.strictEqual(service.getCredentials, getCredentials);
     });
 
@@ -128,12 +129,12 @@ describe('Service', function() {
     });
 
     it('should preserve the original global interceptors', function() {
-      var globalInterceptors = [];
+      const globalInterceptors = [];
 
-      var options = extend({}, OPTIONS);
+      const options = extend({}, OPTIONS);
       options.interceptors_ = globalInterceptors;
 
-      var service = new Service({}, options);
+      const service = new Service({}, options);
       assert.strictEqual(service.globalInterceptors, globalInterceptors);
     });
 
@@ -150,7 +151,7 @@ describe('Service', function() {
     });
 
     it('should default projectId with placeholder', function() {
-      var service = new Service({}, {});
+      const service = new Service({}, {});
       assert.strictEqual(service.projectId, '{{projectId}}');
     });
 
@@ -159,13 +160,13 @@ describe('Service', function() {
     });
 
     it('should default projectIdRequired to true', function() {
-      var service = new Service({}, OPTIONS);
+      const service = new Service({}, OPTIONS);
       assert.strictEqual(service.projectIdRequired, true);
     });
 
     it('should localize the Promise object', function() {
-      var FakePromise = function() {};
-      var service = new Service({}, {promise: FakePromise});
+      const FakePromise = function() {};
+      const service = new Service({}, {promise: FakePromise});
 
       assert.strictEqual(service.Promise, FakePromise);
     });
@@ -176,12 +177,12 @@ describe('Service', function() {
 
     it('should disable forever agent for Cloud Function envs', function() {
       process.env.FUNCTION_NAME = 'cloud-function-name';
-      var service = new Service(CONFIG, OPTIONS);
+      const service = new Service(CONFIG, OPTIONS);
       delete process.env.FUNCTION_NAME;
 
-      var interceptor = service.interceptors[0];
+      const interceptor = service.interceptors[0];
 
-      var modifiedReqOpts = interceptor.request({forever: true});
+      const modifiedReqOpts = interceptor.request({forever: true});
       assert.strictEqual(modifiedReqOpts.forever, false);
     });
   });
@@ -198,7 +199,7 @@ describe('Service', function() {
     });
 
     it('should return error from auth client', function(done) {
-      var error = new Error('Error.');
+      const error = new Error('Error.');
 
       service.authClient = {
         getProjectId: function(callback) {
@@ -213,8 +214,8 @@ describe('Service', function() {
     });
 
     it('should update and return the project ID if found', function(done) {
-      var service = new Service({}, {});
-      var projectId = 'detected-project-id';
+      const service = new Service({}, {});
+      const projectId = 'detected-project-id';
 
       service.authClient = {
         getProjectId: function(callback) {
@@ -232,7 +233,7 @@ describe('Service', function() {
   });
 
   describe('request_', function() {
-    var reqOpts;
+    let reqOpts;
 
     beforeEach(function() {
       reqOpts = {
@@ -241,7 +242,7 @@ describe('Service', function() {
     });
 
     it('should compose the correct request', function(done) {
-      var expectedUri = [service.baseUrl, reqOpts.uri].join('/');
+      const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
       service.makeAuthenticatedRequest = function(reqOpts_, callback) {
         assert.notStrictEqual(reqOpts_, reqOpts);
@@ -254,7 +255,7 @@ describe('Service', function() {
     });
 
     it('should support absolute uris', function(done) {
-      var expectedUri = 'http://www.google.com';
+      const expectedUri = 'http://www.google.com';
 
       service.makeAuthenticatedRequest = function(reqOpts) {
         assert.strictEqual(reqOpts.uri, expectedUri);
@@ -265,11 +266,11 @@ describe('Service', function() {
     });
 
     it('should trim slashes', function(done) {
-      var reqOpts = {
+      const reqOpts = {
         uri: '//1/2//',
       };
 
-      var expectedUri = [service.baseUrl, '1/2'].join('/');
+      const expectedUri = [service.baseUrl, '1/2'].join('/');
 
       service.makeAuthenticatedRequest = function(reqOpts_) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
@@ -280,11 +281,11 @@ describe('Service', function() {
     });
 
     it('should replace path/:subpath with path:subpath', function(done) {
-      var reqOpts = {
+      const reqOpts = {
         uri: ':test',
       };
 
-      var expectedUri = service.baseUrl + reqOpts.uri;
+      const expectedUri = service.baseUrl + reqOpts.uri;
 
       service.makeAuthenticatedRequest = function(reqOpts_) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
@@ -295,9 +296,9 @@ describe('Service', function() {
     });
 
     it('should add the User Agent', function(done) {
-      var userAgent = 'user-agent/0.0.0';
+      const userAgent = 'user-agent/0.0.0';
 
-      var getUserAgentFn = util.getUserAgentFromPackageJson;
+      const getUserAgentFn = util.getUserAgentFromPackageJson;
       util.getUserAgentFromPackageJson = function(packageJson) {
         util.getUserAgentFromPackageJson = getUserAgentFn;
         assert.strictEqual(packageJson, service.packageJson);
@@ -314,7 +315,7 @@ describe('Service', function() {
 
     it('should add the api-client header', function(done) {
       service.makeAuthenticatedRequest = function(reqOpts) {
-        var pkg = service.packageJson;
+        const pkg = service.packageJson;
         assert.strictEqual(
           reqOpts.headers['x-goog-api-client'],
           `gl-node/${process.versions.node} gccl/${pkg.version}`
@@ -328,10 +329,10 @@ describe('Service', function() {
     describe('projectIdRequired', function() {
       describe('false', function() {
         it('should include the projectId', function(done) {
-          var config = extend({}, CONFIG, {projectIdRequired: false});
-          var service = new Service(config, OPTIONS);
+          const config = extend({}, CONFIG, {projectIdRequired: false});
+          const service = new Service(config, OPTIONS);
 
-          var expectedUri = [service.baseUrl, reqOpts.uri].join('/');
+          const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
           service.makeAuthenticatedRequest = function(reqOpts_) {
             assert.strictEqual(reqOpts_.uri, expectedUri);
@@ -345,10 +346,10 @@ describe('Service', function() {
 
       describe('true', function() {
         it('should not include the projectId', function(done) {
-          var config = extend({}, CONFIG, {projectIdRequired: true});
-          var service = new Service(config, OPTIONS);
+          const config = extend({}, CONFIG, {projectIdRequired: true});
+          const service = new Service(config, OPTIONS);
 
-          var expectedUri = [
+          const expectedUri = [
             service.baseUrl,
             'projects',
             service.projectId,
@@ -368,7 +369,7 @@ describe('Service', function() {
 
     describe('request interceptors', function() {
       it('should call the request interceptors in order', function(done) {
-        var reqOpts = {
+        const reqOpts = {
           uri: '',
           interceptors_: [],
         };
@@ -434,13 +435,13 @@ describe('Service', function() {
           return reqOpts;
         }
 
-        var globalInterceptors = [{request: request}];
-        var localInterceptors = [{request: request}];
-        var requestInterceptors = [{request: request}];
+        const globalInterceptors = [{request: request}];
+        const localInterceptors = [{request: request}];
+        const requestInterceptors = [{request: request}];
 
-        var originalGlobalInterceptors = [].slice.call(globalInterceptors);
-        var originalLocalInterceptors = [].slice.call(localInterceptors);
-        var originalRequestInterceptors = [].slice.call(requestInterceptors);
+        const originalGlobalInterceptors = [].slice.call(globalInterceptors);
+        const originalLocalInterceptors = [].slice.call(localInterceptors);
+        const originalRequestInterceptors = [].slice.call(requestInterceptors);
 
         service.makeAuthenticatedRequest = function() {
           assert.deepEqual(globalInterceptors, originalGlobalInterceptors);
@@ -477,7 +478,7 @@ describe('Service', function() {
   });
 
   describe('request', function() {
-    var request_;
+    let request_;
 
     before(function() {
       request_ = Service.prototype.request_;
@@ -488,7 +489,7 @@ describe('Service', function() {
     });
 
     it('should call through to _request', function(done) {
-      var fakeOpts = {};
+      const fakeOpts = {};
 
       Service.prototype.request_ = function(reqOpts, callback) {
         assert.strictEqual(reqOpts, fakeOpts);
@@ -500,7 +501,7 @@ describe('Service', function() {
   });
 
   describe('requestStream', function() {
-    var request_;
+    let request_;
 
     before(function() {
       request_ = Service.prototype.request_;
@@ -511,15 +512,15 @@ describe('Service', function() {
     });
 
     it('should return whatever _request returns', function() {
-      var fakeOpts = {};
-      var fakeStream = {};
+      const fakeOpts = {};
+      const fakeStream = {};
 
       Service.prototype.request_ = function(reqOpts) {
         assert.strictEqual(reqOpts, fakeOpts);
         return fakeStream;
       };
 
-      var stream = service.requestStream(fakeOpts);
+      const stream = service.requestStream(fakeOpts);
       assert.strictEqual(stream, fakeStream);
     });
   });

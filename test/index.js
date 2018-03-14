@@ -16,18 +16,18 @@
 
 'use strict';
 
-var assert = require('assert');
-var proxyquire = require('proxyquire');
+const assert = require('assert');
+const proxyquire = require('proxyquire');
 
-var fakeLogger = {};
-var fakeOperation = {};
-var fakePaginator = {};
-var fakeService = {};
-var fakeServiceObject = {};
-var fakeUtil = {};
+const fakeLogger = {};
+const fakeOperation = {};
+const fakePaginator = {};
+const fakeService = {};
+const fakeServiceObject = {};
+const fakeUtil = {};
 
 describe('common', function() {
-  var common;
+  let common;
 
   before(function() {
     common = proxyquire('../src/index.js', {

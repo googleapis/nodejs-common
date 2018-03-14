@@ -16,25 +16,25 @@
 
 'use strict';
 
-var assert = require('assert');
-var duplexify;
-var extend = require('extend');
-var format = require('string-format-obj');
-var googleAuth = require('google-auto-auth');
-var is = require('is');
-var proxyquire = require('proxyquire');
-var request = require('request');
-var retryRequest = require('retry-request');
-var stream = require('stream');
-var streamEvents = require('stream-events');
+const assert = require('assert');
+let duplexify;
+const extend = require('extend');
+const format = require('string-format-obj');
+const googleAuth = require('google-auto-auth');
+const is = require('is');
+const proxyquire = require('proxyquire');
+const request = require('request');
+const retryRequest = require('retry-request');
+const stream = require('stream');
+const streamEvents = require('stream-events');
 
-var googleAutoAuthOverride;
+let googleAutoAuthOverride;
 function fakeGoogleAutoAuth() {
   return (googleAutoAuthOverride || googleAuth).apply(null, arguments);
 }
 
-var REQUEST_DEFAULT_CONF;
-var requestOverride;
+let REQUEST_DEFAULT_CONF;
+let requestOverride;
 function fakeRequest() {
   return (requestOverride || request).apply(null, arguments);
 }
@@ -45,19 +45,19 @@ fakeRequest.defaults = function(defaultConfiguration) {
   return fakeRequest;
 };
 
-var retryRequestOverride;
+let retryRequestOverride;
 function fakeRetryRequest() {
   return (retryRequestOverride || retryRequest).apply(null, arguments);
 }
 
-var streamEventsOverride;
+let streamEventsOverride;
 function fakeStreamEvents() {
   return (streamEventsOverride || streamEvents).apply(null, arguments);
 }
 
 describe('common/util', function() {
-  var util;
-  var utilOverrides = {};
+  let util;
+  let utilOverrides = {};
 
   before(function() {
     util = proxyquire('../src/util', {
@@ -66,7 +66,7 @@ describe('common/util', function() {
       'retry-request': fakeRetryRequest,
       'stream-events': fakeStreamEvents,
     });
-    var utilCached = extend(true, {}, util);
+    const utilCached = extend(true, {}, util);
 
     // Override all util methods, allowing them to be mocked. Overrides are
     // removed before each test.
@@ -106,7 +106,7 @@ describe('common/util', function() {
   });
 
   it('should export an error for module instantiation errors', function() {
-    var errorMessage = format(
+    const errorMessage = format(
       [
         'Sorry, we cannot connect to Cloud Services without a project ID.',
         'You may specify one with an environment variable named',
@@ -119,20 +119,20 @@ describe('common/util', function() {
       }
     );
 
-    var missingProjectIdError = new Error(errorMessage);
+    const missingProjectIdError = new Error(errorMessage);
     assert.deepEqual(util.missingProjectIdError, missingProjectIdError);
   });
 
   describe('ApiError', function() {
     it('should build correct ApiError', function() {
-      var error = {
+      const error = {
         errors: [new Error(), new Error()],
         code: 100,
         message: 'Uh oh',
         response: {a: 'b', c: 'd'},
       };
 
-      var apiError = new util.ApiError(error);
+      const apiError = new util.ApiError(error);
 
       assert.strictEqual(apiError.errors, error.errors);
       assert.strictEqual(apiError.code, error.code);
@@ -141,24 +141,24 @@ describe('common/util', function() {
     });
 
     it('should detect ApiError message from response body', function() {
-      var errorMessage = 'API error message';
+      const errorMessage = 'API error message';
 
-      var error = {
+      const error = {
         errors: [new Error(errorMessage)],
         code: 100,
         response: {a: 'b', c: 'd'},
       };
 
-      var apiError = new util.ApiError(error);
+      const apiError = new util.ApiError(error);
 
       assert.strictEqual(apiError.message, errorMessage);
     });
 
     it('should parse the response body for errors', function() {
-      var error = new Error('Error.');
-      var errors = [error, error];
+      const error = new Error('Error.');
+      const errors = [error, error];
 
-      var errorBody = {
+      const errorBody = {
         response: {
           body: JSON.stringify({
             error: {
@@ -168,36 +168,39 @@ describe('common/util', function() {
         },
       };
 
-      var apiError = new util.ApiError(errorBody);
+      const apiError = new util.ApiError(errorBody);
 
       assert.deepEqual(apiError.errors, errors);
     });
 
     it('should append the custom error message', function() {
-      var errorMessage = 'API error message';
-      var customErrorMessage = 'Custom error message';
-      var expectedErrorMessage = [customErrorMessage, errorMessage].join(' - ');
+      const errorMessage = 'API error message';
+      const customErrorMessage = 'Custom error message';
+      const expectedErrorMessage = [customErrorMessage, errorMessage].join(
+        ' - '
+      );
 
-      var error = {
+      const error = {
         errors: [new Error(errorMessage)],
         code: 100,
         response: {a: 'b', c: 'd'},
         message: customErrorMessage,
       };
 
-      var apiError = new util.ApiError(error);
+      const apiError = new util.ApiError(error);
 
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });
 
     it('should parse and append the decoded response body', function() {
-      var errorMessage = 'API error message';
-      var responseBodyMsg = 'Response body message &lt;';
-      var expectedErrorMessage = [errorMessage, 'Response body message <'].join(
-        ' - '
-      );
+      const errorMessage = 'API error message';
+      const responseBodyMsg = 'Response body message &lt;';
+      const expectedErrorMessage = [
+        errorMessage,
+        'Response body message <',
+      ].join(' - ');
 
-      var error = {
+      const error = {
         message: errorMessage,
         code: 100,
         response: {
@@ -205,7 +208,7 @@ describe('common/util', function() {
         },
       };
 
-      var apiError = new util.ApiError(error);
+      const apiError = new util.ApiError(error);
 
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });

@@ -20,16 +20,16 @@
 
 'use strict';
 
-var arrify = require('arrify');
-var exec = require('methmeth');
-var extend = require('extend');
-var is = require('is');
+const arrify = require('arrify');
+const exec = require('methmeth');
+const extend = require('extend');
+const is = require('is');
 
 /**
  * @type {module:common/util}
  * @private
  */
-var util = require('./util.js');
+const util = require('./util.js');
 
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
@@ -61,7 +61,7 @@ var util = require('./util.js');
  *     instance of Storage if the object is Bucket.
  */
 function ServiceObject(config) {
-  var self = this;
+  const self = this;
 
   this.metadata = {};
 
@@ -74,7 +74,7 @@ function ServiceObject(config) {
   this.Promise = this.parent.Promise;
 
   if (config.methods) {
-    var allMethodNames = Object.keys(ServiceObject.prototype);
+    const allMethodNames = Object.keys(ServiceObject.prototype);
     allMethodNames
       .filter(function(methodName) {
         return (
@@ -102,8 +102,8 @@ function ServiceObject(config) {
  * @param {object} callback.apiResponse - The full API response.
  */
 ServiceObject.prototype.create = function(options, callback) {
-  var self = this;
-  var args = [this.id];
+  const self = this;
+  const args = [this.id];
 
   if (is.fn(options)) {
     callback = options;
@@ -116,7 +116,7 @@ ServiceObject.prototype.create = function(options, callback) {
   // Wrap the callback to return *this* instance of the object, not the newly-
   // created one.
   function onCreate(err, instance) {
-    var args = [].slice.call(arguments);
+    const args = [].slice.call(arguments);
 
     if (!err) {
       self.metadata = instance.metadata;
@@ -139,10 +139,10 @@ ServiceObject.prototype.create = function(options, callback) {
  * @param {object} callback.apiResponse - The full API response.
  */
 ServiceObject.prototype.delete = function(callback) {
-  var methodConfig = this.methods.delete || {};
+  const methodConfig = this.methods.delete || {};
   callback = callback || util.noop;
 
-  var reqOpts = extend(
+  const reqOpts = extend(
     {
       method: 'DELETE',
       uri: '',
@@ -194,7 +194,7 @@ ServiceObject.prototype.exists = function(callback) {
  * @param {object} callback.apiResponse - The full API response.
  */
 ServiceObject.prototype.get = function(config, callback) {
-  var self = this;
+  const self = this;
 
   if (is.fn(config)) {
     callback = config;
@@ -203,7 +203,7 @@ ServiceObject.prototype.get = function(config, callback) {
 
   config = config || {};
 
-  var autoCreate = config.autoCreate && is.fn(this.create);
+  const autoCreate = config.autoCreate && is.fn(this.create);
   delete config.autoCreate;
 
   function onCreate(err, instance, apiResponse) {
@@ -223,7 +223,7 @@ ServiceObject.prototype.get = function(config, callback) {
   this.getMetadata(function(err, metadata) {
     if (err) {
       if (err.code === 404 && autoCreate) {
-        var args = [];
+        const args = [];
 
         if (!is.empty(config)) {
           args.push(config);
@@ -252,11 +252,11 @@ ServiceObject.prototype.get = function(config, callback) {
  * @param {object} callback.apiResponse - The full API response.
  */
 ServiceObject.prototype.getMetadata = function(callback) {
-  var self = this;
+  const self = this;
 
-  var methodConfig = this.methods.getMetadata || {};
+  const methodConfig = this.methods.getMetadata || {};
 
-  var reqOpts = extend(
+  const reqOpts = extend(
     {
       uri: '',
     },
@@ -287,13 +287,13 @@ ServiceObject.prototype.getMetadata = function(callback) {
  * @param {object} callback.apiResponse - The full API response.
  */
 ServiceObject.prototype.setMetadata = function(metadata, callback) {
-  var self = this;
+  const self = this;
 
   callback = callback || util.noop;
 
-  var methodConfig = this.methods.setMetadata || {};
+  const methodConfig = this.methods.setMetadata || {};
 
-  var reqOpts = extend(
+  const reqOpts = extend(
     true,
     {
       method: 'PATCH',
@@ -329,9 +329,9 @@ ServiceObject.prototype.setMetadata = function(metadata, callback) {
 ServiceObject.prototype.request_ = function(reqOpts, callback) {
   reqOpts = extend(true, {}, reqOpts);
 
-  var isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
+  const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
 
-  var uriComponents = [this.baseUrl, this.id || '', reqOpts.uri];
+  const uriComponents = [this.baseUrl, this.id || '', reqOpts.uri];
 
   if (isAbsoluteUrl) {
     uriComponents.splice(0, uriComponents.indexOf(reqOpts.uri));
@@ -340,13 +340,13 @@ ServiceObject.prototype.request_ = function(reqOpts, callback) {
   reqOpts.uri = uriComponents
     .filter(exec('trim')) // Limit to non-empty strings.
     .map(function(uriComponent) {
-      var trimSlashesRegex = /^\/*|\/*$/g;
+      const trimSlashesRegex = /^\/*|\/*$/g;
       return uriComponent.replace(trimSlashesRegex, '');
     })
     .join('/');
 
-  var childInterceptors = arrify(reqOpts.interceptors_);
-  var localInterceptors = [].slice.call(this.interceptors);
+  const childInterceptors = arrify(reqOpts.interceptors_);
+  const localInterceptors = [].slice.call(this.interceptors);
 
   reqOpts.interceptors_ = childInterceptors.concat(localInterceptors);
 

@@ -20,14 +20,14 @@
 
 'use strict';
 
-var createErrorClass = require('create-error-class');
-var duplexify = require('duplexify');
-var ent = require('ent');
-var extend = require('extend');
-var format = require('string-format-obj');
-var googleAuth = require('google-auto-auth');
-var is = require('is');
-var request = require('request').defaults({
+const createErrorClass = require('create-error-class');
+const duplexify = require('duplexify');
+const ent = require('ent');
+const extend = require('extend');
+const format = require('string-format-obj');
+const googleAuth = require('google-auto-auth');
+const is = require('is');
+const request = require('request').defaults({
   timeout: 60000,
   gzip: true,
   forever: true,
@@ -35,14 +35,14 @@ var request = require('request').defaults({
     maxSockets: Infinity,
   },
 });
-var retryRequest = require('retry-request');
-var streamEvents = require('stream-events');
-var through = require('through2');
-var uniq = require('array-uniq');
+const retryRequest = require('retry-request');
+const streamEvents = require('stream-events');
+const through = require('through2');
+const uniq = require('array-uniq');
 
-var util = module.exports;
+const util = module.exports;
 
-var errorMessage = format(
+const errorMessage = format(
   [
     'Sorry, we cannot connect to Cloud Services without a project ID.',
     'You may specify one with an environment variable named "GCLOUD_PROJECT".',
@@ -55,7 +55,7 @@ var errorMessage = format(
   }
 );
 
-var missingProjectIdError = new Error(errorMessage);
+const missingProjectIdError = new Error(errorMessage);
 
 util.missingProjectIdError = missingProjectIdError;
 
@@ -87,7 +87,7 @@ util.ApiError = createErrorClass('ApiError', function(errorBody) {
     this.errors = errorBody.errors;
   }
 
-  var messages = [];
+  const messages = [];
 
   if (errorBody.message) {
     messages.push(errorBody.message);
@@ -110,12 +110,12 @@ util.ApiError = createErrorClass('ApiError', function(errorBody) {
  * @param {object} b - Error object.
  */
 util.PartialFailureError = createErrorClass('PartialFailureError', function(b) {
-  var errorObject = b;
+  const errorObject = b;
 
   this.errors = errorObject.errors;
   this.response = errorObject.response;
 
-  var defaultErrorMessage = 'A failure occurred during this request.';
+  const defaultErrorMessage = 'A failure occurred during this request.';
   this.message = errorObject.message || defaultErrorMessage;
 });
 
@@ -130,7 +130,7 @@ util.PartialFailureError = createErrorClass('PartialFailureError', function(b) {
 function handleResp(err, resp, body, callback) {
   callback = callback || util.noop;
 
-  var parsedResp = extend(
+  const parsedResp = extend(
     true,
     {err: err || null},
     resp && util.parseHttpRespMessage(resp),
@@ -152,7 +152,7 @@ util.handleResp = handleResp;
  * @param {object} parsedHttpRespMessage.resp - The original response object.
  */
 function parseHttpRespMessage(httpRespMessage) {
-  var parsedHttpRespMessage = {
+  const parsedHttpRespMessage = {
     resp: httpRespMessage,
   };
 
@@ -182,7 +182,7 @@ util.parseHttpRespMessage = parseHttpRespMessage;
  *     returned here, otherwise the original value.
  */
 function parseHttpRespBody(body) {
-  var parsedHttpRespBody = {
+  const parsedHttpRespBody = {
     body: body,
   };
 
@@ -226,19 +226,19 @@ util.parseHttpRespBody = parseHttpRespBody;
 function makeWritableStream(dup, options, onComplete) {
   onComplete = onComplete || util.noop;
 
-  var writeStream = through();
+  const writeStream = through();
   dup.setWritable(writeStream);
 
-  var defaultReqOpts = {
+  const defaultReqOpts = {
     method: 'POST',
     qs: {
       uploadType: 'multipart',
     },
   };
 
-  var metadata = options.metadata || {};
+  const metadata = options.metadata || {};
 
-  var reqOpts = extend(true, defaultReqOpts, options.request, {
+  const reqOpts = extend(true, defaultReqOpts, options.request, {
     multipart: [
       {
         'Content-Type': 'application/json',
@@ -290,8 +290,8 @@ function shouldRetryRequest(err) {
     }
 
     if (err.errors) {
-      for (var i in err.errors) {
-        var reason = err.errors[i].reason;
+      for (const i in err.errors) {
+        const reason = err.errors[i].reason;
         if (reason === 'rateLimitExceeded') {
           return true;
         }
@@ -330,13 +330,13 @@ util.shouldRetryRequest = shouldRetryRequest;
 function makeAuthenticatedRequestFactory(config) {
   config = config || {};
 
-  var googleAutoAuthConfig = extend({}, config);
+  const googleAutoAuthConfig = extend({}, config);
 
   if (googleAutoAuthConfig.projectId === '{{projectId}}') {
     delete googleAutoAuthConfig.projectId;
   }
 
-  var authClient = googleAuth(googleAutoAuthConfig);
+  const authClient = googleAuth(googleAutoAuthConfig);
 
   /**
    * The returned function that will make an authenticated request.
@@ -349,9 +349,9 @@ function makeAuthenticatedRequestFactory(config) {
    *     request options.
    */
   function makeAuthenticatedRequest(reqOpts, options) {
-    var stream;
-    var reqConfig = extend({}, config);
-    var activeRequest_;
+    let stream;
+    const reqConfig = extend({}, config);
+    let activeRequest_;
 
     if (!options) {
       stream = duplexify();
@@ -359,7 +359,7 @@ function makeAuthenticatedRequestFactory(config) {
     }
 
     function onAuthenticated(err, authenticatedReqOpts) {
-      var autoAuthFailed =
+      const autoAuthFailed =
         err &&
         err.message.indexOf('Could not load the default credentials') > -1;
 
@@ -369,7 +369,7 @@ function makeAuthenticatedRequestFactory(config) {
       }
 
       if (!err || autoAuthFailed) {
-        var projectId = authClient.projectId;
+        let projectId = authClient.projectId;
 
         if (config.projectId && config.projectId !== '{{projectId}}') {
           projectId = config.projectId;
@@ -465,21 +465,21 @@ function makeRequest(reqOpts, config, callback) {
 
   config = config || {};
 
-  var options = {
+  const options = {
     request: request,
 
     retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
 
     shouldRetryFn: function(httpRespMessage) {
-      var err = util.parseHttpRespMessage(httpRespMessage).err;
+      const err = util.parseHttpRespMessage(httpRespMessage).err;
       return err && util.shouldRetryRequest(err);
     },
   };
 
   if (config.stream) {
-    var dup = config.stream;
-    var requestStream;
-    var isGetRequest = (reqOpts.method || 'GET').toUpperCase() === 'GET';
+    const dup = config.stream;
+    let requestStream;
+    const isGetRequest = (reqOpts.method || 'GET').toUpperCase() === 'GET';
 
     if (isGetRequest) {
       requestStream = retryRequest(reqOpts, options);
@@ -555,7 +555,7 @@ function replaceProjectIdToken(value, projectId) {
   }
 
   if (is.object(value) && is.fn(value.hasOwnProperty)) {
-    for (var opt in value) {
+    for (const opt in value) {
       if (value.hasOwnProperty(opt)) {
         value[opt] = replaceProjectIdToken(value[opt], projectId);
       }
@@ -592,23 +592,23 @@ function extendGlobalConfig(globalConfig, overrides) {
   globalConfig = globalConfig || {};
   overrides = overrides || {};
 
-  var defaultConfig = {};
+  const defaultConfig = {};
 
   if (process.env.GCLOUD_PROJECT) {
     defaultConfig.projectId = process.env.GCLOUD_PROJECT;
   }
 
-  var options = extend({}, globalConfig);
+  const options = extend({}, globalConfig);
 
-  var hasGlobalConnection = options.credentials || options.keyFilename;
-  var isOverridingConnection = overrides.credentials || overrides.keyFilename;
+  const hasGlobalConnection = options.credentials || options.keyFilename;
+  const isOverridingConnection = overrides.credentials || overrides.keyFilename;
 
   if (hasGlobalConnection && isOverridingConnection) {
     delete options.credentials;
     delete options.keyFilename;
   }
 
-  var extendedConfig = extend(true, defaultConfig, options, overrides);
+  const extendedConfig = extend(true, defaultConfig, options, overrides);
 
   // Preserve the original (not cloned) interceptors.
   extendedConfig.interceptors_ = globalConfig.interceptors_;
@@ -627,7 +627,7 @@ util.extendGlobalConfig = extendGlobalConfig;
  * @return {object} config - Merged and validated configuration.
  */
 function normalizeArguments(globalContext, localConfig) {
-  var globalConfig = globalContext && globalContext.config_;
+  const globalConfig = globalContext && globalContext.config_;
 
   return util.extendGlobalConfig(globalConfig, localConfig);
 }
@@ -647,10 +647,10 @@ util.normalizeArguments = normalizeArguments;
 function createLimiter(makeRequestFn, options) {
   options = options || {};
 
-  var stream = streamEvents(through.obj(options.streamOptions));
+  const stream = streamEvents(through.obj(options.streamOptions));
 
-  var requestsMade = 0;
-  var requestsToMake = -1;
+  let requestsMade = 0;
+  let requestsToMake = -1;
 
   if (is.number(options.maxApiCalls)) {
     requestsToMake = options.maxApiCalls;
@@ -681,16 +681,17 @@ function isCustomType(unknown, module) {
     return obj.constructor && obj.constructor.name.toLowerCase();
   }
 
-  var moduleNameParts = module.split('/');
+  const moduleNameParts = module.split('/');
 
-  var parentModuleName = moduleNameParts[0] && moduleNameParts[0].toLowerCase();
-  var subModuleName = moduleNameParts[1] && moduleNameParts[1].toLowerCase();
+  const parentModuleName =
+    moduleNameParts[0] && moduleNameParts[0].toLowerCase();
+  const subModuleName = moduleNameParts[1] && moduleNameParts[1].toLowerCase();
 
   if (subModuleName && getConstructorName(unknown) !== subModuleName) {
     return false;
   }
 
-  var walkingModule = unknown;
+  let walkingModule = unknown;
   do {
     if (getConstructorName(walkingModule) === parentModuleName) {
       return true;
@@ -709,7 +710,7 @@ util.isCustomType = isCustomType;
  * @return {string} userAgent - The formatted User-Agent string.
  */
 function getUserAgentFromPackageJson(packageJson) {
-  var hyphenatedPackageName = packageJson.name
+  const hyphenatedPackageName = packageJson.name
     .replace('@google-cloud', 'gcloud-node') // For legacy purposes.
     .replace('/', '-'); // For UA spec-compliance purposes.
 
@@ -734,14 +735,14 @@ function promisify(originalMethod, options) {
 
   options = options || {};
 
-  var slice = Array.prototype.slice;
+  const slice = Array.prototype.slice;
 
-  var wrapper = function() {
-    var context = this;
-    var last;
+  const wrapper = function() {
+    const context = this;
+    let last;
 
     for (last = arguments.length - 1; last >= 0; last--) {
-      var arg = arguments[last];
+      const arg = arguments[last];
 
       if (is.undefined(arg)) {
         continue; // skip trailing undefined.
@@ -755,9 +756,9 @@ function promisify(originalMethod, options) {
     }
 
     // peel trailing undefined.
-    var args = slice.call(arguments, 0, last + 1);
+    const args = slice.call(arguments, 0, last + 1);
 
-    var PromiseCtor = Promise;
+    let PromiseCtor = Promise;
 
     // Because dedupe will likely create a single install of
     // @google-cloud/common to be shared amongst all modules, we need to
@@ -768,8 +769,8 @@ function promisify(originalMethod, options) {
 
     return new PromiseCtor(function(resolve, reject) {
       args.push(function() {
-        var callbackArgs = slice.call(arguments);
-        var err = callbackArgs.shift();
+        const callbackArgs = slice.call(arguments);
+        const err = callbackArgs.shift();
 
         if (err) {
           return reject(err);
@@ -800,9 +801,9 @@ util.promisify = promisify;
  * @param {object=} options - Configuration object.
  */
 function promisifyAll(Class, options) {
-  var exclude = (options && options.exclude) || [];
+  const exclude = (options && options.exclude) || [];
 
-  var methods = Object.keys(Class.prototype).filter(function(methodName) {
+  const methods = Object.keys(Class.prototype).filter(function(methodName) {
     return (
       is.fn(Class.prototype[methodName]) && // is it a function?
       !/(^_|(Stream|_)|promise$)/.test(methodName) && // is it promisable?
@@ -811,7 +812,7 @@ function promisifyAll(Class, options) {
   });
 
   methods.forEach(function(methodName) {
-    var originalMethod = Class.prototype[methodName];
+    const originalMethod = Class.prototype[methodName];
 
     if (!originalMethod.promisified_) {
       Class.prototype[methodName] = util.promisify(originalMethod, options);
