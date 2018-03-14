@@ -683,7 +683,8 @@ function isCustomType(unknown, module) {
 
   const moduleNameParts = module.split('/');
 
-  const parentModuleName = moduleNameParts[0] && moduleNameParts[0].toLowerCase();
+  const parentModuleName =
+    moduleNameParts[0] && moduleNameParts[0].toLowerCase();
   const subModuleName = moduleNameParts[1] && moduleNameParts[1].toLowerCase();
 
   if (subModuleName && getConstructorName(unknown) !== subModuleName) {

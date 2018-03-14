@@ -22,7 +22,8 @@ const proxyquire = require('proxyquire').noPreserveCache();
 
 const util = require('../src/util.js');
 
-const makeAuthenticatedRequestFactoryCache = util.makeAuthenticatedRequestFactory;
+const makeAuthenticatedRequestFactoryCache =
+  util.makeAuthenticatedRequestFactory;
 let makeAuthenticatedRequestFactoryOverride;
 util.makeAuthenticatedRequestFactory = function() {
   if (makeAuthenticatedRequestFactoryOverride) {

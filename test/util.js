@@ -176,7 +176,9 @@ describe('common/util', function() {
     it('should append the custom error message', function() {
       const errorMessage = 'API error message';
       const customErrorMessage = 'Custom error message';
-      const expectedErrorMessage = [customErrorMessage, errorMessage].join(' - ');
+      const expectedErrorMessage = [customErrorMessage, errorMessage].join(
+        ' - '
+      );
 
       const error = {
         errors: [new Error(errorMessage)],
@@ -193,9 +195,10 @@ describe('common/util', function() {
     it('should parse and append the decoded response body', function() {
       const errorMessage = 'API error message';
       const responseBodyMsg = 'Response body message &lt;';
-      const expectedErrorMessage = [errorMessage, 'Response body message <'].join(
-        ' - '
-      );
+      const expectedErrorMessage = [
+        errorMessage,
+        'Response body message <',
+      ].join(' - ');
 
       const error = {
         message: errorMessage,
