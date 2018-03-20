@@ -55,9 +55,17 @@ const errorMessage = format(
   }
 );
 
-const missingProjectIdError = new Error(errorMessage);
-
-util.missingProjectIdError = missingProjectIdError;
+/**
+ * Custom error type for missing project ID errors.
+ */
+util.MissingProjectIdError = createErrorClass(
+  'MissingProjectIdError',
+  function() {
+    this.message = `Sorry, we cannot connect to Cloud Services without a project
+    ID. You may specify one with an environment variable named
+    "GOOGLE_CLOUD_PROJECT".`.replace(/ +/g, ' ');
+  }
+);
 
 /**
  * No op.
@@ -564,7 +572,7 @@ function replaceProjectIdToken(value, projectId) {
 
   if (is.string(value) && value.indexOf('{{projectId}}') > -1) {
     if (!projectId || projectId === '{{projectId}}') {
-      throw util.missingProjectIdError;
+      throw new MissingProjectIdError();
     }
     value = value.replace(/{{projectId}}/g, projectId);
   }
