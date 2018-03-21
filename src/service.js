@@ -47,7 +47,6 @@ const PROJECT_ID_TOKEN = '{{projectId}}';
  */
 function Service(config, options) {
   options = options || {};
-  var self = this;
 
   util.privatize(this, 'baseUrl', config.baseUrl);
   util.privatize(this, 'globalInterceptors', arrify(options.interceptors_));
