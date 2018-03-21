@@ -19,7 +19,6 @@
 const assert = require('assert');
 let duplexify;
 const extend = require('extend');
-const format = require('string-format-obj');
 const googleAuth = require('google-auto-auth');
 const is = require('is');
 const proxyquire = require('proxyquire');
@@ -106,21 +105,12 @@ describe('common/util', function() {
   });
 
   it('should export an error for module instantiation errors', function() {
-    const errorMessage = format(
-      [
-        'Sorry, we cannot connect to Cloud Services without a project ID.',
-        'You may specify one with an environment variable named',
-        '"GCLOUD_PROJECT". See {baseUrl}/{path} for a detailed guide on creating',
-        'an authenticated connection.',
-      ].join(' '),
-      {
-        baseUrl: 'https://googlecloudplatform.github.io/google-cloud-node/#',
-        path: 'docs/guides/authentication',
-      }
-    );
+    const errorMessage = `Sorry, we cannot connect to Cloud Services without a project
+    ID. You may specify one with an environment variable named
+    "GOOGLE_CLOUD_PROJECT".`.replace(/ +/g, ' ');
 
-    const missingProjectIdError = new Error(errorMessage);
-    assert.deepEqual(util.missingProjectIdError, missingProjectIdError);
+    const missingProjectIdError = new util.MissingProjectIdError();
+    assert.strictEqual(missingProjectIdError.message, errorMessage);
   });
 
   describe('ApiError', function() {
@@ -771,16 +761,17 @@ describe('common/util', function() {
         });
       });
 
-      it('should return missing projectId error', function(done) {
+      it('should return an error while decorating', function(done) {
+        var error = new Error('Error.');
         var reqOpts = {a: 'b', c: 'd'};
 
         utilOverrides.decorateRequest = function() {
-          throw util.missingProjectIdError;
+          throw error;
         };
 
         makeAuthenticatedRequest(reqOpts, {
           onAuthenticated: function(err) {
-            assert.strictEqual(err, util.missingProjectIdError);
+            assert.strictEqual(err, error);
             done();
           },
         });
