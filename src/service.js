@@ -62,6 +62,7 @@ function Service(config, options) {
     credentials: options.credentials,
     keyFile: options.keyFilename,
     email: options.email,
+    token: options.token,
   });
 
   this.makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(reqCfg);

@@ -52,6 +52,7 @@ describe('Service', function() {
     keyFile: {},
     email: 'email',
     projectId: 'project-id',
+    token: 'token',
   };
 
   before(function() {
@@ -82,6 +83,7 @@ describe('Service', function() {
           email: OPTIONS.email,
           projectIdRequired: CONFIG.projectIdRequired,
           projectId: OPTIONS.projectId,
+          token: OPTIONS.token,
         });
 
         assert.deepEqual(config, expectedConfig);
