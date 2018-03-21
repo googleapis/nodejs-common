@@ -696,7 +696,7 @@ describe('ServiceObject', function() {
         done();
       };
 
-      delete serviceObject.id;
+      serviceObject.id = undefined;
 
       serviceObject.request_(reqOpts, assert.ifError);
     });

@@ -815,3 +815,16 @@ function promisifyAll(Class, options) {
 }
 
 util.promisifyAll = promisifyAll;
+
+/**
+ * This will mask properties of an object from console.log.
+ *
+ * @param {object} object - The object to assign the property to.
+ * @param {string} propName - Property name.
+ * @param {*} value - Value.
+ */
+function privatize(object, propName, value) {
+  Object.defineProperty(object, propName, {value, writable: true});
+}
+
+util.privatize = privatize;

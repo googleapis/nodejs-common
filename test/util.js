@@ -1918,4 +1918,19 @@ describe('common/util', function() {
       });
     });
   });
+
+  describe('privatize', function() {
+    it('should set value', function() {
+      var obj = {};
+      util.privatize(obj, 'value', true);
+      assert.strictEqual(obj.value, true);
+    });
+
+    it('should allow values to be overwritten', function() {
+      var obj = {};
+      util.privatize(obj, 'value', true);
+      obj.value = false;
+      assert.strictEqual(obj.value, false);
+    });
+  });
 });
