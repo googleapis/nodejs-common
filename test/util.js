@@ -19,7 +19,6 @@
 const assert = require('assert');
 let duplexify;
 const extend = require('extend');
-const format = require('string-format-obj');
 const googleAuth = require('google-auto-auth');
 const is = require('is');
 const proxyquire = require('proxyquire');
