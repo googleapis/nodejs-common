@@ -24,7 +24,6 @@ const createErrorClass = require('create-error-class');
 const duplexify = require('duplexify');
 const ent = require('ent');
 const extend = require('extend');
-const format = require('string-format-obj');
 const googleAuth = require('google-auto-auth');
 const is = require('is');
 const request = require('request').defaults({
