@@ -24,7 +24,6 @@ const createErrorClass = require('create-error-class');
 const duplexify = require('duplexify');
 const ent = require('ent');
 const extend = require('extend');
-const format = require('string-format-obj');
 const googleAuth = require('google-auto-auth');
 const is = require('is');
 const request = require('request').defaults({
@@ -42,22 +41,17 @@ const uniq = require('array-uniq');
 
 const util = module.exports;
 
-const errorMessage = format(
-  [
-    'Sorry, we cannot connect to Cloud Services without a project ID.',
-    'You may specify one with an environment variable named "GCLOUD_PROJECT".',
-    'See {baseUrl}/{path} for a detailed guide on creating an authenticated',
-    'connection.',
-  ].join(' '),
-  {
-    baseUrl: 'https://googlecloudplatform.github.io/google-cloud-node/#',
-    path: 'docs/guides/authentication',
+/**
+ * Custom error type for missing project ID errors.
+ */
+util.MissingProjectIdError = createErrorClass(
+  'MissingProjectIdError',
+  function() {
+    this.message = `Sorry, we cannot connect to Cloud Services without a project
+    ID. You may specify one with an environment variable named
+    "GOOGLE_CLOUD_PROJECT".`.replace(/ +/g, ' ');
   }
 );
-
-const missingProjectIdError = new Error(errorMessage);
-
-util.missingProjectIdError = missingProjectIdError;
 
 /**
  * No op.
@@ -564,7 +558,7 @@ function replaceProjectIdToken(value, projectId) {
 
   if (is.string(value) && value.indexOf('{{projectId}}') > -1) {
     if (!projectId || projectId === '{{projectId}}') {
-      throw util.missingProjectIdError;
+      throw new util.MissingProjectIdError();
     }
     value = value.replace(/{{projectId}}/g, projectId);
   }
