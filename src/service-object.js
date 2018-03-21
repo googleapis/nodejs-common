@@ -63,15 +63,15 @@ const util = require('./util.js');
 function ServiceObject(config) {
   const self = this;
 
-  this.metadata = {};
+  util.privatize(this, 'metadata', {});
 
-  this.baseUrl = config.baseUrl;
-  this.parent = config.parent; // Parent class.
-  this.id = config.id; // Name or ID (e.g. dataset ID, bucket name, etc.)
-  this.createMethod = config.createMethod;
-  this.methods = config.methods || {};
-  this.interceptors = [];
-  this.Promise = this.parent.Promise;
+  util.privatize(this, 'baseUrl', config.baseUrl);
+  util.privatize(this, 'parent', config.parent); // Parent class.
+  util.privatize(this, 'id', config.id); // Name or ID (e.g. dataset ID, bucket name, etc.)
+  util.privatize(this, 'createMethod', config.createMethod);
+  util.privatize(this, 'methods', config.methods || {});
+  util.privatize(this, 'interceptors', []);
+  util.privatize(this, 'Promise', this.parent.Promise);
 
   if (config.methods) {
     const allMethodNames = Object.keys(ServiceObject.prototype);
