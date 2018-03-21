@@ -66,9 +66,17 @@ function Service(config, options) {
     token: options.token,
   });
 
-  util.privatize(this, 'makeAuthenticatedRequest', util.makeAuthenticatedRequestFactory(reqCfg));
+  util.privatize(
+    this,
+    'makeAuthenticatedRequest',
+    util.makeAuthenticatedRequestFactory(reqCfg)
+  );
   util.privatize(this, 'authClient', this.makeAuthenticatedRequest.authClient);
-  util.privatize(this, 'getCredentials', this.makeAuthenticatedRequest.getCredentials);
+  util.privatize(
+    this,
+    'getCredentials',
+    this.makeAuthenticatedRequest.getCredentials
+  );
 
   const isCloudFunctionEnv = !!process.env.FUNCTION_NAME;
 
