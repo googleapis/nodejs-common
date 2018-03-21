@@ -48,13 +48,13 @@ const PROJECT_ID_TOKEN = '{{projectId}}';
 function Service(config, options) {
   options = options || {};
 
-  this.baseUrl = config.baseUrl;
-  this.globalInterceptors = arrify(options.interceptors_);
-  this.interceptors = [];
-  this.packageJson = config.packageJson;
-  this.projectId = options.projectId || PROJECT_ID_TOKEN;
-  this.projectIdRequired = config.projectIdRequired !== false;
-  this.Promise = options.promise || Promise;
+  util.privatize(this, 'baseUrl', config.baseUrl);
+  util.privatize(this, 'globalInterceptors', arrify(options.interceptors_));
+  util.privatize(this, 'interceptors', []);
+  util.privatize(this, 'packageJson', config.packageJson);
+  util.privatize(this, 'projectId', options.projectId || PROJECT_ID_TOKEN);
+  util.privatize(this, 'projectIdRequired', config.projectIdRequired !== false);
+  util.privatize(this, 'Promise', options.promise || Promise);
 
   const reqCfg = extend({}, config, {
     projectIdRequired: this.projectIdRequired,
@@ -65,9 +65,17 @@ function Service(config, options) {
     token: options.token,
   });
 
-  this.makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(reqCfg);
-  this.authClient = this.makeAuthenticatedRequest.authClient;
-  this.getCredentials = this.makeAuthenticatedRequest.getCredentials;
+  util.privatize(
+    this,
+    'makeAuthenticatedRequest',
+    util.makeAuthenticatedRequestFactory(reqCfg)
+  );
+  util.privatize(this, 'authClient', this.makeAuthenticatedRequest.authClient);
+  util.privatize(
+    this,
+    'getCredentials',
+    this.makeAuthenticatedRequest.getCredentials
+  );
 
   const isCloudFunctionEnv = !!process.env.FUNCTION_NAME;
 
