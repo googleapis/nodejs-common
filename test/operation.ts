@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-'use strict';
+import * as assert from 'assert';
+import * as proxyquire from 'proxyquire';
+import {EventEmitter} from 'events';
 
-const assert = require('assert');
-const EventEmitter = require('events').EventEmitter;
-const proxyquire = require('proxyquire');
+const util = require('../src/util');
 
-const util = require('../src/util.js');
-
-const fakeModelo = {
+const fakeModelo: any = {
   inherits: function() {
     this.calledWith_ = arguments;
     return require('modelo').inherits.apply(this, arguments);
@@ -354,7 +352,7 @@ describe('Operation', function() {
         const startPolling_ = operation.startPolling_;
         let startPollingCalled = false;
 
-        global.setTimeout = function(fn, timeoutMs) {
+        (global as any).setTimeout = function(fn, timeoutMs) {
           fn(); // should call startPolling_
           assert.strictEqual(timeoutMs, 500);
         };

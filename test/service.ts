@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const assert = require('assert');
-const extend = require('extend');
-const proxyquire = require('proxyquire').noPreserveCache();
+import * as assert from 'assert';
+import * as extend from 'extend';
+import * as proxyquire from 'proxyquire';
+proxyquire.noPreserveCache();
 
 const util = require('../src/util.js');
 
@@ -47,7 +46,7 @@ describe('Service', function() {
     },
   };
 
-  const OPTIONS = {
+  const OPTIONS: any = {
     credentials: {},
     keyFile: {},
     email: 'email',
@@ -401,7 +400,7 @@ describe('Service', function() {
         });
 
         // Called fifth.
-        reqOpts.interceptors_.push({
+        (reqOpts.interceptors_ as any).push({
           request: function(reqOpts) {
             reqOpts.order += '5';
             return reqOpts;
@@ -417,7 +416,7 @@ describe('Service', function() {
         });
 
         // Called sixth.
-        reqOpts.interceptors_.push({
+        (reqOpts.interceptors_ as any).push({
           request: function(reqOpts) {
             reqOpts.order += '6';
             return reqOpts;

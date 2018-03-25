@@ -18,34 +18,34 @@
  * @type {module:common/logger}
  * @private
  */
-exports.logger = require('./logger.js');
+exports.logger = require('./logger');
 
 /**
  * @type {module:common/operation}
  * @private
  */
-exports.Operation = require('./operation.js');
+exports.Operation = require('./operation');
 
 /**
  * @type {module:common/paginator}
  * @private
  */
-exports.paginator = require('./paginator.js');
+exports.paginator = require('./paginator');
 
 /**
  * @type {module:common/service}
  * @private
  */
-exports.Service = require('./service.js');
+exports.Service = require('./service');
 
 /**
  * @type {module:common/serviceObject}
  * @private
  */
-exports.ServiceObject = require('./service-object.js');
+exports.ServiceObject = require('./service-object');
 
 /**
  * @type {module:common/util}
  * @private
  */
-exports.util = require('./util.js');
+exports.util = require('./util');

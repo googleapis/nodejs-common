@@ -18,16 +18,14 @@
  * @module common/service
  */
 
-'use strict';
-
+import * as extend from 'extend';
 const arrify = require('arrify');
-const extend = require('extend');
 
 /**
  * @type {module:common/util}
  * @private
  */
-const util = require('./util.js');
+const util = require('./util');
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 
