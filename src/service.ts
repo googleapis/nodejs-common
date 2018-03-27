@@ -79,7 +79,7 @@ function Service(config, options) {
 
   if (isCloudFunctionEnv) {
     this.interceptors.push({
-      request: function(reqOpts) {
+      request(reqOpts) {
         reqOpts.forever = false;
         return reqOpts;
       },

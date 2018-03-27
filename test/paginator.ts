@@ -69,7 +69,7 @@ describe('paginator', function() {
 
   beforeEach(function() {
     FakeClass.prototype = {
-      methodToExtend: function() {
+      methodToExtend() {
         return UUID;
       },
     };
@@ -378,7 +378,7 @@ describe('paginator', function() {
 
         const parsedArguments = {
           autoPaginate: true,
-          callback: function(err) {
+          callback(err) {
             assert.strictEqual(err, error);
             done();
           },
@@ -400,7 +400,7 @@ describe('paginator', function() {
 
         const parsedArguments = {
           autoPaginate: true,
-          callback: function(err, results_) {
+          callback(err, results_) {
             assert.deepEqual(results_.toString().split(''), results);
             done();
           },
@@ -462,7 +462,7 @@ describe('paginator', function() {
         });
 
         return {
-          makeRequest: makeRequest,
+          makeRequest,
           stream: transformStream,
         };
       };
@@ -527,7 +527,7 @@ describe('paginator', function() {
           };
         };
 
-        paginator.runAsStream_({maxApiCalls: maxApiCalls}, util.noop);
+        paginator.runAsStream_({maxApiCalls}, util.noop);
       });
     });
 
@@ -550,7 +550,7 @@ describe('paginator', function() {
         paginator.runAsStream_(
           {
             maxApiCalls: 100,
-            streamOptions: streamOptions,
+            streamOptions,
           },
           util.noop
         );

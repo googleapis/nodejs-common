@@ -47,7 +47,7 @@ describe('logger base-functionality', function() {
 
   it('should use a specified level', function() {
     const level = 'level';
-    assert.strictEqual(logger({level: level}).level, level);
+    assert.strictEqual(logger({level}).level, level);
   });
 
   it('should treat a single arguments as the level', function() {
