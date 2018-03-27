@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const assert = require('assert');
-const proxyquire = require('proxyquire');
+import * as assert from 'assert';
+import * as proxyquire from 'proxyquire';
 
 const fakeLogger = {};
 const fakeOperation = {};

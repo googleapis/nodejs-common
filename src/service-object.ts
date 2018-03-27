@@ -18,12 +18,10 @@
  * @module common/service-object
  */
 
-'use strict';
-
 const arrify = require('arrify');
+import * as extend from 'extend';
+import * as is from 'is';
 const exec = require('methmeth');
-const extend = require('extend');
-const is = require('is');
 
 /**
  * @type {module:common/util}
@@ -223,7 +221,7 @@ ServiceObject.prototype.get = function(config, callback) {
   this.getMetadata(function(err, metadata) {
     if (err) {
       if (err.code === 404 && autoCreate) {
-        const args = [];
+        const args: any[] = [];
 
         if (!is.empty(config)) {
           args.push(config);
@@ -339,7 +337,7 @@ ServiceObject.prototype.request_ = function(reqOpts, callback) {
 
   reqOpts.uri = uriComponents
     .filter(exec('trim')) // Limit to non-empty strings.
-    .map(function(uriComponent) {
+    .map(function(uriComponent: any) {
       const trimSlashesRegex = /^\/*|\/*$/g;
       return uriComponent.replace(trimSlashesRegex, '');
     })

@@ -18,14 +18,13 @@
  * @module common/util
  */
 
-'use strict';
 
+import * as duplexify from 'duplexify';
+import * as ent  from 'ent';
+import * as extend from 'extend';
+import * as is from 'is';
 const createErrorClass = require('create-error-class');
-const duplexify = require('duplexify');
-const ent = require('ent');
-const extend = require('extend');
 const googleAuth = require('google-auto-auth');
-const is = require('is');
 const request = require('request').defaults({
   timeout: 60000,
   gzip: true,
@@ -34,12 +33,18 @@ const request = require('request').defaults({
     maxSockets: Infinity,
   },
 });
-const retryRequest = require('retry-request');
-const streamEvents = require('stream-events');
-const through = require('through2');
-const uniq = require('array-uniq');
+import * as retryRequest from 'retry-request';
+import * as streamEvents from 'stream-events';
+import * as through from 'through2';
+import * as uniq from 'array-uniq';
 
 const util = module.exports;
+
+export class ErrorBody extends Error {
+  code?: string;
+  response?: string;
+  errors?: string;
+}
 
 /**
  * Custom error type for missing project ID errors.
@@ -81,7 +86,7 @@ util.ApiError = createErrorClass('ApiError', function(errorBody) {
     this.errors = errorBody.errors;
   }
 
-  const messages = [];
+  const messages: string[] = [];
 
   if (errorBody.message) {
     messages.push(errorBody.message);
@@ -146,7 +151,7 @@ util.handleResp = handleResp;
  * @param {object} parsedHttpRespMessage.resp - The original response object.
  */
 function parseHttpRespMessage(httpRespMessage) {
-  const parsedHttpRespMessage = {
+  const parsedHttpRespMessage: any = {
     resp: httpRespMessage,
   };
 
@@ -176,7 +181,7 @@ util.parseHttpRespMessage = parseHttpRespMessage;
  *     returned here, otherwise the original value.
  */
 function parseHttpRespBody(body) {
-  const parsedHttpRespBody = {
+  const parsedHttpRespBody: any = {
     body: body,
   };
 
@@ -426,11 +431,11 @@ function makeAuthenticatedRequestFactory(config) {
     };
   }
 
-  makeAuthenticatedRequest.getCredentials = authClient.getCredentials.bind(
+  (makeAuthenticatedRequest as any).getCredentials = authClient.getCredentials.bind(
     authClient
   );
 
-  makeAuthenticatedRequest.authClient = authClient;
+  (makeAuthenticatedRequest as any).authClient = authClient;
 
   return makeAuthenticatedRequest;
 }
@@ -491,6 +496,7 @@ function makeRequest(reqOpts, config, callback) {
       .on('complete', dup.emit.bind(dup, 'complete'));
 
     dup.abort = requestStream.abort;
+    return;
   } else {
     return retryRequest(reqOpts, options, function(err, response, body) {
       util.handleResp(err, response, body, callback);
@@ -586,7 +592,7 @@ function extendGlobalConfig(globalConfig, overrides) {
   globalConfig = globalConfig || {};
   overrides = overrides || {};
 
-  const defaultConfig = {};
+  const defaultConfig: any = {};
 
   if (process.env.GCLOUD_PROJECT) {
     defaultConfig.projectId = process.env.GCLOUD_PROJECT;
@@ -731,7 +737,7 @@ function promisify(originalMethod, options) {
 
   const slice = Array.prototype.slice;
 
-  const wrapper = function() {
+  const wrapper: any = function() {
     const context = this;
     let last;
 

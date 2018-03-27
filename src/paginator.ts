@@ -18,19 +18,17 @@
  * @module common/paginator
  */
 
-'use strict';
-
 const arrify = require('arrify');
 const concat = require('concat-stream');
-const extend = require('extend');
-const is = require('is');
+import * as extend from 'extend';
+import * as is from 'is';
 const split = require('split-array-stream');
 
 /**
  * @type {module:common/util}
  * @private
  */
-const util = require('./util.js');
+const util = require('./util');
 
 /*! Developer Documentation
  *
@@ -50,7 +48,7 @@ const util = require('./util.js');
  * Methods to extend should be written to accept callbacks and return a
  * `nextQuery`.
  */
-const paginator = {};
+const paginator:any = {};
 
 /**
  * Cache the original method, then overwrite it on the Class's prototype.
@@ -154,6 +152,7 @@ paginator.parseArguments_ = function(args) {
     maxApiCalls: maxApiCalls,
     maxResults: maxResults,
     callback: callback,
+    streamOptions: undefined as any
   };
 
   parsedArguments.streamOptions = extend(true, {}, parsedArguments.query);

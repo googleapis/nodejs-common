@@ -18,10 +18,8 @@
  * @module common/operation
  */
 
-'use strict';
-
-const events = require('events');
-const extend = require('extend');
+import * as events from 'events';
+import * as extend from 'extend';
 const modelo = require('modelo');
 
 /**

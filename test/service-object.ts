@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-'use strict';
+import * as assert from 'assert';
+import * as extend from 'extend';
+import * as proxyquire from 'proxyquire';
 
-const assert = require('assert');
-const extend = require('extend');
-const proxyquire = require('proxyquire');
-
-const util = require('../src/util.js');
+const util = require('../src/util');
 
 let promisified = false;
 const fakeUtil = extend({}, util, {

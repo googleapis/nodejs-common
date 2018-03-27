@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const assert = require('assert');
+import * as assert from 'assert';
+import * as extend from 'extend';
+import * as googleAuth from 'google-auto-auth';
+import * as is from 'is';
+import * as proxyquire from 'proxyquire';
+import * as request from 'request';
+import * as retryRequest from 'retry-request';
+import * as stream from 'stream';
+import * as streamEvents from 'stream-events';
 let duplexify;
-const extend = require('extend');
-const googleAuth = require('google-auto-auth');
-const is = require('is');
-const proxyquire = require('proxyquire');
-const request = require('request');
-const retryRequest = require('retry-request');
-const stream = require('stream');
-const streamEvents = require('stream-events');
+
+export class GoogleError extends Error {
+  code?: number;
+  errors?: { reason: string }[];
+}
 
 let googleAutoAuthOverride;
 function fakeGoogleAutoAuth() {
@@ -37,7 +40,7 @@ let requestOverride;
 function fakeRequest() {
   return (requestOverride || request).apply(null, arguments);
 }
-fakeRequest.defaults = function(defaultConfiguration) {
+(fakeRequest as any).defaults = function(defaultConfiguration) {
   // Ignore the default values, so we don't have to test for them in every API
   // call.
   REQUEST_DEFAULT_CONF = defaultConfiguration;
@@ -56,7 +59,7 @@ function fakeStreamEvents() {
 
 describe('common/util', function() {
   let util;
-  let utilOverrides = {};
+  let utilOverrides: any = {};
 
   before(function() {
     util = proxyquire('../src/util', {
@@ -558,7 +561,7 @@ describe('common/util', function() {
 
     it('should emit an error if the request fails', function(done) {
       var dup = duplexify();
-      var fakeStream = new stream.Writable();
+      var fakeStream: any = new stream.Writable();
       var error = new Error('Error.');
 
       fakeStream.write = function() {};
@@ -590,7 +593,7 @@ describe('common/util', function() {
 
     it('should emit the response', function(done) {
       var dup = duplexify();
-      var fakeStream = new stream.Writable();
+      var fakeStream: any = new stream.Writable();
       var fakeResponse = {};
 
       fakeStream.write = function() {};
@@ -619,7 +622,7 @@ describe('common/util', function() {
 
     it('should pass back the response data to the callback', function(done) {
       var dup = duplexify();
-      var fakeStream = new stream.Writable();
+      var fakeStream: any = new stream.Writable();
       var fakeResponse = {};
 
       fakeStream.write = function() {};
@@ -650,7 +653,7 @@ describe('common/util', function() {
   });
 
   describe('makeAuthenticatedRequestFactory', function() {
-    var authClient = {
+    var authClient: any = {
       getCredentials: function() {},
       projectId: 'project-id',
     };
@@ -1060,42 +1063,42 @@ describe('common/util', function() {
     });
 
     it('should return true with error code 429', function() {
-      var error = new Error('429');
+      var error = new GoogleError('429');
       error.code = 429;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 500', function() {
-      var error = new Error('500');
+      var error = new GoogleError('500');
       error.code = 500;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 502', function() {
-      var error = new Error('502');
+      var error = new GoogleError('502');
       error.code = 502;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 503', function() {
-      var error = new Error('503');
+      var error = new GoogleError('503');
       error.code = 503;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should detect rateLimitExceeded reason', function() {
-      var rateLimitError = new Error('Rate limit error without code.');
+      var rateLimitError = new GoogleError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'rateLimitExceeded'}];
 
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
     });
 
     it('should detect userRateLimitExceeded reason', function() {
-      var rateLimitError = new Error('Rate limit error without code.');
+      var rateLimitError = new GoogleError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'userRateLimitExceeded'}];
 
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
@@ -1160,11 +1163,9 @@ describe('common/util', function() {
 
       it('should return the instance of retryRequest', function() {
         var requestInstance = {};
-
         retryRequestOverride = function() {
           return requestInstance;
         };
-
         var request = util.makeRequest(reqOpts, assert.ifError);
         assert.strictEqual(request, requestInstance);
       });
@@ -1237,7 +1238,7 @@ describe('common/util', function() {
           var userStream = duplexify();
 
           retryRequestOverride = function() {
-            var requestStream = new stream.Stream();
+            var requestStream: any = new stream.Stream();
             requestStream.abort = done;
             return requestStream;
           };
@@ -1868,7 +1869,7 @@ describe('common/util', function() {
 
       func = util.promisify(
         function(callback) {
-          callback.apply(this, [null].concat(fakeArgs));
+          callback.apply(this, [null].concat(fakeArgs as any));
         },
         {
           singular: true,
@@ -1921,13 +1922,13 @@ describe('common/util', function() {
 
   describe('privatize', function() {
     it('should set value', function() {
-      var obj = {};
+      var obj: any = {};
       util.privatize(obj, 'value', true);
       assert.strictEqual(obj.value, true);
     });
 
     it('should allow values to be overwritten', function() {
-      var obj = {};
+      var obj: any = {};
       util.privatize(obj, 'value', true);
       obj.value = false;
       assert.strictEqual(obj.value, false);

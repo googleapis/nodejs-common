@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const assert = require('assert');
-const extend = require('extend');
-const proxyquire = require('proxyquire');
-const stream = require('stream');
-const through = require('through2');
-const uuid = require('uuid');
+import * as assert from 'assert';
+import * as extend from 'extend';
+import * as proxyquire from 'proxyquire';
+import * as stream from 'stream';
+import * as through from 'through2';
+import * as uuid from 'uuid';
 
 let paginator = require('../src/paginator.js');
 const util = extend({}, require('../src/util.js'));
 
-let overrides = {};
+let overrides: any = {};
 
 function override(name, object) {
   const cachedObject = extend({}, object);
@@ -507,7 +505,7 @@ describe('paginator', function() {
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
       rs.on('data', function(result) {
-        resultsReceived.push(result);
+        (resultsReceived.push as any)(result);
       });
       rs.on('end', function() {
         assert.deepEqual(resultsReceived, ['a', 'b', 'c']);

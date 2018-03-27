@@ -37,12 +37,13 @@
     "docs": "repo-tools exec -- jsdoc -c .jsdoc.js",
     "lint": "repo-tools lint --cmd eslint -- src/ samples/ system-test/ test/",
     "prettier": "repo-tools exec -- prettier --write src/*.js src/*/*.js samples/*.js samples/*/*.js test/*.js test/*/*.js system-test/*.js system-test/*/*.js",
-    "cover": "nyc --reporter=lcov mocha --require intelli-espower-loader test/*.js && nyc report",
+    "cover": "nyc --reporter=lcov mocha --require source-map-support/register intelli-espower-loader build/test/*.js && nyc report",
     "samples-test": "cd samples/ && npm link ../ && npm test && cd ../",
-    "test-no-cover": "repo-tools test run --cmd mocha -- test/*.js --no-timeouts",
-    "test": "repo-tools test run --cmd npm -- run cover",
+    "test-no-cover": "repo-tools test run --cmd mocha -- build/test/*.js --no-timeouts",
+    "test": "npm run compile && repo-tools test run --cmd npm -- run cover",
     "posttest": "npm run license-check",
-    "license-check": "jsgl --local ."
+    "license-check": "jsgl --local .",
+    "compile": "tsc -p ."
   },
   "dependencies": {
     "array-uniq": "^1.0.3",
@@ -66,12 +67,22 @@
   },
   "devDependencies": {
     "@google-cloud/nodejs-repo-tools": "^2.1.1",
+    "@types/arrify": "^1.0.2",
+    "@types/concat-stream": "^1.6.0",
+    "@types/duplexify": "^3.5.0",
+    "@types/ent": "^2.2.1",
+    "@types/extend": "^3.0.0",
+    "@types/is": "0.0.19",
+    "@types/mocha": "^5.0.0",
+    "@types/node": "^9.4.7",
+    "@types/proxyquire": "^1.3.28",
     "async": "^2.6.0",
     "codecov": "^3.0.0",
     "eslint": "^4.10.0",
     "eslint-config-prettier": "^2.7.0",
     "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-prettier": "^2.3.1",
+    "gts": "^0.5.4",
     "ink-docstrap": "^1.3.0",
     "intelli-espower-loader": "^1.0.1",
     "js-green-licenses": "^0.5.0",
@@ -81,6 +92,8 @@
     "power-assert": "^1.4.4",
     "prettier": "^1.11.1",
     "proxyquire": "^2.0.0",
+    "source-map-support": "^0.5.4",
+    "typescript": "^2.7.2",
     "uuid": "^3.0.1"
   }
 }

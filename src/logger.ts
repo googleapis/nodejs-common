@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-'use strict';
-
 /*!
  * @module common/logger
  */
 
+import * as is from 'is';
 const format = require('string-format-obj');
-const is = require('is');
 const logDriver = require('log-driver');
 
 /**
