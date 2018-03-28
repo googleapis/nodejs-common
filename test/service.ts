@@ -24,15 +24,15 @@ const util = require('../src/util.js');
 const makeAuthenticatedRequestFactoryCache =
   util.makeAuthenticatedRequestFactory;
 let makeAuthenticatedRequestFactoryOverride;
-util.makeAuthenticatedRequestFactory = function() {
+util.makeAuthenticatedRequestFactory = (...args) => {
   if (makeAuthenticatedRequestFactoryOverride) {
-    return makeAuthenticatedRequestFactoryOverride.apply(this, arguments);
+    return makeAuthenticatedRequestFactoryOverride.apply(this, args);
   }
 
-  return makeAuthenticatedRequestFactoryCache.apply(this, arguments);
+  return makeAuthenticatedRequestFactoryCache.apply(this, args);
 };
 
-describe('Service', function() {
+describe('Service', () => {
   let Service;
   let service;
 
@@ -54,25 +54,25 @@ describe('Service', function() {
     token: 'token',
   };
 
-  before(function() {
+  before(() => {
     Service = proxyquire('../src/service.js', {
       './util.js': util,
     });
   });
 
-  beforeEach(function() {
+  beforeEach(() => {
     makeAuthenticatedRequestFactoryOverride = null;
     service = new Service(CONFIG, OPTIONS);
   });
 
-  describe('instantiation', function() {
-    it('should not require options', function() {
-      assert.doesNotThrow(function() {
+  describe('instantiation', () => {
+    it('should not require options', () => {
+      assert.doesNotThrow(() => {
         new Service(CONFIG);
       });
     });
 
-    it('should create an authenticated request factory', function() {
+    it('should create an authenticated request factory', () => {
       const authenticatedRequest = {};
 
       makeAuthenticatedRequestFactoryOverride = function(config) {
@@ -94,10 +94,10 @@ describe('Service', function() {
       assert.strictEqual(svc.makeAuthenticatedRequest, authenticatedRequest);
     });
 
-    it('should localize the authClient', function() {
+    it('should localize the authClient', () => {
       const authClient = {};
 
-      makeAuthenticatedRequestFactoryOverride = function() {
+      makeAuthenticatedRequestFactoryOverride = () => {
         return {
           authClient,
         };
@@ -107,14 +107,14 @@ describe('Service', function() {
       assert.strictEqual(service.authClient, authClient);
     });
 
-    it('should localize the baseUrl', function() {
+    it('should localize the baseUrl', () => {
       assert.strictEqual(service.baseUrl, CONFIG.baseUrl);
     });
 
-    it('should localize the getCredentials method', function() {
+    it('should localize the getCredentials method', () => {
       function getCredentials() {}
 
-      makeAuthenticatedRequestFactoryOverride = function() {
+      makeAuthenticatedRequestFactoryOverride = () => {
         return {
           authClient: {},
           getCredentials,
@@ -125,11 +125,11 @@ describe('Service', function() {
       assert.strictEqual(service.getCredentials, getCredentials);
     });
 
-    it('should default globalInterceptors to an empty array', function() {
+    it('should default globalInterceptors to an empty array', () => {
       assert.deepEqual(service.globalInterceptors, []);
     });
 
-    it('should preserve the original global interceptors', function() {
+    it('should preserve the original global interceptors', () => {
       const globalInterceptors = [];
 
       const options = extend({}, OPTIONS);
@@ -139,44 +139,44 @@ describe('Service', function() {
       assert.strictEqual(service.globalInterceptors, globalInterceptors);
     });
 
-    it('should default interceptors to an empty array', function() {
+    it('should default interceptors to an empty array', () => {
       assert.deepEqual(service.interceptors, []);
     });
 
-    it('should localize package.json', function() {
+    it('should localize package.json', () => {
       assert.strictEqual(service.packageJson, CONFIG.packageJson);
     });
 
-    it('should localize the projectId', function() {
+    it('should localize the projectId', () => {
       assert.strictEqual(service.projectId, OPTIONS.projectId);
     });
 
-    it('should default projectId with placeholder', function() {
+    it('should default projectId with placeholder', () => {
       const service = new Service({}, {});
       assert.strictEqual(service.projectId, '{{projectId}}');
     });
 
-    it('should localize the projectIdRequired', function() {
+    it('should localize the projectIdRequired', () => {
       assert.strictEqual(service.projectIdRequired, CONFIG.projectIdRequired);
     });
 
-    it('should default projectIdRequired to true', function() {
+    it('should default projectIdRequired to true', () => {
       const service = new Service({}, OPTIONS);
       assert.strictEqual(service.projectIdRequired, true);
     });
 
-    it('should localize the Promise object', function() {
-      const FakePromise = function() {};
+    it('should localize the Promise object', () => {
+      const FakePromise = () => {};
       const service = new Service({}, {promise: FakePromise});
 
       assert.strictEqual(service.Promise, FakePromise);
     });
 
-    it('should localize the native Promise object by default', function() {
+    it('should localize the native Promise object by default', () => {
       assert.strictEqual(service.Promise, global.Promise);
     });
 
-    it('should disable forever agent for Cloud Function envs', function() {
+    it('should disable forever agent for Cloud Function envs', () => {
       process.env.FUNCTION_NAME = 'cloud-function-name';
       const service = new Service(CONFIG, OPTIONS);
       delete process.env.FUNCTION_NAME;
@@ -188,8 +188,8 @@ describe('Service', function() {
     });
   });
 
-  describe('getProjectId', function() {
-    it('should get the project ID from the auth client', function(done) {
+  describe('getProjectId', () => {
+    it('should get the project ID from the auth client', (done) => {
       service.authClient = {
         getProjectId() {
           done();
@@ -199,7 +199,7 @@ describe('Service', function() {
       service.getProjectId(assert.ifError);
     });
 
-    it('should return error from auth client', function(done) {
+    it('should return error from auth client', (done) => {
       const error = new Error('Error.');
 
       service.authClient = {
@@ -214,7 +214,7 @@ describe('Service', function() {
       });
     });
 
-    it('should update and return the project ID if found', function(done) {
+    it('should update and return the project ID if found', (done) => {
       const service = new Service({}, {});
       const projectId = 'detected-project-id';
 
@@ -233,16 +233,16 @@ describe('Service', function() {
     });
   });
 
-  describe('request_', function() {
+  describe('request_', () => {
     let reqOpts;
 
-    beforeEach(function() {
+    beforeEach(() => {
       reqOpts = {
         uri: 'uri',
       };
     });
 
-    it('should compose the correct request', function(done) {
+    it('should compose the correct request', (done) => {
       const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
       service.makeAuthenticatedRequest = function(reqOpts_, callback) {
@@ -255,7 +255,7 @@ describe('Service', function() {
       service.request_(reqOpts, done);
     });
 
-    it('should support absolute uris', function(done) {
+    it('should support absolute uris', (done) => {
       const expectedUri = 'http://www.google.com';
 
       service.makeAuthenticatedRequest = function(reqOpts) {
@@ -266,7 +266,7 @@ describe('Service', function() {
       service.request_({uri: expectedUri}, assert.ifError);
     });
 
-    it('should trim slashes', function(done) {
+    it('should trim slashes', (done) => {
       const reqOpts = {
         uri: '//1/2//',
       };
@@ -281,7 +281,7 @@ describe('Service', function() {
       service.request_(reqOpts, assert.ifError);
     });
 
-    it('should replace path/:subpath with path:subpath', function(done) {
+    it('should replace path/:subpath with path:subpath', (done) => {
       const reqOpts = {
         uri: ':test',
       };
@@ -296,7 +296,7 @@ describe('Service', function() {
       service.request_(reqOpts, assert.ifError);
     });
 
-    it('should add the User Agent', function(done) {
+    it('should add the User Agent', (done) => {
       const userAgent = 'user-agent/0.0.0';
 
       const getUserAgentFn = util.getUserAgentFromPackageJson;
@@ -314,7 +314,7 @@ describe('Service', function() {
       service.request_(reqOpts, assert.ifError);
     });
 
-    it('should add the api-client header', function(done) {
+    it('should add the api-client header', (done) => {
       service.makeAuthenticatedRequest = function(reqOpts) {
         const pkg = service.packageJson;
         assert.strictEqual(
@@ -327,9 +327,9 @@ describe('Service', function() {
       service.request_(reqOpts, assert.ifError);
     });
 
-    describe('projectIdRequired', function() {
-      describe('false', function() {
-        it('should include the projectId', function(done) {
+    describe('projectIdRequired', () => {
+      describe('false', () => {
+        it('should include the projectId', (done) => {
           const config = extend({}, CONFIG, {projectIdRequired: false});
           const service = new Service(config, OPTIONS);
 
@@ -345,8 +345,8 @@ describe('Service', function() {
         });
       });
 
-      describe('true', function() {
-        it('should not include the projectId', function(done) {
+      describe('true', () => {
+        it('should not include the projectId', (done) => {
           const config = extend({}, CONFIG, {projectIdRequired: true});
           const service = new Service(config, OPTIONS);
 
@@ -368,8 +368,8 @@ describe('Service', function() {
       });
     });
 
-    describe('request interceptors', function() {
-      it('should call the request interceptors in order', function(done) {
+    describe('request interceptors', () => {
+      it('should call the request interceptors in order', (done) => {
         const reqOpts = {
           uri: '',
           interceptors_: [],
@@ -431,7 +431,7 @@ describe('Service', function() {
         service.request_(reqOpts, assert.ifError);
       });
 
-      it('should not affect original interceptor arrays', function(done) {
+      it('should not affect original interceptor arrays', (done) => {
         function request(reqOpts) {
           return reqOpts;
         }
@@ -444,7 +444,7 @@ describe('Service', function() {
         const originalLocalInterceptors = [].slice.call(localInterceptors);
         const originalRequestInterceptors = [].slice.call(requestInterceptors);
 
-        service.makeAuthenticatedRequest = function() {
+        service.makeAuthenticatedRequest = () => {
           assert.deepEqual(globalInterceptors, originalGlobalInterceptors);
           assert.deepEqual(localInterceptors, originalLocalInterceptors);
           assert.deepEqual(requestInterceptors, originalRequestInterceptors);
@@ -460,7 +460,7 @@ describe('Service', function() {
         );
       });
 
-      it('should not call unrelated interceptors', function(done) {
+      it('should not call unrelated interceptors', (done) => {
         service.interceptors.push({
           anotherInterceptor() {
             done(); // Will throw.
@@ -478,18 +478,18 @@ describe('Service', function() {
     });
   });
 
-  describe('request', function() {
+  describe('request', () => {
     let request_;
 
-    before(function() {
+    before(() => {
       request_ = Service.prototype.request_;
     });
 
-    after(function() {
+    after(() => {
       Service.prototype.request_ = request_;
     });
 
-    it('should call through to _request', function(done) {
+    it('should call through to _request', (done) => {
       const fakeOpts = {};
 
       Service.prototype.request_ = function(reqOpts, callback) {
@@ -501,18 +501,18 @@ describe('Service', function() {
     });
   });
 
-  describe('requestStream', function() {
+  describe('requestStream', () => {
     let request_;
 
-    before(function() {
+    before(() => {
       request_ = Service.prototype.request_;
     });
 
-    after(function() {
+    after(() => {
       Service.prototype.request_ = request_;
     });
 
-    it('should return whatever _request returns', function() {
+    it('should return whatever _request returns', () => {
       const fakeOpts = {};
       const fakeStream = {};
 

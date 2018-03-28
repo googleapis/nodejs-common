@@ -92,8 +92,8 @@ modelo.inherits(Operation, ServiceObject, events.EventEmitter);
 Operation.prototype.promise = function() {
   const self = this;
 
-  return new self.Promise(function(resolve, reject) {
-    self.on('error', reject).on('complete', function(metadata) {
+  return new self.Promise((resolve, reject) => {
+    self.on('error', reject).on('complete', (metadata) => {
       resolve([metadata]);
     });
   });
@@ -112,7 +112,7 @@ Operation.prototype.promise = function() {
 Operation.prototype.listenForEvents_ = function() {
   const self = this;
 
-  this.on('newListener', function(event) {
+  this.on('newListener', (event) => {
     if (event === 'complete') {
       self.completeListeners++;
 
@@ -123,7 +123,7 @@ Operation.prototype.listenForEvents_ = function() {
     }
   });
 
-  this.on('removeListener', function(event) {
+  this.on('removeListener', (event) => {
     if (event === 'complete' && --self.completeListeners === 0) {
       self.hasActiveListeners = false;
     }
@@ -142,7 +142,7 @@ Operation.prototype.listenForEvents_ = function() {
  * @param {function} callback
  */
 Operation.prototype.poll_ = function(callback) {
-  this.getMetadata(function(err, resp) {
+  this.getMetadata((err, resp) => {
     if (err || resp.error) {
       callback(err || resp.error);
       return;
@@ -173,7 +173,7 @@ Operation.prototype.startPolling_ = function() {
     return;
   }
 
-  this.poll_(function(err, metadata) {
+  this.poll_((err, metadata) => {
     if (err) {
       self.emit('error', err);
       return;
