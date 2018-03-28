@@ -53,7 +53,7 @@ function logger(options) {
 
     level: options.level || 'error',
 
-    format: function() {
+    format() {
       const args = [].slice.call(arguments);
 
       return format('{level}{tag} {message}', {

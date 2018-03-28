@@ -27,7 +27,7 @@ let duplexify;
 
 export class GoogleError extends Error {
   code?: number;
-  errors?: { reason: string }[];
+  errors?: Array<{ reason: string }>;
 }
 
 let googleAutoAuthOverride;
@@ -155,7 +155,7 @@ describe('common/util', function() {
         response: {
           body: JSON.stringify({
             error: {
-              errors: errors,
+              errors,
             },
           }),
         },
@@ -207,36 +207,36 @@ describe('common/util', function() {
     });
 
     it('should use default message if there are no errors', function() {
-      var expectedErrorMessage = 'Error during request.';
+      const expectedErrorMessage = 'Error during request.';
 
-      var error = {
+      const error = {
         code: 100,
         response: {a: 'b', c: 'd'},
       };
 
-      var apiError = new util.ApiError(error);
+      const apiError = new util.ApiError(error);
 
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });
 
     it('should use default message if too many errors', function() {
-      var expectedErrorMessage = 'Error during request.';
+      const expectedErrorMessage = 'Error during request.';
 
-      var error = {
+      const error = {
         errors: [new Error(), new Error()],
         code: 100,
         response: {a: 'b', c: 'd'},
       };
 
-      var apiError = new util.ApiError(error);
+      const apiError = new util.ApiError(error);
 
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });
 
     it('should filter out duplicate errors', function() {
-      var expectedErrorMessage = 'Error during request.';
+      const expectedErrorMessage = 'Error during request.';
 
-      var error = {
+      const error = {
         code: 100,
         message: expectedErrorMessage,
         response: {
@@ -244,7 +244,7 @@ describe('common/util', function() {
         },
       };
 
-      var apiError = new util.ApiError(error);
+      const apiError = new util.ApiError(error);
 
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });
@@ -252,13 +252,13 @@ describe('common/util', function() {
 
   describe('PartialFailureError', function() {
     it('should build correct PartialFailureError', function() {
-      var error = {
+      const error = {
         errors: [new Error(), new Error()],
         response: {a: 'b', c: 'd'},
         message: 'Partial failure occurred',
       };
 
-      var partialFailureError = new util.PartialFailureError(error);
+      const partialFailureError = new util.PartialFailureError(error);
 
       assert.strictEqual(partialFailureError.errors, error.errors);
       assert.strictEqual(partialFailureError.response, error.response);
@@ -266,14 +266,14 @@ describe('common/util', function() {
     });
 
     it('should use default message', function() {
-      var expectedErrorMessage = 'A failure occurred during this request.';
+      const expectedErrorMessage = 'A failure occurred during this request.';
 
-      var error = {
+      const error = {
         errors: [],
         response: {a: 'b', c: 'd'},
       };
 
-      var partialFailureError = new util.PartialFailureError(error);
+      const partialFailureError = new util.PartialFailureError(error);
 
       assert.strictEqual(partialFailureError.message, expectedErrorMessage);
     });
@@ -281,29 +281,29 @@ describe('common/util', function() {
 
   describe('extendGlobalConfig', function() {
     it('should favor `keyFilename` when `credentials` is global', function() {
-      var globalConfig = {credentials: {}};
-      var options = util.extendGlobalConfig(globalConfig, {
+      const globalConfig = {credentials: {}};
+      const options = util.extendGlobalConfig(globalConfig, {
         keyFilename: 'key.json',
       });
       assert.strictEqual(options.credentials, undefined);
     });
 
     it('should favor `credentials` when `keyFilename` is global', function() {
-      var globalConfig = {keyFilename: 'key.json'};
-      var options = util.extendGlobalConfig(globalConfig, {credentials: {}});
+      const globalConfig = {keyFilename: 'key.json'};
+      const options = util.extendGlobalConfig(globalConfig, {credentials: {}});
       assert.strictEqual(options.keyFilename, undefined);
     });
 
     it('should honor the GCLOUD_PROJECT environment variable', function() {
-      var newProjectId = 'envvar-project-id';
-      var cachedProjectId = process.env.GCLOUD_PROJECT;
+      const newProjectId = 'envvar-project-id';
+      const cachedProjectId = process.env.GCLOUD_PROJECT;
       process.env.GCLOUD_PROJECT = newProjectId;
 
       // No projectId specified:
-      var globalConfig = {keyFilename: 'key.json'};
-      var overrides = {};
+      const globalConfig = {keyFilename: 'key.json'};
+      const overrides = {};
 
-      var options = util.extendGlobalConfig(globalConfig, overrides);
+      const options = util.extendGlobalConfig(globalConfig, overrides);
 
       if (cachedProjectId) {
         process.env.GCLOUD_PROJECT = cachedProjectId;
@@ -315,14 +315,14 @@ describe('common/util', function() {
     });
 
     it('should not modify original object', function() {
-      var globalConfig = {keyFilename: 'key.json'};
+      const globalConfig = {keyFilename: 'key.json'};
       util.extendGlobalConfig(globalConfig, {credentials: {}});
       assert.deepEqual(globalConfig, {keyFilename: 'key.json'});
     });
 
     it('should link the original interceptors_', function() {
-      var interceptors = [];
-      var globalConfig = {interceptors_: interceptors};
+      const interceptors = [];
+      const globalConfig = {interceptors_: interceptors};
       util.extendGlobalConfig(globalConfig, {});
       assert.strictEqual(globalConfig.interceptors_, interceptors);
     });
@@ -330,7 +330,7 @@ describe('common/util', function() {
 
   describe('handleResp', function() {
     it('should handle errors', function(done) {
-      var error = new Error('Error.');
+      const error = new Error('Error.');
 
       util.handleResp(error, {}, null, function(err) {
         assert.strictEqual(err, error);
@@ -343,13 +343,13 @@ describe('common/util', function() {
     });
 
     it('should parse response', function(done) {
-      var err = {a: 'b', c: 'd'};
-      var resp = {a: 'b', c: 'd'};
-      var body = {a: 'b', c: 'd'};
+      const err = {a: 'b', c: 'd'};
+      const resp = {a: 'b', c: 'd'};
+      const body = {a: 'b', c: 'd'};
 
-      var returnedErr = {a: 'b', c: 'd'};
-      var returnedBody = {a: 'b', c: 'd'};
-      var returnedResp = {a: 'b', c: 'd'};
+      const returnedErr = {a: 'b', c: 'd'};
+      const returnedBody = {a: 'b', c: 'd'};
+      const returnedResp = {a: 'b', c: 'd'};
 
       utilOverrides.parseHttpRespMessage = function(resp_) {
         assert.strictEqual(resp_, resp);
@@ -376,7 +376,7 @@ describe('common/util', function() {
     });
 
     it('should parse response for error', function(done) {
-      var error = new Error('Error.');
+      const error = new Error('Error.');
 
       utilOverrides.parseHttpRespMessage = function() {
         return {err: error};
@@ -389,7 +389,7 @@ describe('common/util', function() {
     });
 
     it('should parse body for error', function(done) {
-      var error = new Error('Error.');
+      const error = new Error('Error.');
 
       utilOverrides.parseHttpRespBody = function() {
         return {err: error};
@@ -420,7 +420,7 @@ describe('common/util', function() {
 
   describe('parseHttpRespMessage', function() {
     it('should build ApiError with non-200 status and message', function(done) {
-      var httpRespMessage = {statusCode: 400, statusMessage: 'Not Good'};
+      const httpRespMessage = {statusCode: 400, statusMessage: 'Not Good'};
 
       utilOverrides.ApiError = function(error_) {
         assert.strictEqual(error_.code, httpRespMessage.statusCode);
@@ -434,22 +434,22 @@ describe('common/util', function() {
     });
 
     it('should return the original response message', function() {
-      var httpRespMessage = {};
-      var parsedHttpRespMessage = util.parseHttpRespMessage(httpRespMessage);
+      const httpRespMessage = {};
+      const parsedHttpRespMessage = util.parseHttpRespMessage(httpRespMessage);
       assert.strictEqual(parsedHttpRespMessage.resp, httpRespMessage);
     });
   });
 
   describe('parseHttpRespBody', function() {
     it('should detect body errors', function() {
-      var apiErr = {
+      const apiErr = {
         errors: [{message: 'bar'}],
         code: 400,
         message: 'an error occurred',
       };
 
-      var parsedHttpRespBody = util.parseHttpRespBody({error: apiErr});
-      var expectedErrorMessage = [
+      const parsedHttpRespBody = util.parseHttpRespBody({error: apiErr});
+      const expectedErrorMessage = [
         apiErr.message,
         apiErr.errors[0].message,
       ].join(' - ');
@@ -460,15 +460,15 @@ describe('common/util', function() {
     });
 
     it('should try to parse JSON if body is string', function() {
-      var httpRespBody = '{ "foo": "bar" }';
-      var parsedHttpRespBody = util.parseHttpRespBody(httpRespBody);
+      const httpRespBody = '{ "foo": "bar" }';
+      const parsedHttpRespBody = util.parseHttpRespBody(httpRespBody);
 
       assert.strictEqual(parsedHttpRespBody.body.foo, 'bar');
     });
 
     it('should return the original body', function() {
-      var httpRespBody = {};
-      var parsedHttpRespBody = util.parseHttpRespBody(httpRespBody);
+      const httpRespBody = {};
+      const parsedHttpRespBody = util.parseHttpRespBody(httpRespBody);
 
       assert.strictEqual(parsedHttpRespBody.body, httpRespBody);
     });
@@ -476,18 +476,18 @@ describe('common/util', function() {
 
   describe('makeWritableStream', function() {
     it('should use defaults', function(done) {
-      var dup = duplexify();
-      var metadata = {a: 'b', c: 'd'};
+      const dup = duplexify();
+      const metadata = {a: 'b', c: 'd'};
 
       util.makeWritableStream(dup, {
-        metadata: metadata,
-        makeAuthenticatedRequest: function(request) {
+        metadata,
+        makeAuthenticatedRequest(request) {
           assert.equal(request.method, 'POST');
           assert.equal(request.qs.uploadType, 'multipart');
 
           assert.strictEqual(Array.isArray(request.multipart), true);
 
-          var mp = request.multipart;
+          const mp = request.multipart;
 
           assert.strictEqual(mp[0]['Content-Type'], 'application/json');
           assert.strictEqual(mp[0].body, JSON.stringify(metadata));
@@ -502,9 +502,9 @@ describe('common/util', function() {
     });
 
     it('should allow overriding defaults', function(done) {
-      var dup = duplexify();
+      const dup = duplexify();
 
-      var req = {
+      const req = {
         method: 'PUT',
         qs: {
           uploadType: 'media',
@@ -516,12 +516,12 @@ describe('common/util', function() {
         metadata: {
           contentType: 'application/json',
         },
-        makeAuthenticatedRequest: function(request) {
+        makeAuthenticatedRequest(request) {
           assert.equal(request.method, req.method);
           assert.deepEqual(request.qs, req.qs);
           assert.equal(request.something, req.something);
 
-          var mp = request.multipart;
+          const mp = request.multipart;
           assert.strictEqual(mp[1]['Content-Type'], 'application/json');
 
           done();
@@ -532,37 +532,37 @@ describe('common/util', function() {
     });
 
     it('should emit an error', function(done) {
-      var error = new Error('Error.');
+      const error = new Error('Error.');
 
-      var ws = duplexify();
+      const ws = duplexify();
       ws.on('error', function(err) {
         assert.equal(err, error);
         done();
       });
 
       util.makeWritableStream(ws, {
-        makeAuthenticatedRequest: function(request, opts) {
+        makeAuthenticatedRequest(request, opts) {
           opts.onAuthenticated(error);
         },
       });
     });
 
     it('should set the writable stream', function(done) {
-      var dup = duplexify();
+      const dup = duplexify();
 
       dup.setWritable = function() {
         done();
       };
 
       util.makeWritableStream(dup, {
-        makeAuthenticatedRequest: function() {},
+        makeAuthenticatedRequest() {},
       });
     });
 
     it('should emit an error if the request fails', function(done) {
-      var dup = duplexify();
-      var fakeStream: any = new stream.Writable();
-      var error = new Error('Error.');
+      const dup = duplexify();
+      const fakeStream: any = new stream.Writable();
+      const error = new Error('Error.');
 
       fakeStream.write = function() {};
       dup.end = function() {};
@@ -581,7 +581,7 @@ describe('common/util', function() {
       });
 
       util.makeWritableStream(dup, {
-        makeAuthenticatedRequest: function(request, opts) {
+        makeAuthenticatedRequest(request, opts) {
           opts.onAuthenticated();
         },
       });
@@ -592,9 +592,9 @@ describe('common/util', function() {
     });
 
     it('should emit the response', function(done) {
-      var dup = duplexify();
-      var fakeStream: any = new stream.Writable();
-      var fakeResponse = {};
+      const dup = duplexify();
+      const fakeStream: any = new stream.Writable();
+      const fakeResponse = {};
 
       fakeStream.write = function() {};
 
@@ -606,8 +606,8 @@ describe('common/util', function() {
         callback(null, fakeResponse);
       };
 
-      var options = {
-        makeAuthenticatedRequest: function(request, opts) {
+      const options = {
+        makeAuthenticatedRequest(request, opts) {
           opts.onAuthenticated();
         },
       };
@@ -621,9 +621,9 @@ describe('common/util', function() {
     });
 
     it('should pass back the response data to the callback', function(done) {
-      var dup = duplexify();
-      var fakeStream: any = new stream.Writable();
-      var fakeResponse = {};
+      const dup = duplexify();
+      const fakeStream: any = new stream.Writable();
+      const fakeResponse = {};
 
       fakeStream.write = function() {};
 
@@ -635,8 +635,8 @@ describe('common/util', function() {
         callback();
       };
 
-      var options = {
-        makeAuthenticatedRequest: function(request, opts) {
+      const options = {
+        makeAuthenticatedRequest(request, opts) {
           opts.onAuthenticated();
         },
       };
@@ -653,8 +653,8 @@ describe('common/util', function() {
   });
 
   describe('makeAuthenticatedRequestFactory', function() {
-    var authClient: any = {
-      getCredentials: function() {},
+    const authClient: any = {
+      getCredentials() {},
       projectId: 'project-id',
     };
 
@@ -665,7 +665,7 @@ describe('common/util', function() {
     });
 
     it('should create an authClient', function(done) {
-      var config = {
+      const config = {
         test: true,
       };
 
@@ -679,7 +679,7 @@ describe('common/util', function() {
     });
 
     it('should not pass projectId token to google-auto-auth', function(done) {
-      var config = {
+      const config = {
         projectId: '{{projectId}}',
       };
 
@@ -693,7 +693,7 @@ describe('common/util', function() {
     });
 
     it('should not remove projectId from config object', function(done) {
-      var config = {
+      const config = {
         projectId: '{{projectId}}',
       };
 
@@ -716,38 +716,38 @@ describe('common/util', function() {
       }
 
       googleAutoAuthOverride = function() {
-        return {getCredentials: getCredentials};
+        return {getCredentials};
       };
 
-      var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+      const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
       makeAuthenticatedRequest.getCredentials();
     });
 
     it('should return the authClient', function() {
-      var authClient = {getCredentials: function() {}};
+      const authClient = {getCredentials() {}};
 
       googleAutoAuthOverride = function() {
         return authClient;
       };
 
-      var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+      const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
       assert.strictEqual(makeAuthenticatedRequest.authClient, authClient);
     });
 
     describe('customEndpoint (no authentication attempted)', function() {
-      var makeAuthenticatedRequest;
-      var config = {
+      let makeAuthenticatedRequest;
+      const config = {
         customEndpoint: true,
       };
-      var expectedProjectId = authClient.projectId;
+      const expectedProjectId = authClient.projectId;
 
       beforeEach(function() {
         makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(config);
       });
 
       it('should decorate the request', function(done) {
-        var reqOpts = {a: 'b', c: 'd'};
-        var decoratedRequest = {};
+        const reqOpts = {a: 'b', c: 'd'};
+        const decoratedRequest = {};
 
         utilOverrides.decorateRequest = function(reqOpts_, projectId) {
           assert.strictEqual(reqOpts_, reqOpts);
@@ -756,7 +756,7 @@ describe('common/util', function() {
         };
 
         makeAuthenticatedRequest(reqOpts, {
-          onAuthenticated: function(err, authenticatedReqOpts) {
+          onAuthenticated(err, authenticatedReqOpts) {
             assert.ifError(err);
             assert.strictEqual(authenticatedReqOpts, decoratedRequest);
             done();
@@ -765,15 +765,15 @@ describe('common/util', function() {
       });
 
       it('should return an error while decorating', function(done) {
-        var error = new Error('Error.');
-        var reqOpts = {a: 'b', c: 'd'};
+        const error = new Error('Error.');
+        const reqOpts = {a: 'b', c: 'd'};
 
         utilOverrides.decorateRequest = function() {
           throw error;
         };
 
         makeAuthenticatedRequest(reqOpts, {
-          onAuthenticated: function(err) {
+          onAuthenticated(err) {
             assert.strictEqual(err, error);
             done();
           },
@@ -781,10 +781,10 @@ describe('common/util', function() {
       });
 
       it('should pass options back to callback', function(done) {
-        var reqOpts = {a: 'b', c: 'd'};
+        const reqOpts = {a: 'b', c: 'd'};
 
         makeAuthenticatedRequest(reqOpts, {
-          onAuthenticated: function(err, authenticatedReqOpts) {
+          onAuthenticated(err, authenticatedReqOpts) {
             assert.ifError(err);
             assert.deepEqual(reqOpts, authenticatedReqOpts);
             done();
@@ -793,7 +793,7 @@ describe('common/util', function() {
       });
 
       it('should not authenticate requests with a custom API', function(done) {
-        var reqOpts = {a: 'b', c: 'd'};
+        const reqOpts = {a: 'b', c: 'd'};
 
         utilOverrides.makeRequest = function(rOpts) {
           assert.deepEqual(rOpts, reqOpts);
@@ -806,21 +806,21 @@ describe('common/util', function() {
 
     describe('needs authentication', function() {
       it('should pass correct args to authorizeRequest', function(done) {
-        var reqOpts = {e: 'f', g: 'h'};
+        const reqOpts = {e: 'f', g: 'h'};
 
         authClient.authorizeRequest = function(rOpts) {
           assert.deepEqual(rOpts, reqOpts);
           done();
         };
 
-        var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+        const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
         makeAuthenticatedRequest(reqOpts, {});
       });
 
       it('should return a stream if callback is missing', function() {
         authClient.authorizeRequest = function() {};
 
-        var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({});
+        const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({});
         assert(makeAuthenticatedRequest({}) instanceof stream.Stream);
       });
 
@@ -833,7 +833,7 @@ describe('common/util', function() {
             setImmediate(done);
           };
 
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({
             customEndpoint: true,
           });
 
@@ -848,7 +848,7 @@ describe('common/util', function() {
         it('should use user-provided projectId', function(done) {
           authClient.projectId = 'authclient-project-id';
 
-          var config = {
+          const config = {
             customEndpoint: true,
             projectId: 'project-id',
           };
@@ -858,7 +858,7 @@ describe('common/util', function() {
             setImmediate(done);
           };
 
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
             config
           );
 
@@ -872,7 +872,7 @@ describe('common/util', function() {
       });
 
       describe('authentication errors', function() {
-        var error = new Error('Error.');
+        const error = new Error('Error.');
 
         beforeEach(function() {
           authClient.authorizeRequest = function(rOpts, callback) {
@@ -883,18 +883,18 @@ describe('common/util', function() {
         });
 
         it('should attempt request anyway', function(done) {
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
 
-          var correctReqOpts = {};
-          var incorrectReqOpts = {};
+          const correctReqOpts = {};
+          const incorrectReqOpts = {};
 
           authClient.authorizeRequest = function(rOpts, callback) {
-            var error = new Error('Could not load the default credentials');
+            const error = new Error('Could not load the default credentials');
             callback(error, incorrectReqOpts);
           };
 
           makeAuthenticatedRequest(correctReqOpts, {
-            onAuthenticated: function(err, reqOpts) {
+            onAuthenticated(err, reqOpts) {
               assert.ifError(err);
 
               assert.strictEqual(reqOpts, correctReqOpts);
@@ -906,16 +906,16 @@ describe('common/util', function() {
         });
 
         it('should block decorateRequest error', function(done) {
-          var decorateRequestError = new Error('Error.');
+          const decorateRequestError = new Error('Error.');
           utilOverrides.decorateRequest = function() {
             throw decorateRequestError;
           };
 
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(
             {},
             {
-              onAuthenticated: function(err) {
+              onAuthenticated(err) {
                 assert.notStrictEqual(err, decorateRequestError);
                 assert.strictEqual(err, error);
                 done();
@@ -925,7 +925,7 @@ describe('common/util', function() {
         });
 
         it('should invoke the callback with error', function(done) {
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest({}, function(err) {
             assert.strictEqual(err, error);
             done();
@@ -933,11 +933,11 @@ describe('common/util', function() {
         });
 
         it('should exec onAuthenticated callback with error', function(done) {
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(
             {},
             {
-              onAuthenticated: function(err) {
+              onAuthenticated(err) {
                 assert.strictEqual(err, error);
                 done();
               },
@@ -946,11 +946,11 @@ describe('common/util', function() {
         });
 
         it('should emit an error and end the stream', function(done) {
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest({}).on('error', function(err) {
             assert.strictEqual(err, error);
 
-            var stream = this;
+            const stream = this;
             setImmediate(function() {
               assert.strictEqual(stream.destroyed, true);
               done();
@@ -960,7 +960,7 @@ describe('common/util', function() {
       });
 
       describe('authentication success', function() {
-        var reqOpts = {a: 'b', c: 'd'};
+        const reqOpts = {a: 'b', c: 'd'};
 
         beforeEach(function() {
           authClient.authorizeRequest = function(rOpts, callback) {
@@ -974,9 +974,9 @@ describe('common/util', function() {
             return reqOpts;
           };
 
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(reqOpts, {
-            onAuthenticated: function(err, authenticatedReqOpts) {
+            onAuthenticated(err, authenticatedReqOpts) {
               assert.strictEqual(authenticatedReqOpts, reqOpts);
               done();
             },
@@ -984,7 +984,7 @@ describe('common/util', function() {
         });
 
         it('should make request with correct options', function(done) {
-          var config = {a: 'b', c: 'd'};
+          const config = {a: 'b', c: 'd'};
 
           utilOverrides.decorateRequest = function(reqOpts_) {
             assert.strictEqual(reqOpts_, reqOpts);
@@ -997,14 +997,14 @@ describe('common/util', function() {
             cb();
           };
 
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
             config
           );
           makeAuthenticatedRequest(reqOpts, done);
         });
 
         it('should return abort() from the active request', function(done) {
-          var retryRequest = {
+          const retryRequest = {
             abort: done,
           };
 
@@ -1012,12 +1012,12 @@ describe('common/util', function() {
             return retryRequest;
           };
 
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(reqOpts, assert.ifError).abort();
         });
 
         it('should only abort() once', function(done) {
-          var retryRequest = {
+          const retryRequest = {
             abort: done, // Will throw if called more than once.
           };
 
@@ -1025,15 +1025,15 @@ describe('common/util', function() {
             return retryRequest;
           };
 
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          var request = makeAuthenticatedRequest(reqOpts, assert.ifError);
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const request = makeAuthenticatedRequest(reqOpts, assert.ifError);
 
           request.abort(); // done()
           request.abort(); // done()
         });
 
         it('should provide stream to makeRequest', function(done) {
-          var stream;
+          let stream;
 
           utilOverrides.makeRequest = function(authenticatedReqOpts, cfg) {
             setImmediate(function() {
@@ -1042,7 +1042,7 @@ describe('common/util', function() {
             });
           };
 
-          var makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
             {}
           );
           stream = makeAuthenticatedRequest(reqOpts);
@@ -1057,48 +1057,48 @@ describe('common/util', function() {
     });
 
     it('should return false from generic error', function() {
-      var error = new Error('Generic error with no code');
+      const error = new Error('Generic error with no code');
 
       assert.strictEqual(util.shouldRetryRequest(error), false);
     });
 
     it('should return true with error code 429', function() {
-      var error = new GoogleError('429');
+      const error = new GoogleError('429');
       error.code = 429;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 500', function() {
-      var error = new GoogleError('500');
+      const error = new GoogleError('500');
       error.code = 500;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 502', function() {
-      var error = new GoogleError('502');
+      const error = new GoogleError('502');
       error.code = 502;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 503', function() {
-      var error = new GoogleError('503');
+      const error = new GoogleError('503');
       error.code = 503;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should detect rateLimitExceeded reason', function() {
-      var rateLimitError = new GoogleError('Rate limit error without code.');
+      const rateLimitError = new GoogleError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'rateLimitExceeded'}];
 
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
     });
 
     it('should detect userRateLimitExceeded reason', function() {
-      var rateLimitError = new GoogleError('Rate limit error without code.');
+      const rateLimitError = new GoogleError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'userRateLimitExceeded'}];
 
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
@@ -1106,7 +1106,7 @@ describe('common/util', function() {
   });
 
   describe('makeRequest', function() {
-    var reqOpts = {
+    const reqOpts = {
       method: 'GET',
     };
 
@@ -1116,7 +1116,7 @@ describe('common/util', function() {
         assert.equal(config.retries, 3);
         assert.strictEqual(config.request, fakeRequest);
 
-        var error = new Error('Error.');
+        const error = new Error('Error.');
         utilOverrides.parseHttpRespMessage = function() {
           return {err: error};
         };
@@ -1129,7 +1129,7 @@ describe('common/util', function() {
       };
     }
 
-    var noRetryRequestConfig = {autoRetry: false};
+    const noRetryRequestConfig = {autoRetry: false};
     function testNoRetryRequestConfig(done) {
       return function(reqOpts, config) {
         assert.strictEqual(config.retries, 0);
@@ -1137,7 +1137,7 @@ describe('common/util', function() {
       };
     }
 
-    var customRetryRequestConfig = {maxRetries: 10};
+    const customRetryRequestConfig = {maxRetries: 10};
     function testCustomRetryRequestConfig(done) {
       return function(reqOpts, config) {
         assert.strictEqual(config.retries, customRetryRequestConfig.maxRetries);
@@ -1162,23 +1162,23 @@ describe('common/util', function() {
       });
 
       it('should return the instance of retryRequest', function() {
-        var requestInstance = {};
+        const requestInstance = {};
         retryRequestOverride = function() {
           return requestInstance;
         };
-        var request = util.makeRequest(reqOpts, assert.ifError);
+        const request = util.makeRequest(reqOpts, assert.ifError);
         assert.strictEqual(request, requestInstance);
       });
     });
 
     describe('stream mode', function() {
       it('should forward the specified events to the stream', function(done) {
-        var requestStream = duplexify();
-        var userStream = duplexify();
+        const requestStream = duplexify();
+        const userStream = duplexify();
 
-        var error = new Error('Error.');
-        var response = {};
-        var complete = {};
+        const error = new Error('Error.');
+        const response = {};
+        const complete = {};
 
         userStream
           .on('error', function(error_) {
@@ -1207,7 +1207,7 @@ describe('common/util', function() {
 
       describe('GET requests', function() {
         it('should use retryRequest', function(done) {
-          var userStream = duplexify();
+          const userStream = duplexify();
 
           retryRequestOverride = function(reqOpts_) {
             assert.strictEqual(reqOpts_, reqOpts);
@@ -1219,8 +1219,8 @@ describe('common/util', function() {
         });
 
         it('should set the readable stream', function(done) {
-          var userStream = duplexify();
-          var retryRequestStream = new stream.Stream();
+          const userStream = duplexify();
+          const retryRequestStream = new stream.Stream();
 
           retryRequestOverride = function() {
             return retryRequestStream;
@@ -1235,10 +1235,10 @@ describe('common/util', function() {
         });
 
         it('should expose the abort method from retryRequest', function(done) {
-          var userStream = duplexify();
+          const userStream = duplexify();
 
           retryRequestOverride = function() {
-            var requestStream: any = new stream.Stream();
+            const requestStream: any = new stream.Stream();
             requestStream.abort = done;
             return requestStream;
           };
@@ -1250,8 +1250,8 @@ describe('common/util', function() {
 
       describe('non-GET requests', function() {
         it('should not use retryRequest', function(done) {
-          var userStream = duplexify();
-          var reqOpts = {
+          const userStream = duplexify();
+          const reqOpts = {
             method: 'POST',
           };
 
@@ -1266,8 +1266,8 @@ describe('common/util', function() {
         });
 
         it('should set the writable stream', function(done) {
-          var userStream = duplexify();
-          var requestStream = new stream.Stream();
+          const userStream = duplexify();
+          const requestStream = new stream.Stream();
 
           requestOverride = function() {
             return requestStream;
@@ -1282,10 +1282,10 @@ describe('common/util', function() {
         });
 
         it('should expose the abort method from request', function(done) {
-          var userStream = duplexify();
+          const userStream = duplexify();
 
           requestOverride = function() {
-            var requestStream = duplexify();
+            const requestStream = duplexify();
             requestStream.abort = done;
             return requestStream;
           };
@@ -1318,9 +1318,9 @@ describe('common/util', function() {
       });
 
       it('should let handleResp handle the response', function(done) {
-        var error = new Error('Error.');
-        var response = {a: 'b', c: 'd'};
-        var body = response.a;
+        const error = new Error('Error.');
+        const response = {a: 'b', c: 'd'};
+        const body = response.a;
 
         retryRequestOverride = function(rOpts, opts, callback) {
           callback(error, response, body);
@@ -1340,7 +1340,7 @@ describe('common/util', function() {
 
   describe('decorateRequest', function() {
     it('should delete qs.autoPaginate', function() {
-      var decoratedReqOpts = util.decorateRequest({
+      const decoratedReqOpts = util.decorateRequest({
         autoPaginate: true,
       });
 
@@ -1348,7 +1348,7 @@ describe('common/util', function() {
     });
 
     it('should delete qs.autoPaginateVal', function() {
-      var decoratedReqOpts = util.decorateRequest({
+      const decoratedReqOpts = util.decorateRequest({
         autoPaginateVal: true,
       });
 
@@ -1356,7 +1356,7 @@ describe('common/util', function() {
     });
 
     it('should delete objectMode', function() {
-      var decoratedReqOpts = util.decorateRequest({
+      const decoratedReqOpts = util.decorateRequest({
         objectMode: true,
       });
 
@@ -1364,7 +1364,7 @@ describe('common/util', function() {
     });
 
     it('should delete qs.autoPaginate', function() {
-      var decoratedReqOpts = util.decorateRequest({
+      const decoratedReqOpts = util.decorateRequest({
         qs: {
           autoPaginate: true,
         },
@@ -1374,7 +1374,7 @@ describe('common/util', function() {
     });
 
     it('should delete qs.autoPaginateVal', function() {
-      var decoratedReqOpts = util.decorateRequest({
+      const decoratedReqOpts = util.decorateRequest({
         qs: {
           autoPaginateVal: true,
         },
@@ -1384,7 +1384,7 @@ describe('common/util', function() {
     });
 
     it('should delete json.autoPaginate', function() {
-      var decoratedReqOpts = util.decorateRequest({
+      const decoratedReqOpts = util.decorateRequest({
         json: {
           autoPaginate: true,
         },
@@ -1394,7 +1394,7 @@ describe('common/util', function() {
     });
 
     it('should delete json.autoPaginateVal', function() {
-      var decoratedReqOpts = util.decorateRequest({
+      const decoratedReqOpts = util.decorateRequest({
         json: {
           autoPaginateVal: true,
         },
@@ -1404,12 +1404,12 @@ describe('common/util', function() {
     });
 
     it('should replace project ID tokens for qs object', function() {
-      var projectId = 'project-id';
-      var reqOpts = {
+      const projectId = 'project-id';
+      const reqOpts = {
         uri: 'http://',
         qs: {},
       };
-      var decoratedQs = {};
+      const decoratedQs = {};
 
       utilOverrides.replaceProjectIdToken = function(qs, projectId_) {
         utilOverrides = {};
@@ -1418,17 +1418,17 @@ describe('common/util', function() {
         return decoratedQs;
       };
 
-      var decoratedRequest = util.decorateRequest(reqOpts, projectId);
+      const decoratedRequest = util.decorateRequest(reqOpts, projectId);
       assert.strictEqual(decoratedRequest.qs, decoratedQs);
     });
 
     it('should replace project ID tokens for json object', function() {
-      var projectId = 'project-id';
-      var reqOpts = {
+      const projectId = 'project-id';
+      const reqOpts = {
         uri: 'http://',
         json: {},
       };
-      var decoratedJson = {};
+      const decoratedJson = {};
 
       utilOverrides.replaceProjectIdToken = function(json, projectId_) {
         utilOverrides = {};
@@ -1437,16 +1437,16 @@ describe('common/util', function() {
         return decoratedJson;
       };
 
-      var decoratedRequest = util.decorateRequest(reqOpts, projectId);
+      const decoratedRequest = util.decorateRequest(reqOpts, projectId);
       assert.strictEqual(decoratedRequest.json, decoratedJson);
     });
 
     it('should decorate the request', function() {
-      var projectId = 'project-id';
-      var reqOpts = {
+      const projectId = 'project-id';
+      const reqOpts = {
         uri: 'http://',
       };
-      var decoratedUri = 'http://decorated';
+      const decoratedUri = 'http://decorated';
 
       utilOverrides.replaceProjectIdToken = function(uri, projectId_) {
         assert.strictEqual(uri, reqOpts.uri);
@@ -1461,7 +1461,7 @@ describe('common/util', function() {
   });
 
   describe('projectId placeholder', function() {
-    var PROJECT_ID = 'project-id';
+    const PROJECT_ID = 'project-id';
 
     it('should replace any {{projectId}} it finds', function() {
       assert.deepEqual(
@@ -1545,15 +1545,15 @@ describe('common/util', function() {
   });
 
   describe('normalizeArguments', function() {
-    var fakeContext = {
+    const fakeContext = {
       config_: {
         projectId: 'grapespaceship911',
       },
     };
 
     it('should return an extended object', function() {
-      var local = {a: 'b'};
-      var config;
+      const local = {a: 'b'};
+      let config;
 
       utilOverrides.extendGlobalConfig = function(globalConfig, localConfig) {
         assert.strictEqual(globalConfig, fakeContext.config_);
@@ -1568,7 +1568,7 @@ describe('common/util', function() {
 
   describe('createLimiter', function() {
     function REQUEST_FN() {}
-    var OPTIONS = {
+    const OPTIONS = {
       streamOptions: {
         highWaterMark: 8,
       },
@@ -1585,23 +1585,23 @@ describe('common/util', function() {
     });
 
     it('should return a makeRequest function', function() {
-      var limiter = util.createLimiter(REQUEST_FN, OPTIONS);
+      const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
       assert(is.fn(limiter.makeRequest));
     });
 
     it('should return the created stream', function() {
-      var streamEventsStream = {};
+      const streamEventsStream = {};
 
       streamEventsOverride = function() {
         return streamEventsStream;
       };
 
-      var limiter = util.createLimiter(REQUEST_FN, OPTIONS);
+      const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
       assert.strictEqual(limiter.stream, streamEventsStream);
     });
 
     it('should pass stream options to through', function() {
-      var limiter = util.createLimiter(REQUEST_FN, OPTIONS);
+      const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
 
       assert.strictEqual(
         limiter.stream._readableState.highWaterMark,
@@ -1611,9 +1611,9 @@ describe('common/util', function() {
 
     describe('makeRequest', function() {
       it('should pass arguments to request method', function(done) {
-        var args = [{}, {}];
+        const args = [{}, {}];
 
-        var limiter = util.createLimiter(function(obj1, obj2) {
+        const limiter = util.createLimiter(function(obj1, obj2) {
           assert.strictEqual(obj1, args[0]);
           assert.strictEqual(obj2, args[1]);
           done();
@@ -1623,16 +1623,16 @@ describe('common/util', function() {
       });
 
       it('should not make more requests than the limit', function(done) {
-        var callsMade = 0;
-        var maxApiCalls = 10;
+        let callsMade = 0;
+        const maxApiCalls = 10;
 
-        var limiter = util.createLimiter(
+        const limiter = util.createLimiter(
           function() {
             callsMade++;
             limiter.makeRequest();
           },
           {
-            maxApiCalls: maxApiCalls,
+            maxApiCalls,
           }
         );
 
@@ -1657,8 +1657,8 @@ describe('common/util', function() {
       this.parent = new MiddleLayer();
     }
 
-    var pubsub = new PubSub();
-    var subscription = new Subscription();
+    const pubsub = new PubSub();
+    const subscription = new Subscription();
 
     describe('Service objects', function() {
       it('should match by constructor name', function() {
@@ -1695,7 +1695,7 @@ describe('common/util', function() {
 
   describe('getUserAgentFromPackageJson', function() {
     it('should format a User Agent string from a package.json', function() {
-      var userAgent = util.getUserAgentFromPackageJson({
+      const userAgent = util.getUserAgentFromPackageJson({
         name: '@google-cloud/storage',
         version: '0.1.0',
       });
@@ -1705,10 +1705,10 @@ describe('common/util', function() {
   });
 
   describe('promisifyAll', function() {
-    var fakeArgs = [null, 1, 2, 3];
-    var fakeError = new Error('err.');
+    const fakeArgs = [null, 1, 2, 3];
+    const fakeError = new Error('err.');
 
-    var FakeClass;
+    let FakeClass;
 
     beforeEach(function() {
       FakeClass = function() {};
@@ -1760,8 +1760,8 @@ describe('common/util', function() {
     });
 
     it('should pass the options object to promisify', function(done) {
-      var promisify = util.promisify;
-      var fakeOptions = {
+      const promisify = util.promisify;
+      const fakeOptions = {
         a: 'a',
       };
 
@@ -1779,7 +1779,7 @@ describe('common/util', function() {
     });
 
     it('should not re-promisify methods', function() {
-      var method = FakeClass.prototype.methodName;
+      const method = FakeClass.prototype.methodName;
 
       util.promisifyAll(FakeClass);
 
@@ -1788,9 +1788,9 @@ describe('common/util', function() {
   });
 
   describe('promisify', function() {
-    var fakeContext = {};
-    var func;
-    var fakeArgs;
+    const fakeContext = {};
+    let func;
+    let fakeArgs;
 
     beforeEach(function() {
       fakeArgs = [null, 1, 2, 3];
@@ -1801,7 +1801,7 @@ describe('common/util', function() {
     });
 
     it('should not re-promisify the function', function() {
-      var original = func;
+      const original = func;
 
       func = util.promisify(func);
 
@@ -1809,8 +1809,8 @@ describe('common/util', function() {
     });
 
     it('should not return a promise in callback mode', function(done) {
-      var returnVal = func.call(fakeContext, function() {
-        var args = [].slice.call(arguments);
+      const returnVal = func.call(fakeContext, function() {
+        const args = [].slice.call(arguments);
 
         assert.deepEqual(args, fakeArgs);
         assert.strictEqual(this, fakeContext);
@@ -1826,7 +1826,7 @@ describe('common/util', function() {
     });
 
     it('should reject the promise on a failed request', function() {
-      var error = new Error('err');
+      const error = new Error('err');
 
       fakeArgs = [error];
 
@@ -1841,14 +1841,14 @@ describe('common/util', function() {
     });
 
     it('should allow the Promise object to be overridden', function() {
-      var FakePromise = function() {};
-      var promise = func.call({Promise: FakePromise});
+      const FakePromise = function() {};
+      const promise = func.call({Promise: FakePromise});
 
       assert(promise instanceof FakePromise);
     });
 
     it('should resolve singular arguments', function() {
-      var fakeArg = 'hi';
+      const fakeArg = 'hi';
 
       func = util.promisify(
         function(callback) {
@@ -1865,7 +1865,7 @@ describe('common/util', function() {
     });
 
     it('should ignore singular when multiple args are present', function() {
-      var fakeArgs = ['a', 'b'];
+      const fakeArgs = ['a', 'b'];
 
       func = util.promisify(
         function(callback) {
@@ -1883,19 +1883,19 @@ describe('common/util', function() {
 
     describe('trailing undefined arguments', function() {
       it('should not return a promise in callback mode', function(done) {
-        var func = util.promisify(function(optional) {
+        const func = util.promisify(function(optional) {
           assert(is.fn(optional));
           optional(null);
         });
 
-        var returnVal = func(function() {
+        const returnVal = func(function() {
           assert(!returnVal);
           done();
         });
       });
 
       it('should return a promise when callback omitted', function(done) {
-        var func = util.promisify(function(optional) {
+        const func = util.promisify(function(optional) {
           assert.strictEqual(arguments.length, 1);
           assert(is.fn(optional));
           optional(null);
@@ -1907,7 +1907,7 @@ describe('common/util', function() {
       });
 
       it('should not mistake non-function args for callbacks', function(done) {
-        var func = util.promisify(function(foo, optional) {
+        const func = util.promisify(function(foo, optional) {
           assert.strictEqual(arguments.length, 2);
           assert(is.fn(optional));
           optional(null);
@@ -1922,13 +1922,13 @@ describe('common/util', function() {
 
   describe('privatize', function() {
     it('should set value', function() {
-      var obj: any = {};
+      const obj: any = {};
       util.privatize(obj, 'value', true);
       assert.strictEqual(obj.value, true);
     });
 
     it('should allow values to be overwritten', function() {
-      var obj: any = {};
+      const obj: any = {};
       util.privatize(obj, 'value', true);
       obj.value = false;
       assert.strictEqual(obj.value, false);

@@ -182,7 +182,7 @@ util.parseHttpRespMessage = parseHttpRespMessage;
  */
 function parseHttpRespBody(body) {
   const parsedHttpRespBody: any = {
-    body: body,
+    body,
   };
 
   if (is.string(body)) {
@@ -251,7 +251,7 @@ function makeWritableStream(dup, options, onComplete) {
   });
 
   options.makeAuthenticatedRequest(reqOpts, {
-    onAuthenticated: function(err, authenticatedReqOpts) {
+    onAuthenticated(err, authenticatedReqOpts) {
       if (err) {
         dup.destroy(err);
         return;
@@ -422,7 +422,7 @@ function makeAuthenticatedRequestFactory(config) {
     }
 
     return {
-      abort: function() {
+      abort() {
         if (activeRequest_) {
           activeRequest_.abort();
           activeRequest_ = null;
@@ -465,11 +465,11 @@ function makeRequest(reqOpts, config, callback) {
   config = config || {};
 
   const options = {
-    request: request,
+    request,
 
     retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
 
-    shouldRetryFn: function(httpRespMessage) {
+    shouldRetryFn(httpRespMessage) {
       const err = util.parseHttpRespMessage(httpRespMessage).err;
       return err && util.shouldRetryRequest(err);
     },
@@ -657,7 +657,7 @@ function createLimiter(makeRequestFn, options) {
   }
 
   return {
-    makeRequest: function() {
+    makeRequest() {
       requestsMade++;
 
       if (requestsToMake >= 0 && requestsMade > requestsToMake) {
@@ -670,7 +670,7 @@ function createLimiter(makeRequestFn, options) {
       return stream;
     },
 
-    stream: stream,
+    stream,
   };
 }
 

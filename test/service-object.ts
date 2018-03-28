@@ -22,7 +22,7 @@ const util = require('../src/util');
 
 let promisified = false;
 const fakeUtil = extend({}, util, {
-  promisifyAll: function(Class) {
+  promisifyAll(Class) {
     if (Class.name === 'ServiceObject') {
       promisified = true;
     }
@@ -83,7 +83,7 @@ describe('ServiceObject', function() {
       const methods = {};
 
       const config = extend({}, CONFIG, {
-        methods: methods,
+        methods,
       });
 
       const serviceObject = new ServiceObject(config);
@@ -125,7 +125,7 @@ describe('ServiceObject', function() {
   describe('create', function() {
     it('should call createMethod', function(done) {
       const config = extend({}, CONFIG, {
-        createMethod: createMethod,
+        createMethod,
       });
       const options = {};
 
@@ -141,7 +141,7 @@ describe('ServiceObject', function() {
 
     it('should not require options', function(done) {
       const config = extend({}, CONFIG, {
-        createMethod: createMethod,
+        createMethod,
       });
 
       function createMethod(id, options, callback) {
@@ -157,7 +157,7 @@ describe('ServiceObject', function() {
 
     it('should pass error to callback', function(done) {
       const config = extend({}, CONFIG, {
-        createMethod: createMethod,
+        createMethod,
       });
       const options = {};
 
@@ -179,7 +179,7 @@ describe('ServiceObject', function() {
 
     it('should return instance and apiResponse to callback', function(done) {
       const config = extend({}, CONFIG, {
-        createMethod: createMethod,
+        createMethod,
       });
       const options = {};
 
@@ -200,7 +200,7 @@ describe('ServiceObject', function() {
 
     it('should assign metadata', function(done) {
       const config = extend({}, CONFIG, {
-        createMethod: createMethod,
+        createMethod,
       });
       const options = {};
 
@@ -222,7 +222,7 @@ describe('ServiceObject', function() {
 
     it('should execute callback with any amount of arguments', function(done) {
       const config = extend({}, CONFIG, {
-        createMethod: createMethod,
+        createMethod,
       });
       const options = {};
 
@@ -749,15 +749,15 @@ describe('ServiceObject', function() {
     it('should extend interceptors from child ServiceObjects', function(done) {
       const parent = new ServiceObject(CONFIG);
       parent.interceptors.push({
-        request: function(reqOpts) {
+        request(reqOpts) {
           reqOpts.parent = true;
           return reqOpts;
         },
       });
 
-      const child = new ServiceObject(extend({}, CONFIG, {parent: parent}));
+      const child = new ServiceObject(extend({}, CONFIG, {parent}));
       child.interceptors.push({
-        request: function(reqOpts) {
+        request(reqOpts) {
           reqOpts.child = true;
           return reqOpts;
         },
@@ -780,7 +780,7 @@ describe('ServiceObject', function() {
 
     it('should pass a clone of the interceptors', function(done) {
       serviceObject.interceptors.push({
-        request: function(reqOpts) {
+        request(reqOpts) {
           reqOpts.one = true;
           return reqOpts;
         },

@@ -148,10 +148,10 @@ paginator.parseArguments_ = function(args) {
 
   const parsedArguments = {
     query: query || {},
-    autoPaginate: autoPaginate,
-    maxApiCalls: maxApiCalls,
-    maxResults: maxResults,
-    callback: callback,
+    autoPaginate,
+    maxApiCalls,
+    maxResults,
+    callback,
     streamOptions: undefined as any
   };
 
@@ -216,7 +216,7 @@ paginator.run_ = function(parsedArguments, originalMethod) {
  * @return {stream} - Readable object stream.
  */
 paginator.runAsStream_ = function(parsedArguments, originalMethod) {
-  let query = parsedArguments.query;
+  const query = parsedArguments.query;
   let resultsToSend = parsedArguments.maxResults;
 
   const limiter = util.createLimiter(makeRequest, {

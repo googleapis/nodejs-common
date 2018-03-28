@@ -43,7 +43,8 @@
     "test": "npm run compile && repo-tools test run --cmd npm -- run cover",
     "posttest": "npm run license-check",
     "license-check": "jsgl --local .",
-    "compile": "tsc -p ."
+    "compile": "tsc -p .",
+    "fix": "gts fix"
   },
   "dependencies": {
     "array-uniq": "^1.0.3",

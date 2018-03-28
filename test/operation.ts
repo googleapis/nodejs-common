@@ -21,7 +21,7 @@ import {EventEmitter} from 'events';
 const util = require('../src/util');
 
 const fakeModelo: any = {
-  inherits: function() {
+  inherits() {
     this.calledWith_ = arguments;
     return require('modelo').inherits.apply(this, arguments);
   },
@@ -84,7 +84,7 @@ describe('Operation', function() {
       const baseUrl = 'baseUrl';
 
       const operation = new Operation({
-        baseUrl: baseUrl,
+        baseUrl,
       });
 
       assert.strictEqual(operation.serviceObjectArguments_[0].baseUrl, baseUrl);

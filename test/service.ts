@@ -99,7 +99,7 @@ describe('Service', function() {
 
       makeAuthenticatedRequestFactoryOverride = function() {
         return {
-          authClient: authClient,
+          authClient,
         };
       };
 
@@ -117,7 +117,7 @@ describe('Service', function() {
       makeAuthenticatedRequestFactoryOverride = function() {
         return {
           authClient: {},
-          getCredentials: getCredentials,
+          getCredentials,
         };
       };
 
@@ -191,7 +191,7 @@ describe('Service', function() {
   describe('getProjectId', function() {
     it('should get the project ID from the auth client', function(done) {
       service.authClient = {
-        getProjectId: function() {
+        getProjectId() {
           done();
         },
       };
@@ -203,7 +203,7 @@ describe('Service', function() {
       const error = new Error('Error.');
 
       service.authClient = {
-        getProjectId: function(callback) {
+        getProjectId(callback) {
           callback(error);
         },
       };
@@ -219,7 +219,7 @@ describe('Service', function() {
       const projectId = 'detected-project-id';
 
       service.authClient = {
-        getProjectId: function(callback) {
+        getProjectId(callback) {
           callback(null, projectId);
         },
       };
@@ -377,7 +377,7 @@ describe('Service', function() {
 
         // Called first.
         service.globalInterceptors.push({
-          request: function(reqOpts) {
+          request(reqOpts) {
             reqOpts.order = '1';
             return reqOpts;
           },
@@ -385,7 +385,7 @@ describe('Service', function() {
 
         // Called third.
         service.interceptors.push({
-          request: function(reqOpts) {
+          request(reqOpts) {
             reqOpts.order += '3';
             return reqOpts;
           },
@@ -393,7 +393,7 @@ describe('Service', function() {
 
         // Called second.
         service.globalInterceptors.push({
-          request: function(reqOpts) {
+          request(reqOpts) {
             reqOpts.order += '2';
             return reqOpts;
           },
@@ -401,7 +401,7 @@ describe('Service', function() {
 
         // Called fifth.
         (reqOpts.interceptors_ as any).push({
-          request: function(reqOpts) {
+          request(reqOpts) {
             reqOpts.order += '5';
             return reqOpts;
           },
@@ -409,7 +409,7 @@ describe('Service', function() {
 
         // Called fourth.
         service.interceptors.push({
-          request: function(reqOpts) {
+          request(reqOpts) {
             reqOpts.order += '4';
             return reqOpts;
           },
@@ -417,7 +417,7 @@ describe('Service', function() {
 
         // Called sixth.
         (reqOpts.interceptors_ as any).push({
-          request: function(reqOpts) {
+          request(reqOpts) {
             reqOpts.order += '6';
             return reqOpts;
           },
@@ -436,9 +436,9 @@ describe('Service', function() {
           return reqOpts;
         }
 
-        const globalInterceptors = [{request: request}];
-        const localInterceptors = [{request: request}];
-        const requestInterceptors = [{request: request}];
+        const globalInterceptors = [{request}];
+        const localInterceptors = [{request}];
+        const requestInterceptors = [{request}];
 
         const originalGlobalInterceptors = [].slice.call(globalInterceptors);
         const originalLocalInterceptors = [].slice.call(localInterceptors);
@@ -462,10 +462,10 @@ describe('Service', function() {
 
       it('should not call unrelated interceptors', function(done) {
         service.interceptors.push({
-          anotherInterceptor: function() {
+          anotherInterceptor() {
             done(); // Will throw.
           },
-          request: function() {
+          request() {
             setImmediate(done);
             return {};
           },
