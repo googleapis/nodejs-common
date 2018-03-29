@@ -257,8 +257,8 @@ function makeWritableStream(dup, options, onComplete) {
         return;
       }
 
-      request(authenticatedReqOpts, function(err, resp, body) {
-        util.handleResp(err, resp, body, function(err, data) {
+      request(authenticatedReqOpts, (err, resp, body) => {
+        util.handleResp(err, resp, body, (err, data) => {
           if (err) {
             dup.destroy(err);
             return;
@@ -498,7 +498,7 @@ function makeRequest(reqOpts, config, callback) {
     dup.abort = requestStream.abort;
     return;
   } else {
-    return retryRequest(reqOpts, options, function(err, response, body) {
+    return retryRequest(reqOpts, options, (err, response, body) => {
       util.handleResp(err, response, body, callback);
     });
   }
@@ -549,7 +549,7 @@ util.decorateRequest = decorateRequest;
  */
 function replaceProjectIdToken(value, projectId) {
   if (is.array(value)) {
-    value = value.map(function(val) {
+    value = value.map((val) => {
       return replaceProjectIdToken(val, projectId);
     });
   }
@@ -803,7 +803,7 @@ util.promisify = promisify;
 function promisifyAll(Class, options) {
   const exclude = (options && options.exclude) || [];
 
-  const methods = Object.keys(Class.prototype).filter(function(methodName) {
+  const methods = Object.keys(Class.prototype).filter((methodName) => {
     return (
       is.fn(Class.prototype[methodName]) && // is it a function?
       !/(^_|(Stream|_)|promise$)/.test(methodName) && // is it promisable?
@@ -811,7 +811,7 @@ function promisifyAll(Class, options) {
     ); // is it blacklisted?
   });
 
-  methods.forEach(function(methodName) {
+  methods.forEach((methodName) => {
     const originalMethod = Class.prototype[methodName];
 
     if (!originalMethod.promisified_) {

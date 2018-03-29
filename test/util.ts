@@ -57,7 +57,7 @@ function fakeStreamEvents() {
   return (streamEventsOverride || streamEvents).apply(null, arguments);
 }
 
-describe('common/util', function() {
+describe('common/util', () => {
   let util;
   let utilOverrides: any = {};
 
@@ -88,7 +88,7 @@ describe('common/util', function() {
     duplexify = require('duplexify');
   });
 
-  beforeEach(function() {
+  beforeEach(() => {
     googleAutoAuthOverride = null;
     requestOverride = null;
     retryRequestOverride = null;
@@ -96,7 +96,7 @@ describe('common/util', function() {
     utilOverrides = {};
   });
 
-  it('should have set correct defaults on Request', function() {
+  it('should have set correct defaults on Request', () => {
     assert.deepEqual(REQUEST_DEFAULT_CONF, {
       timeout: 60000,
       gzip: true,
@@ -107,7 +107,7 @@ describe('common/util', function() {
     });
   });
 
-  it('should export an error for module instantiation errors', function() {
+  it('should export an error for module instantiation errors', () => {
     const errorMessage = `Sorry, we cannot connect to Cloud Services without a project
     ID. You may specify one with an environment variable named
     "GOOGLE_CLOUD_PROJECT".`.replace(/ +/g, ' ');
@@ -116,8 +116,8 @@ describe('common/util', function() {
     assert.strictEqual(missingProjectIdError.message, errorMessage);
   });
 
-  describe('ApiError', function() {
-    it('should build correct ApiError', function() {
+  describe('ApiError', () => {
+    it('should build correct ApiError', () => {
       const error = {
         errors: [new Error(), new Error()],
         code: 100,
@@ -133,7 +133,7 @@ describe('common/util', function() {
       assert.strictEqual(apiError.response, error.response);
     });
 
-    it('should detect ApiError message from response body', function() {
+    it('should detect ApiError message from response body', () => {
       const errorMessage = 'API error message';
 
       const error = {
@@ -147,7 +147,7 @@ describe('common/util', function() {
       assert.strictEqual(apiError.message, errorMessage);
     });
 
-    it('should parse the response body for errors', function() {
+    it('should parse the response body for errors', () => {
       const error = new Error('Error.');
       const errors = [error, error];
 
@@ -166,7 +166,7 @@ describe('common/util', function() {
       assert.deepEqual(apiError.errors, errors);
     });
 
-    it('should append the custom error message', function() {
+    it('should append the custom error message', () => {
       const errorMessage = 'API error message';
       const customErrorMessage = 'Custom error message';
       const expectedErrorMessage = [customErrorMessage, errorMessage].join(
@@ -185,7 +185,7 @@ describe('common/util', function() {
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });
 
-    it('should parse and append the decoded response body', function() {
+    it('should parse and append the decoded response body', () => {
       const errorMessage = 'API error message';
       const responseBodyMsg = 'Response body message &lt;';
       const expectedErrorMessage = [
@@ -206,7 +206,7 @@ describe('common/util', function() {
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });
 
-    it('should use default message if there are no errors', function() {
+    it('should use default message if there are no errors', () => {
       const expectedErrorMessage = 'Error during request.';
 
       const error = {
@@ -219,7 +219,7 @@ describe('common/util', function() {
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });
 
-    it('should use default message if too many errors', function() {
+    it('should use default message if too many errors', () => {
       const expectedErrorMessage = 'Error during request.';
 
       const error = {
@@ -233,7 +233,7 @@ describe('common/util', function() {
       assert.strictEqual(apiError.message, expectedErrorMessage);
     });
 
-    it('should filter out duplicate errors', function() {
+    it('should filter out duplicate errors', () => {
       const expectedErrorMessage = 'Error during request.';
 
       const error = {
@@ -250,8 +250,8 @@ describe('common/util', function() {
     });
   });
 
-  describe('PartialFailureError', function() {
-    it('should build correct PartialFailureError', function() {
+  describe('PartialFailureError', () => {
+    it('should build correct PartialFailureError', () => {
       const error = {
         errors: [new Error(), new Error()],
         response: {a: 'b', c: 'd'},
@@ -265,7 +265,7 @@ describe('common/util', function() {
       assert.strictEqual(partialFailureError.message, error.message);
     });
 
-    it('should use default message', function() {
+    it('should use default message', () => {
       const expectedErrorMessage = 'A failure occurred during this request.';
 
       const error = {
@@ -279,8 +279,8 @@ describe('common/util', function() {
     });
   });
 
-  describe('extendGlobalConfig', function() {
-    it('should favor `keyFilename` when `credentials` is global', function() {
+  describe('extendGlobalConfig', () => {
+    it('should favor `keyFilename` when `credentials` is global', () => {
       const globalConfig = {credentials: {}};
       const options = util.extendGlobalConfig(globalConfig, {
         keyFilename: 'key.json',
@@ -288,13 +288,13 @@ describe('common/util', function() {
       assert.strictEqual(options.credentials, undefined);
     });
 
-    it('should favor `credentials` when `keyFilename` is global', function() {
+    it('should favor `credentials` when `keyFilename` is global', () => {
       const globalConfig = {keyFilename: 'key.json'};
       const options = util.extendGlobalConfig(globalConfig, {credentials: {}});
       assert.strictEqual(options.keyFilename, undefined);
     });
 
-    it('should honor the GCLOUD_PROJECT environment variable', function() {
+    it('should honor the GCLOUD_PROJECT environment variable', () => {
       const newProjectId = 'envvar-project-id';
       const cachedProjectId = process.env.GCLOUD_PROJECT;
       process.env.GCLOUD_PROJECT = newProjectId;
@@ -314,13 +314,13 @@ describe('common/util', function() {
       assert.strictEqual(options.projectId, newProjectId);
     });
 
-    it('should not modify original object', function() {
+    it('should not modify original object', () => {
       const globalConfig = {keyFilename: 'key.json'};
       util.extendGlobalConfig(globalConfig, {credentials: {}});
       assert.deepEqual(globalConfig, {keyFilename: 'key.json'});
     });
 
-    it('should link the original interceptors_', function() {
+    it('should link the original interceptors_', () => {
       const interceptors = [];
       const globalConfig = {interceptors_: interceptors};
       util.extendGlobalConfig(globalConfig, {});
@@ -328,8 +328,8 @@ describe('common/util', function() {
     });
   });
 
-  describe('handleResp', function() {
-    it('should handle errors', function(done) {
+  describe('handleResp', () => {
+    it('should handle errors', (done) => {
       const error = new Error('Error.');
 
       util.handleResp(error, {}, null, function(err) {
@@ -338,11 +338,11 @@ describe('common/util', function() {
       });
     });
 
-    it('uses a no-op callback if none is sent', function() {
+    it('uses a no-op callback if none is sent', () => {
       util.handleResp(undefined, {}, '');
     });
 
-    it('should parse response', function(done) {
+    it('should parse response', (done) => {
       const err = {a: 'b', c: 'd'};
       const resp = {a: 'b', c: 'd'};
       const body = {a: 'b', c: 'd'};
@@ -375,10 +375,10 @@ describe('common/util', function() {
       });
     });
 
-    it('should parse response for error', function(done) {
+    it('should parse response for error', (done) => {
       const error = new Error('Error.');
 
-      utilOverrides.parseHttpRespMessage = function() {
+      utilOverrides.parseHttpRespMessage = () => {
         return {err: error};
       };
 
@@ -388,29 +388,29 @@ describe('common/util', function() {
       });
     });
 
-    it('should parse body for error', function(done) {
+    it('should parse body for error', (done) => {
       const error = new Error('Error.');
 
-      utilOverrides.parseHttpRespBody = function() {
+      utilOverrides.parseHttpRespBody = () => {
         return {err: error};
       };
 
-      util.handleResp(null, {}, {}, function(err) {
+      util.handleResp(null, {}, {}, (err) => {
         assert.deepEqual(err, error);
         done();
       });
     });
 
-    it('should not parse undefined response', function(done) {
-      utilOverrides.parseHttpRespMessage = function() {
+    it('should not parse undefined response', (done) => {
+      utilOverrides.parseHttpRespMessage = () => {
         done(); // Will throw.
       };
 
       util.handleResp(null, null, null, done);
     });
 
-    it('should not parse undefined body', function(done) {
-      utilOverrides.parseHttpRespBody = function() {
+    it('should not parse undefined body', (done) => {
+      utilOverrides.parseHttpRespBody = () => {
         done(); // Will throw.
       };
 
@@ -418,8 +418,8 @@ describe('common/util', function() {
     });
   });
 
-  describe('parseHttpRespMessage', function() {
-    it('should build ApiError with non-200 status and message', function(done) {
+  describe('parseHttpRespMessage', () => {
+    it('should build ApiError with non-200 status and message', (done) => {
       const httpRespMessage = {statusCode: 400, statusMessage: 'Not Good'};
 
       utilOverrides.ApiError = function(error_) {
@@ -433,15 +433,15 @@ describe('common/util', function() {
       util.parseHttpRespMessage(httpRespMessage);
     });
 
-    it('should return the original response message', function() {
+    it('should return the original response message', () => {
       const httpRespMessage = {};
       const parsedHttpRespMessage = util.parseHttpRespMessage(httpRespMessage);
       assert.strictEqual(parsedHttpRespMessage.resp, httpRespMessage);
     });
   });
 
-  describe('parseHttpRespBody', function() {
-    it('should detect body errors', function() {
+  describe('parseHttpRespBody', () => {
+    it('should detect body errors', () => {
       const apiErr = {
         errors: [{message: 'bar'}],
         code: 400,
@@ -459,14 +459,14 @@ describe('common/util', function() {
       assert.deepEqual(parsedHttpRespBody.err.message, expectedErrorMessage);
     });
 
-    it('should try to parse JSON if body is string', function() {
+    it('should try to parse JSON if body is string', () => {
       const httpRespBody = '{ "foo": "bar" }';
       const parsedHttpRespBody = util.parseHttpRespBody(httpRespBody);
 
       assert.strictEqual(parsedHttpRespBody.body.foo, 'bar');
     });
 
-    it('should return the original body', function() {
+    it('should return the original body', () => {
       const httpRespBody = {};
       const parsedHttpRespBody = util.parseHttpRespBody(httpRespBody);
 
@@ -474,8 +474,8 @@ describe('common/util', function() {
     });
   });
 
-  describe('makeWritableStream', function() {
-    it('should use defaults', function(done) {
+  describe('makeWritableStream', () => {
+    it('should use defaults', (done) => {
       const dup = duplexify();
       const metadata = {a: 'b', c: 'd'};
 
@@ -501,7 +501,7 @@ describe('common/util', function() {
       });
     });
 
-    it('should allow overriding defaults', function(done) {
+    it('should allow overriding defaults', (done) => {
       const dup = duplexify();
 
       const req = {
@@ -531,7 +531,7 @@ describe('common/util', function() {
       });
     });
 
-    it('should emit an error', function(done) {
+    it('should emit an error', (done) => {
       const error = new Error('Error.');
 
       const ws = duplexify();
@@ -547,10 +547,10 @@ describe('common/util', function() {
       });
     });
 
-    it('should set the writable stream', function(done) {
+    it('should set the writable stream', (done) => {
       const dup = duplexify();
 
-      dup.setWritable = function() {
+      dup.setWritable = () => {
         done();
       };
 
@@ -559,13 +559,13 @@ describe('common/util', function() {
       });
     });
 
-    it('should emit an error if the request fails', function(done) {
+    it('should emit an error if the request fails', (done) => {
       const dup = duplexify();
       const fakeStream: any = new stream.Writable();
       const error = new Error('Error.');
 
-      fakeStream.write = function() {};
-      dup.end = function() {};
+      fakeStream.write = () => {};
+      dup.end = () => {};
 
       utilOverrides.handleResp = function(err, res, body, callback) {
         callback(error);
@@ -586,17 +586,17 @@ describe('common/util', function() {
         },
       });
 
-      setImmediate(function() {
+      setImmediate(() => {
         fakeStream.emit('complete', {});
       });
     });
 
-    it('should emit the response', function(done) {
+    it('should emit the response', (done) => {
       const dup = duplexify();
       const fakeStream: any = new stream.Writable();
       const fakeResponse = {};
 
-      fakeStream.write = function() {};
+      fakeStream.write = () => {};
 
       utilOverrides.handleResp = function(err, res, body, callback) {
         callback();
@@ -620,12 +620,12 @@ describe('common/util', function() {
       util.makeWritableStream(dup, options, util.noop);
     });
 
-    it('should pass back the response data to the callback', function(done) {
+    it('should pass back the response data to the callback', (done) => {
       const dup = duplexify();
       const fakeStream: any = new stream.Writable();
       const fakeResponse = {};
 
-      fakeStream.write = function() {};
+      fakeStream.write = () => {};
 
       utilOverrides.handleResp = function(err, res, body, callback) {
         callback(null, fakeResponse);
@@ -646,25 +646,25 @@ describe('common/util', function() {
         done();
       });
 
-      setImmediate(function() {
+      setImmediate(() => {
         fakeStream.emit('complete', {});
       });
     });
   });
 
-  describe('makeAuthenticatedRequestFactory', function() {
+  describe('makeAuthenticatedRequestFactory', () => {
     const authClient: any = {
       getCredentials() {},
       projectId: 'project-id',
     };
 
-    beforeEach(function() {
-      googleAutoAuthOverride = function() {
+    beforeEach(() => {
+      googleAutoAuthOverride = () => {
         return authClient;
       };
     });
 
-    it('should create an authClient', function(done) {
+    it('should create an authClient', (done) => {
       const config = {
         test: true,
       };
@@ -678,7 +678,7 @@ describe('common/util', function() {
       util.makeAuthenticatedRequestFactory(config);
     });
 
-    it('should not pass projectId token to google-auto-auth', function(done) {
+    it('should not pass projectId token to google-auto-auth', (done) => {
       const config = {
         projectId: '{{projectId}}',
       };
@@ -692,12 +692,12 @@ describe('common/util', function() {
       util.makeAuthenticatedRequestFactory(config);
     });
 
-    it('should not remove projectId from config object', function(done) {
+    it('should not remove projectId from config object', (done) => {
       const config = {
         projectId: '{{projectId}}',
       };
 
-      googleAutoAuthOverride = function() {
+      googleAutoAuthOverride = () => {
         assert.strictEqual(config.projectId, '{{projectId}}');
         setImmediate(done);
         return authClient;
@@ -706,16 +706,16 @@ describe('common/util', function() {
       util.makeAuthenticatedRequestFactory(config);
     });
 
-    it('should return a function', function() {
+    it('should return a function', () => {
       assert.equal(typeof util.makeAuthenticatedRequestFactory(), 'function');
     });
 
-    it('should return a getCredentials method', function(done) {
+    it('should return a getCredentials method', (done) => {
       function getCredentials() {
         done();
       }
 
-      googleAutoAuthOverride = function() {
+      googleAutoAuthOverride = () => {
         return {getCredentials};
       };
 
@@ -723,10 +723,10 @@ describe('common/util', function() {
       makeAuthenticatedRequest.getCredentials();
     });
 
-    it('should return the authClient', function() {
+    it('should return the authClient', () => {
       const authClient = {getCredentials() {}};
 
-      googleAutoAuthOverride = function() {
+      googleAutoAuthOverride = () => {
         return authClient;
       };
 
@@ -734,18 +734,18 @@ describe('common/util', function() {
       assert.strictEqual(makeAuthenticatedRequest.authClient, authClient);
     });
 
-    describe('customEndpoint (no authentication attempted)', function() {
+    describe('customEndpoint (no authentication attempted)', () => {
       let makeAuthenticatedRequest;
       const config = {
         customEndpoint: true,
       };
       const expectedProjectId = authClient.projectId;
 
-      beforeEach(function() {
+      beforeEach(() => {
         makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(config);
       });
 
-      it('should decorate the request', function(done) {
+      it('should decorate the request', (done) => {
         const reqOpts = {a: 'b', c: 'd'};
         const decoratedRequest = {};
 
@@ -764,11 +764,11 @@ describe('common/util', function() {
         });
       });
 
-      it('should return an error while decorating', function(done) {
+      it('should return an error while decorating', (done) => {
         const error = new Error('Error.');
         const reqOpts = {a: 'b', c: 'd'};
 
-        utilOverrides.decorateRequest = function() {
+        utilOverrides.decorateRequest = () => {
           throw error;
         };
 
@@ -780,7 +780,7 @@ describe('common/util', function() {
         });
       });
 
-      it('should pass options back to callback', function(done) {
+      it('should pass options back to callback', (done) => {
         const reqOpts = {a: 'b', c: 'd'};
 
         makeAuthenticatedRequest(reqOpts, {
@@ -792,7 +792,7 @@ describe('common/util', function() {
         });
       });
 
-      it('should not authenticate requests with a custom API', function(done) {
+      it('should not authenticate requests with a custom API', (done) => {
         const reqOpts = {a: 'b', c: 'd'};
 
         utilOverrides.makeRequest = function(rOpts) {
@@ -804,8 +804,8 @@ describe('common/util', function() {
       });
     });
 
-    describe('needs authentication', function() {
-      it('should pass correct args to authorizeRequest', function(done) {
+    describe('needs authentication', () => {
+      it('should pass correct args to authorizeRequest', (done) => {
         const reqOpts = {e: 'f', g: 'h'};
 
         authClient.authorizeRequest = function(rOpts) {
@@ -817,15 +817,15 @@ describe('common/util', function() {
         makeAuthenticatedRequest(reqOpts, {});
       });
 
-      it('should return a stream if callback is missing', function() {
-        authClient.authorizeRequest = function() {};
+      it('should return a stream if callback is missing', () => {
+        authClient.authorizeRequest = () => {};
 
         const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({});
         assert(makeAuthenticatedRequest({}) instanceof stream.Stream);
       });
 
-      describe('projectId', function() {
-        it('should default to authClient projectId', function(done) {
+      describe('projectId', () => {
+        it('should default to authClient projectId', (done) => {
           authClient.projectId = 'authclient-project-id';
 
           utilOverrides.decorateRequest = function(reqOpts, projectId) {
@@ -845,7 +845,7 @@ describe('common/util', function() {
           );
         });
 
-        it('should use user-provided projectId', function(done) {
+        it('should use user-provided projectId', (done) => {
           authClient.projectId = 'authclient-project-id';
 
           const config = {
@@ -871,18 +871,18 @@ describe('common/util', function() {
         });
       });
 
-      describe('authentication errors', function() {
+      describe('authentication errors', () => {
         const error = new Error('Error.');
 
-        beforeEach(function() {
+        beforeEach(() => {
           authClient.authorizeRequest = function(rOpts, callback) {
-            setImmediate(function() {
+            setImmediate(() => {
               callback(error);
             });
           };
         });
 
-        it('should attempt request anyway', function(done) {
+        it('should attempt request anyway', (done) => {
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
 
           const correctReqOpts = {};
@@ -905,9 +905,9 @@ describe('common/util', function() {
           });
         });
 
-        it('should block decorateRequest error', function(done) {
+        it('should block decorateRequest error', (done) => {
           const decorateRequestError = new Error('Error.');
-          utilOverrides.decorateRequest = function() {
+          utilOverrides.decorateRequest = () => {
             throw decorateRequestError;
           };
 
@@ -924,7 +924,7 @@ describe('common/util', function() {
           );
         });
 
-        it('should invoke the callback with error', function(done) {
+        it('should invoke the callback with error', (done) => {
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest({}, function(err) {
             assert.strictEqual(err, error);
@@ -932,7 +932,7 @@ describe('common/util', function() {
           });
         });
 
-        it('should exec onAuthenticated callback with error', function(done) {
+        it('should exec onAuthenticated callback with error', (done) => {
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(
             {},
@@ -945,13 +945,13 @@ describe('common/util', function() {
           );
         });
 
-        it('should emit an error and end the stream', function(done) {
+        it('should emit an error and end the stream', (done) => {
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest({}).on('error', function(err) {
             assert.strictEqual(err, error);
 
             const stream = this;
-            setImmediate(function() {
+            setImmediate(() => {
               assert.strictEqual(stream.destroyed, true);
               done();
             });
@@ -959,16 +959,16 @@ describe('common/util', function() {
         });
       });
 
-      describe('authentication success', function() {
+      describe('authentication success', () => {
         const reqOpts = {a: 'b', c: 'd'};
 
-        beforeEach(function() {
+        beforeEach(() => {
           authClient.authorizeRequest = function(rOpts, callback) {
             callback(null, rOpts);
           };
         });
 
-        it('should return authenticated request to callback', function(done) {
+        it('should return authenticated request to callback', (done) => {
           utilOverrides.decorateRequest = function(reqOpts_) {
             assert.strictEqual(reqOpts_, reqOpts);
             return reqOpts;
@@ -983,7 +983,7 @@ describe('common/util', function() {
           });
         });
 
-        it('should make request with correct options', function(done) {
+        it('should make request with correct options', (done) => {
           const config = {a: 'b', c: 'd'};
 
           utilOverrides.decorateRequest = function(reqOpts_) {
@@ -1003,12 +1003,12 @@ describe('common/util', function() {
           makeAuthenticatedRequest(reqOpts, done);
         });
 
-        it('should return abort() from the active request', function(done) {
+        it('should return abort() from the active request', (done) => {
           const retryRequest = {
             abort: done,
           };
 
-          utilOverrides.makeRequest = function() {
+          utilOverrides.makeRequest = () => {
             return retryRequest;
           };
 
@@ -1016,12 +1016,12 @@ describe('common/util', function() {
           makeAuthenticatedRequest(reqOpts, assert.ifError).abort();
         });
 
-        it('should only abort() once', function(done) {
+        it('should only abort() once', (done) => {
           const retryRequest = {
             abort: done, // Will throw if called more than once.
           };
 
-          utilOverrides.makeRequest = function() {
+          utilOverrides.makeRequest = () => {
             return retryRequest;
           };
 
@@ -1032,11 +1032,11 @@ describe('common/util', function() {
           request.abort(); // done()
         });
 
-        it('should provide stream to makeRequest', function(done) {
+        it('should provide stream to makeRequest', (done) => {
           let stream;
 
           utilOverrides.makeRequest = function(authenticatedReqOpts, cfg) {
-            setImmediate(function() {
+            setImmediate(() => {
               assert.strictEqual(cfg.stream, stream);
               done();
             });
@@ -1051,53 +1051,53 @@ describe('common/util', function() {
     });
   });
 
-  describe('shouldRetryRequest', function() {
-    it('should return false if there is no error', function() {
+  describe('shouldRetryRequest', () => {
+    it('should return false if there is no error', () => {
       assert.strictEqual(util.shouldRetryRequest(), false);
     });
 
-    it('should return false from generic error', function() {
+    it('should return false from generic error', () => {
       const error = new Error('Generic error with no code');
 
       assert.strictEqual(util.shouldRetryRequest(error), false);
     });
 
-    it('should return true with error code 429', function() {
+    it('should return true with error code 429', () => {
       const error = new GoogleError('429');
       error.code = 429;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
-    it('should return true with error code 500', function() {
+    it('should return true with error code 500', () => {
       const error = new GoogleError('500');
       error.code = 500;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
-    it('should return true with error code 502', function() {
+    it('should return true with error code 502', () => {
       const error = new GoogleError('502');
       error.code = 502;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
-    it('should return true with error code 503', function() {
+    it('should return true with error code 503', () => {
       const error = new GoogleError('503');
       error.code = 503;
 
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
-    it('should detect rateLimitExceeded reason', function() {
+    it('should detect rateLimitExceeded reason', () => {
       const rateLimitError = new GoogleError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'rateLimitExceeded'}];
 
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
     });
 
-    it('should detect userRateLimitExceeded reason', function() {
+    it('should detect userRateLimitExceeded reason', () => {
       const rateLimitError = new GoogleError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'userRateLimitExceeded'}];
 
@@ -1105,7 +1105,7 @@ describe('common/util', function() {
     });
   });
 
-  describe('makeRequest', function() {
+  describe('makeRequest', () => {
     const reqOpts = {
       method: 'GET',
     };
@@ -1117,7 +1117,7 @@ describe('common/util', function() {
         assert.strictEqual(config.request, fakeRequest);
 
         const error = new Error('Error.');
-        utilOverrides.parseHttpRespMessage = function() {
+        utilOverrides.parseHttpRespMessage = () => {
           return {err: error};
         };
         utilOverrides.shouldRetryRequest = function(err) {
@@ -1145,25 +1145,25 @@ describe('common/util', function() {
       };
     }
 
-    describe('callback mode', function() {
-      it('should pass the default options to retryRequest', function(done) {
+    describe('callback mode', () => {
+      it('should pass the default options to retryRequest', (done) => {
         retryRequestOverride = testDefaultRetryRequestConfig(done);
         util.makeRequest(reqOpts, {});
       });
 
-      it('should allow turning off retries to retryRequest', function(done) {
+      it('should allow turning off retries to retryRequest', (done) => {
         retryRequestOverride = testNoRetryRequestConfig(done);
         util.makeRequest(reqOpts, noRetryRequestConfig);
       });
 
-      it('should override number of retries to retryRequest', function(done) {
+      it('should override number of retries to retryRequest', (done) => {
         retryRequestOverride = testCustomRetryRequestConfig(done);
         util.makeRequest(reqOpts, customRetryRequestConfig);
       });
 
-      it('should return the instance of retryRequest', function() {
+      it('should return the instance of retryRequest', () => {
         const requestInstance = {};
-        retryRequestOverride = function() {
+        retryRequestOverride = () => {
           return requestInstance;
         };
         const request = util.makeRequest(reqOpts, assert.ifError);
@@ -1171,8 +1171,8 @@ describe('common/util', function() {
       });
     });
 
-    describe('stream mode', function() {
-      it('should forward the specified events to the stream', function(done) {
+    describe('stream mode', () => {
+      it('should forward the specified events to the stream', (done) => {
         const requestStream = duplexify();
         const userStream = duplexify();
 
@@ -1194,8 +1194,8 @@ describe('common/util', function() {
             done();
           });
 
-        retryRequestOverride = function() {
-          setImmediate(function() {
+        retryRequestOverride = () => {
+          setImmediate(() => {
             requestStream.emit('error', error);
           });
 
@@ -1205,8 +1205,8 @@ describe('common/util', function() {
         util.makeRequest(reqOpts, {stream: userStream});
       });
 
-      describe('GET requests', function() {
-        it('should use retryRequest', function(done) {
+      describe('GET requests', () => {
+        it('should use retryRequest', (done) => {
           const userStream = duplexify();
 
           retryRequestOverride = function(reqOpts_) {
@@ -1218,11 +1218,11 @@ describe('common/util', function() {
           util.makeRequest(reqOpts, {stream: userStream});
         });
 
-        it('should set the readable stream', function(done) {
+        it('should set the readable stream', (done) => {
           const userStream = duplexify();
           const retryRequestStream = new stream.Stream();
 
-          retryRequestOverride = function() {
+          retryRequestOverride = () => {
             return retryRequestStream;
           };
 
@@ -1234,10 +1234,10 @@ describe('common/util', function() {
           util.makeRequest(reqOpts, {stream: userStream});
         });
 
-        it('should expose the abort method from retryRequest', function(done) {
+        it('should expose the abort method from retryRequest', (done) => {
           const userStream = duplexify();
 
-          retryRequestOverride = function() {
+          retryRequestOverride = () => {
             const requestStream: any = new stream.Stream();
             requestStream.abort = done;
             return requestStream;
@@ -1248,8 +1248,8 @@ describe('common/util', function() {
         });
       });
 
-      describe('non-GET requests', function() {
-        it('should not use retryRequest', function(done) {
+      describe('non-GET requests', () => {
+        it('should not use retryRequest', (done) => {
           const userStream = duplexify();
           const reqOpts = {
             method: 'POST',
@@ -1265,11 +1265,11 @@ describe('common/util', function() {
           util.makeRequest(reqOpts, {stream: userStream});
         });
 
-        it('should set the writable stream', function(done) {
+        it('should set the writable stream', (done) => {
           const userStream = duplexify();
           const requestStream = new stream.Stream();
 
-          requestOverride = function() {
+          requestOverride = () => {
             return requestStream;
           };
 
@@ -1281,10 +1281,10 @@ describe('common/util', function() {
           util.makeRequest({method: 'POST'}, {stream: userStream});
         });
 
-        it('should expose the abort method from request', function(done) {
+        it('should expose the abort method from request', (done) => {
           const userStream = duplexify();
 
-          requestOverride = function() {
+          requestOverride = () => {
             const requestStream = duplexify();
             requestStream.abort = done;
             return requestStream;
@@ -1296,28 +1296,28 @@ describe('common/util', function() {
       });
     });
 
-    describe('callback mode', function() {
-      it('should optionally accept config', function(done) {
+    describe('callback mode', () => {
+      it('should optionally accept config', (done) => {
         retryRequestOverride = testDefaultRetryRequestConfig(done);
         util.makeRequest(reqOpts, assert.ifError);
       });
 
-      it('should pass the default options to retryRequest', function(done) {
+      it('should pass the default options to retryRequest', (done) => {
         retryRequestOverride = testDefaultRetryRequestConfig(done);
         util.makeRequest(reqOpts, {}, assert.ifError);
       });
 
-      it('should allow turning off retries to retryRequest', function(done) {
+      it('should allow turning off retries to retryRequest', (done) => {
         retryRequestOverride = testNoRetryRequestConfig(done);
         util.makeRequest(reqOpts, noRetryRequestConfig, assert.ifError);
       });
 
-      it('should override number of retries to retryRequest', function(done) {
+      it('should override number of retries to retryRequest', (done) => {
         retryRequestOverride = testCustomRetryRequestConfig(done);
         util.makeRequest(reqOpts, customRetryRequestConfig, assert.ifError);
       });
 
-      it('should let handleResp handle the response', function(done) {
+      it('should let handleResp handle the response', (done) => {
         const error = new Error('Error.');
         const response = {a: 'b', c: 'd'};
         const body = response.a;
@@ -1338,8 +1338,8 @@ describe('common/util', function() {
     });
   });
 
-  describe('decorateRequest', function() {
-    it('should delete qs.autoPaginate', function() {
+  describe('decorateRequest', () => {
+    it('should delete qs.autoPaginate', () => {
       const decoratedReqOpts = util.decorateRequest({
         autoPaginate: true,
       });
@@ -1347,7 +1347,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedReqOpts.autoPaginate, undefined);
     });
 
-    it('should delete qs.autoPaginateVal', function() {
+    it('should delete qs.autoPaginateVal', () => {
       const decoratedReqOpts = util.decorateRequest({
         autoPaginateVal: true,
       });
@@ -1355,7 +1355,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedReqOpts.autoPaginateVal, undefined);
     });
 
-    it('should delete objectMode', function() {
+    it('should delete objectMode', () => {
       const decoratedReqOpts = util.decorateRequest({
         objectMode: true,
       });
@@ -1363,7 +1363,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedReqOpts.objectMode, undefined);
     });
 
-    it('should delete qs.autoPaginate', function() {
+    it('should delete qs.autoPaginate', () => {
       const decoratedReqOpts = util.decorateRequest({
         qs: {
           autoPaginate: true,
@@ -1373,7 +1373,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedReqOpts.qs.autoPaginate, undefined);
     });
 
-    it('should delete qs.autoPaginateVal', function() {
+    it('should delete qs.autoPaginateVal', () => {
       const decoratedReqOpts = util.decorateRequest({
         qs: {
           autoPaginateVal: true,
@@ -1383,7 +1383,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedReqOpts.qs.autoPaginateVal, undefined);
     });
 
-    it('should delete json.autoPaginate', function() {
+    it('should delete json.autoPaginate', () => {
       const decoratedReqOpts = util.decorateRequest({
         json: {
           autoPaginate: true,
@@ -1393,7 +1393,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedReqOpts.json.autoPaginate, undefined);
     });
 
-    it('should delete json.autoPaginateVal', function() {
+    it('should delete json.autoPaginateVal', () => {
       const decoratedReqOpts = util.decorateRequest({
         json: {
           autoPaginateVal: true,
@@ -1403,7 +1403,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedReqOpts.json.autoPaginateVal, undefined);
     });
 
-    it('should replace project ID tokens for qs object', function() {
+    it('should replace project ID tokens for qs object', () => {
       const projectId = 'project-id';
       const reqOpts = {
         uri: 'http://',
@@ -1422,7 +1422,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedRequest.qs, decoratedQs);
     });
 
-    it('should replace project ID tokens for json object', function() {
+    it('should replace project ID tokens for json object', () => {
       const projectId = 'project-id';
       const reqOpts = {
         uri: 'http://',
@@ -1441,7 +1441,7 @@ describe('common/util', function() {
       assert.strictEqual(decoratedRequest.json, decoratedJson);
     });
 
-    it('should decorate the request', function() {
+    it('should decorate the request', () => {
       const projectId = 'project-id';
       const reqOpts = {
         uri: 'http://',
@@ -1460,10 +1460,10 @@ describe('common/util', function() {
     });
   });
 
-  describe('projectId placeholder', function() {
+  describe('projectId placeholder', () => {
     const PROJECT_ID = 'project-id';
 
-    it('should replace any {{projectId}} it finds', function() {
+    it('should replace any {{projectId}} it finds', () => {
       assert.deepEqual(
         util.replaceProjectIdToken(
           {
@@ -1521,7 +1521,7 @@ describe('common/util', function() {
       );
     });
 
-    it('should replace more than one {{projectId}}', function() {
+    it('should replace more than one {{projectId}}', () => {
       assert.deepEqual(
         util.replaceProjectIdToken(
           {
@@ -1535,8 +1535,8 @@ describe('common/util', function() {
       );
     });
 
-    it('should throw if it needs a projectId and cannot find it', function() {
-      assert.throws(function() {
+    it('should throw if it needs a projectId and cannot find it', () => {
+      assert.throws(() => {
         util.replaceProjectIdToken({
           here: '{{projectId}}',
         });
@@ -1544,14 +1544,14 @@ describe('common/util', function() {
     });
   });
 
-  describe('normalizeArguments', function() {
+  describe('normalizeArguments', () => {
     const fakeContext = {
       config_: {
         projectId: 'grapespaceship911',
       },
     };
 
-    it('should return an extended object', function() {
+    it('should return an extended object', () => {
       const local = {a: 'b'};
       let config;
 
@@ -1566,7 +1566,7 @@ describe('common/util', function() {
     });
   });
 
-  describe('createLimiter', function() {
+  describe('createLimiter', () => {
     function REQUEST_FN() {}
     const OPTIONS = {
       streamOptions: {
@@ -1574,7 +1574,7 @@ describe('common/util', function() {
       },
     };
 
-    it('should create an object stream with stream-events', function(done) {
+    it('should create an object stream with stream-events', (done) => {
       streamEventsOverride = function(stream) {
         assert.strictEqual(stream._readableState.objectMode, true);
         setImmediate(done);
@@ -1584,15 +1584,15 @@ describe('common/util', function() {
       util.createLimiter(REQUEST_FN, OPTIONS);
     });
 
-    it('should return a makeRequest function', function() {
+    it('should return a makeRequest function', () => {
       const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
       assert(is.fn(limiter.makeRequest));
     });
 
-    it('should return the created stream', function() {
+    it('should return the created stream', () => {
       const streamEventsStream = {};
 
-      streamEventsOverride = function() {
+      streamEventsOverride = () => {
         return streamEventsStream;
       };
 
@@ -1600,7 +1600,7 @@ describe('common/util', function() {
       assert.strictEqual(limiter.stream, streamEventsStream);
     });
 
-    it('should pass stream options to through', function() {
+    it('should pass stream options to through', () => {
       const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
 
       assert.strictEqual(
@@ -1609,8 +1609,8 @@ describe('common/util', function() {
       );
     });
 
-    describe('makeRequest', function() {
-      it('should pass arguments to request method', function(done) {
+    describe('makeRequest', () => {
+      it('should pass arguments to request method', (done) => {
         const args = [{}, {}];
 
         const limiter = util.createLimiter(function(obj1, obj2) {
@@ -1622,12 +1622,12 @@ describe('common/util', function() {
         limiter.makeRequest.apply(null, args);
       });
 
-      it('should not make more requests than the limit', function(done) {
+      it('should not make more requests than the limit', (done) => {
         let callsMade = 0;
         const maxApiCalls = 10;
 
         const limiter = util.createLimiter(
-          function() {
+          () => {
             callsMade++;
             limiter.makeRequest();
           },
@@ -1638,7 +1638,7 @@ describe('common/util', function() {
 
         limiter.makeRequest();
 
-        limiter.stream.on('data', util.noop).on('end', function() {
+        limiter.stream.on('data', util.noop).on('end', () => {
           assert.strictEqual(callsMade, maxApiCalls);
           done();
         });
@@ -1646,7 +1646,7 @@ describe('common/util', function() {
     });
   });
 
-  describe('isCustomType', function() {
+  describe('isCustomType', () => {
     function PubSub() {}
 
     function MiddleLayer() {
@@ -1660,22 +1660,22 @@ describe('common/util', function() {
     const pubsub = new PubSub();
     const subscription = new Subscription();
 
-    describe('Service objects', function() {
-      it('should match by constructor name', function() {
+    describe('Service objects', () => {
+      it('should match by constructor name', () => {
         assert(util.isCustomType(pubsub, 'pubsub'));
       });
 
-      it('should support any casing', function() {
+      it('should support any casing', () => {
         assert(util.isCustomType(pubsub, 'PubSub'));
       });
 
-      it('should not match if the wrong Service', function() {
+      it('should not match if the wrong Service', () => {
         assert(!util.isCustomType(subscription, 'BigQuery'));
       });
     });
 
-    describe('ServiceObject objects', function() {
-      it('should match by constructor names', function() {
+    describe('ServiceObject objects', () => {
+      it('should match by constructor names', () => {
         assert(util.isCustomType(subscription, 'pubsub'));
         assert(util.isCustomType(subscription, 'pubsub/subscription'));
 
@@ -1683,18 +1683,18 @@ describe('common/util', function() {
         assert(util.isCustomType(subscription, 'middlelayer/subscription'));
       });
 
-      it('should support any casing', function() {
+      it('should support any casing', () => {
         assert(util.isCustomType(subscription, 'PubSub/Subscription'));
       });
 
-      it('should not match if the wrong ServiceObject', function() {
+      it('should not match if the wrong ServiceObject', () => {
         assert(!util.isCustomType(subscription, 'pubsub/topic'));
       });
     });
   });
 
-  describe('getUserAgentFromPackageJson', function() {
-    it('should format a User Agent string from a package.json', function() {
+  describe('getUserAgentFromPackageJson', () => {
+    it('should format a User Agent string from a package.json', () => {
       const userAgent = util.getUserAgentFromPackageJson({
         name: '@google-cloud/storage',
         version: '0.1.0',
@@ -1704,14 +1704,14 @@ describe('common/util', function() {
     });
   });
 
-  describe('promisifyAll', function() {
+  describe('promisifyAll', () => {
     const fakeArgs = [null, 1, 2, 3];
     const fakeError = new Error('err.');
 
     let FakeClass;
 
-    beforeEach(function() {
-      FakeClass = function() {};
+    beforeEach(() => {
+      FakeClass = () => {};
 
       FakeClass.prototype.methodName = function(callback) {
         callback.apply(null, fakeArgs);
@@ -1734,7 +1734,7 @@ describe('common/util', function() {
       new FakeClass();
     });
 
-    it('should promisify the correct method', function() {
+    it('should promisify the correct method', () => {
       assert(FakeClass.prototype.methodName.promisified_);
       assert(FakeClass.prototype.methodSingle.promisified_);
       assert(FakeClass.prototype.methodError.promisified_);
@@ -1745,11 +1745,11 @@ describe('common/util', function() {
       assert.strictEqual(FakeClass.prototype.promise, util.noop);
     });
 
-    it('should optionally except an exclude list', function() {
+    it('should optionally except an exclude list', () => {
       function FakeClass2() {}
 
       FakeClass2.prototype.methodSync = util.noop;
-      FakeClass2.prototype.method = function() {};
+      FakeClass2.prototype.method = () => {};
 
       util.promisifyAll(FakeClass2, {
         exclude: ['methodSync'],
@@ -1759,7 +1759,7 @@ describe('common/util', function() {
       assert(FakeClass2.prototype.method.promisified_);
     });
 
-    it('should pass the options object to promisify', function(done) {
+    it('should pass the options object to promisify', (done) => {
       const promisify = util.promisify;
       const fakeOptions = {
         a: 'a',
@@ -1773,12 +1773,12 @@ describe('common/util', function() {
       };
 
       function FakeClass2() {}
-      FakeClass2.prototype.method = function() {};
+      FakeClass2.prototype.method = () => {};
 
       util.promisifyAll(FakeClass2, fakeOptions);
     });
 
-    it('should not re-promisify methods', function() {
+    it('should not re-promisify methods', () => {
       const method = FakeClass.prototype.methodName;
 
       util.promisifyAll(FakeClass);
@@ -1787,12 +1787,12 @@ describe('common/util', function() {
     });
   });
 
-  describe('promisify', function() {
+  describe('promisify', () => {
     const fakeContext = {};
     let func;
     let fakeArgs;
 
-    beforeEach(function() {
+    beforeEach(() => {
       fakeArgs = [null, 1, 2, 3];
 
       func = util.promisify(function(callback) {
@@ -1800,7 +1800,7 @@ describe('common/util', function() {
       });
     });
 
-    it('should not re-promisify the function', function() {
+    it('should not re-promisify the function', () => {
       const original = func;
 
       func = util.promisify(func);
@@ -1808,7 +1808,7 @@ describe('common/util', function() {
       assert.strictEqual(original, func);
     });
 
-    it('should not return a promise in callback mode', function(done) {
+    it('should not return a promise in callback mode', (done) => {
       const returnVal = func.call(fakeContext, function() {
         const args = [].slice.call(arguments);
 
@@ -1819,19 +1819,19 @@ describe('common/util', function() {
       });
     });
 
-    it('should return a promise when the callback is omitted', function() {
+    it('should return a promise when the callback is omitted', () => {
       return func().then(function(args) {
         assert.deepEqual(args, fakeArgs.slice(1));
       });
     });
 
-    it('should reject the promise on a failed request', function() {
+    it('should reject the promise on a failed request', () => {
       const error = new Error('err');
 
       fakeArgs = [error];
 
       return func().then(
-        function() {
+        () => {
           throw new Error('Should have gone to failure block');
         },
         function(err) {
@@ -1840,14 +1840,14 @@ describe('common/util', function() {
       );
     });
 
-    it('should allow the Promise object to be overridden', function() {
-      const FakePromise = function() {};
+    it('should allow the Promise object to be overridden', () => {
+      const FakePromise = () => {};
       const promise = func.call({Promise: FakePromise});
 
       assert(promise instanceof FakePromise);
     });
 
-    it('should resolve singular arguments', function() {
+    it('should resolve singular arguments', () => {
       const fakeArg = 'hi';
 
       func = util.promisify(
@@ -1864,7 +1864,7 @@ describe('common/util', function() {
       });
     });
 
-    it('should ignore singular when multiple args are present', function() {
+    it('should ignore singular when multiple args are present', () => {
       const fakeArgs = ['a', 'b'];
 
       func = util.promisify(
@@ -1881,53 +1881,53 @@ describe('common/util', function() {
       });
     });
 
-    describe('trailing undefined arguments', function() {
-      it('should not return a promise in callback mode', function(done) {
+    describe('trailing undefined arguments', () => {
+      it('should not return a promise in callback mode', (done) => {
         const func = util.promisify(function(optional) {
           assert(is.fn(optional));
           optional(null);
         });
 
-        const returnVal = func(function() {
+        const returnVal = func(() => {
           assert(!returnVal);
           done();
         });
       });
 
-      it('should return a promise when callback omitted', function(done) {
+      it('should return a promise when callback omitted', (done) => {
         const func = util.promisify(function(optional) {
           assert.strictEqual(arguments.length, 1);
           assert(is.fn(optional));
           optional(null);
         });
 
-        func(undefined, undefined).then(function() {
+        func(undefined, undefined).then(() => {
           done();
         });
       });
 
-      it('should not mistake non-function args for callbacks', function(done) {
+      it('should not mistake non-function args for callbacks', (done) => {
         const func = util.promisify(function(foo, optional) {
           assert.strictEqual(arguments.length, 2);
           assert(is.fn(optional));
           optional(null);
         });
 
-        func('foo').then(function() {
+        func('foo').then(() => {
           done();
         });
       });
     });
   });
 
-  describe('privatize', function() {
-    it('should set value', function() {
+  describe('privatize', () => {
+    it('should set value', () => {
       const obj: any = {};
       util.privatize(obj, 'value', true);
       assert.strictEqual(obj.value, true);
     });
 
-    it('should allow values to be overwritten', function() {
+    it('should allow values to be overwritten', () => {
       const obj: any = {};
       util.privatize(obj, 'value', true);
       obj.value = false;

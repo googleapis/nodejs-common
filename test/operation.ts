@@ -31,21 +31,21 @@ function FakeServiceObject() {
   this.serviceObjectArguments_ = arguments;
 }
 
-describe('Operation', function() {
+describe('Operation', () => {
   const FAKE_SERVICE = {};
   const OPERATION_ID = '/a/b/c/d';
 
   let Operation;
   let operation;
 
-  before(function() {
+  before(() => {
     Operation = proxyquire('../src/operation.js', {
       modelo: fakeModelo,
       './service-object.js': FakeServiceObject,
     });
   });
 
-  beforeEach(function() {
+  beforeEach(() => {
     operation = new Operation({
       parent: FAKE_SERVICE,
       id: OPERATION_ID,
@@ -53,8 +53,8 @@ describe('Operation', function() {
     operation.Promise = Promise;
   });
 
-  describe('instantiation', function() {
-    it('should extend ServiceObject and EventEmitter', function() {
+  describe('instantiation', () => {
+    it('should extend ServiceObject and EventEmitter', () => {
       const args = fakeModelo.calledWith_;
 
       assert.strictEqual(args[0], Operation);
@@ -62,7 +62,7 @@ describe('Operation', function() {
       assert.strictEqual(args[2], EventEmitter);
     });
 
-    it('should pass ServiceObject the correct config', function() {
+    it('should pass ServiceObject the correct config', () => {
       const config = operation.serviceObjectArguments_[0];
 
       assert.strictEqual(config.baseUrl, '');
@@ -80,7 +80,7 @@ describe('Operation', function() {
       });
     });
 
-    it('should allow overriding baseUrl', function() {
+    it('should allow overriding baseUrl', () => {
       const baseUrl = 'baseUrl';
 
       const operation = new Operation({
@@ -90,16 +90,16 @@ describe('Operation', function() {
       assert.strictEqual(operation.serviceObjectArguments_[0].baseUrl, baseUrl);
     });
 
-    it('should localize listener variables', function() {
+    it('should localize listener variables', () => {
       assert.strictEqual(operation.completeListeners, 0);
       assert.strictEqual(operation.hasActiveListeners, false);
     });
 
-    it('should call listenForEvents_', function() {
+    it('should call listenForEvents_', () => {
       const listenForEvents = Operation.prototype.listenForEvents_;
       let called = false;
 
-      Operation.prototype.listenForEvents_ = function() {
+      Operation.prototype.listenForEvents_ = () => {
         called = true;
       };
 
@@ -109,62 +109,60 @@ describe('Operation', function() {
     });
   });
 
-  describe('promise', function() {
-    beforeEach(function() {
+  describe('promise', () => {
+    beforeEach(() => {
       operation.startPolling_ = util.noop;
     });
 
-    it('should return an instance of the localized Promise', function() {
-      const FakePromise = (operation.Promise = function() {});
+    it('should return an instance of the localized Promise', () => {
+      const FakePromise = (operation.Promise = () => {});
       const promise = operation.promise();
 
       assert(promise instanceof FakePromise);
     });
 
-    it('should reject the promise if an error occurs', function() {
+    it('should reject the promise if an error occurs', () => {
       const error = new Error('err');
 
-      setImmediate(function() {
+      setImmediate(() => {
         operation.emit('error', error);
       });
 
-      return operation.promise().then(
-        function() {
+      return operation.promise()
+        .then(() => {
           throw new Error('Promise should have been rejected.');
-        },
-        function(err) {
+        }, (err) => {
           assert.strictEqual(err, error);
-        }
-      );
+        });
     });
 
-    it('should resolve the promise on complete', function() {
+    it('should resolve the promise on complete', () => {
       const metadata = {};
 
-      setImmediate(function() {
+      setImmediate(() => {
         operation.emit('complete', metadata);
       });
 
-      return operation.promise().then(function(data) {
+      return operation.promise().then(data => {
         assert.deepEqual(data, [metadata]);
       });
     });
   });
 
-  describe('listenForEvents_', function() {
-    beforeEach(function() {
+  describe('listenForEvents_', () => {
+    beforeEach(() => {
       operation.startPolling_ = util.noop;
     });
 
-    it('should start polling when complete listener is bound', function(done) {
-      operation.startPolling_ = function() {
+    it('should start polling when complete listener is bound', (done) => {
+      operation.startPolling_ = () => {
         done();
       };
 
       operation.on('complete', util.noop);
     });
 
-    it('should track the number of listeners', function() {
+    it('should track the number of listeners', () => {
       assert.strictEqual(operation.completeListeners, 0);
 
       operation.on('complete', util.noop);
@@ -174,10 +172,10 @@ describe('Operation', function() {
       assert.strictEqual(operation.completeListeners, 0);
     });
 
-    it('should only run a single pulling loop', function() {
+    it('should only run a single pulling loop', () => {
       let startPollingCallCount = 0;
 
-      operation.startPolling_ = function() {
+      operation.startPolling_ = () => {
         startPollingCallCount++;
       };
 
@@ -187,7 +185,7 @@ describe('Operation', function() {
       assert.strictEqual(startPollingCallCount, 1);
     });
 
-    it('should close when no more message listeners are bound', function() {
+    it('should close when no more message listeners are bound', () => {
       operation.on('complete', util.noop);
       operation.on('complete', util.noop);
       assert.strictEqual(operation.hasActiveListeners, true);
@@ -200,56 +198,56 @@ describe('Operation', function() {
     });
   });
 
-  describe('poll_', function() {
-    it('should call getMetdata', function(done) {
-      operation.getMetadata = function() {
+  describe('poll_', () => {
+    it('should call getMetdata', (done) => {
+      operation.getMetadata = () => {
         done();
       };
 
       operation.poll_(assert.ifError);
     });
 
-    describe('could not get metadata', function() {
-      it('should callback with an error', function(done) {
+    describe('could not get metadata', () => {
+      it('should callback with an error', (done) => {
         const error = new Error('Error.');
 
-        operation.getMetadata = function(callback) {
+        operation.getMetadata = (callback) => {
           callback(error);
         };
 
-        operation.poll_(function(err) {
+        operation.poll_((err) => {
           assert.strictEqual(err, error);
           done();
         });
       });
 
-      it('should callback with the operation error', function(done) {
+      it('should callback with the operation error', (done) => {
         const apiResponse = {
           error: {},
         };
 
-        operation.getMetadata = function(callback) {
+        operation.getMetadata = (callback) => {
           callback(null, apiResponse, apiResponse);
         };
 
-        operation.poll_(function(err) {
+        operation.poll_((err) => {
           assert.strictEqual(err, apiResponse.error);
           done();
         });
       });
     });
 
-    describe('operation incomplete', function() {
+    describe('operation incomplete', () => {
       const apiResponse = {done: false};
 
-      beforeEach(function() {
-        operation.getMetadata = function(callback) {
+      beforeEach(() => {
+        operation.getMetadata = (callback) => {
           callback(null, apiResponse);
         };
       });
 
-      it('should callback with no arguments', function(done) {
-        operation.poll_(function(err, resp) {
+      it('should callback with no arguments', (done) => {
+        operation.poll_((err, resp) => {
           assert.strictEqual(err, undefined);
           assert.strictEqual(resp, undefined);
           done();
@@ -257,17 +255,17 @@ describe('Operation', function() {
       });
     });
 
-    describe('operation complete', function() {
+    describe('operation complete', () => {
       const apiResponse = {done: true};
 
-      beforeEach(function() {
-        operation.getMetadata = function(callback) {
+      beforeEach(() => {
+        operation.getMetadata = (callback) => {
           callback(null, apiResponse);
         };
       });
 
-      it('should emit complete with metadata', function(done) {
-        operation.poll_(function(err, resp) {
+      it('should emit complete with metadata', (done) => {
+        operation.poll_((err, resp) => {
           assert.ifError(err);
           assert.strictEqual(resp, apiResponse);
           done();
@@ -276,27 +274,27 @@ describe('Operation', function() {
     });
   });
 
-  describe('startPolling_', function() {
+  describe('startPolling_', () => {
     let listenForEvents_;
 
-    before(function() {
+    before(() => {
       listenForEvents_ = Operation.prototype.listenForEvents_;
     });
 
-    after(function() {
+    after(() => {
       Operation.prototype.listenForEvents_ = listenForEvents_;
     });
 
-    beforeEach(function() {
+    beforeEach(() => {
       Operation.prototype.listenForEvents_ = util.noop;
       operation.hasActiveListeners = true;
     });
 
-    afterEach(function() {
+    afterEach(() => {
       operation.hasActiveListeners = false;
     });
 
-    it('should not call getMetadata if no listeners', function(done) {
+    it('should not call getMetadata if no listeners', (done) => {
       operation.hasActiveListeners = false;
 
       operation.getMetadata = done; // if called, test will fail.
@@ -305,27 +303,27 @@ describe('Operation', function() {
       done();
     });
 
-    it('should call getMetadata if listeners are registered', function(done) {
+    it('should call getMetadata if listeners are registered', (done) => {
       operation.hasActiveListeners = true;
 
-      operation.getMetadata = function() {
+      operation.getMetadata = () => {
         done();
       };
 
       operation.startPolling_();
     });
 
-    describe('API error', function() {
+    describe('API error', () => {
       const error = new Error('Error.');
 
-      beforeEach(function() {
-        operation.getMetadata = function(callback) {
+      beforeEach(() => {
+        operation.getMetadata = (callback) => {
           callback(error);
         };
       });
 
-      it('should emit the error', function(done) {
-        operation.on('error', function(err) {
+      it('should emit the error', (done) => {
+        operation.on('error', (err) => {
           assert.strictEqual(err, error);
           done();
         });
@@ -334,25 +332,25 @@ describe('Operation', function() {
       });
     });
 
-    describe('operation pending', function() {
+    describe('operation pending', () => {
       const apiResponse = {done: false};
       const setTimeoutCached = global.setTimeout;
 
-      beforeEach(function() {
-        operation.getMetadata = function(callback) {
+      beforeEach(() => {
+        operation.getMetadata = (callback) => {
           callback(null, apiResponse, apiResponse);
         };
       });
 
-      after(function() {
+      after(() => {
         global.setTimeout = setTimeoutCached;
       });
 
-      it('should call startPolling_ after 500 ms', function(done) {
+      it('should call startPolling_ after 500 ms', (done) => {
         const startPolling_ = operation.startPolling_;
         let startPollingCalled = false;
 
-        (global as any).setTimeout = function(fn, timeoutMs) {
+        (global as any).setTimeout = (fn, timeoutMs) => {
           fn(); // should call startPolling_
           assert.strictEqual(timeoutMs, 500);
         };
@@ -374,17 +372,17 @@ describe('Operation', function() {
       });
     });
 
-    describe('operation complete', function() {
+    describe('operation complete', () => {
       const apiResponse = {done: true};
 
-      beforeEach(function() {
-        operation.getMetadata = function(callback) {
+      beforeEach(() => {
+        operation.getMetadata = (callback) => {
           callback(null, apiResponse, apiResponse);
         };
       });
 
-      it('should emit complete with metadata', function(done) {
-        operation.on('complete', function(metadata) {
+      it('should emit complete with metadata', (done) => {
+        operation.on('complete', (metadata) => {
           assert.strictEqual(metadata, apiResponse);
           done();
         });

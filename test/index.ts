@@ -24,10 +24,10 @@ const fakeService = {};
 const fakeServiceObject = {};
 const fakeUtil = {};
 
-describe('common', function() {
+describe('common', () => {
   let common;
 
-  before(function() {
+  before(() => {
     common = proxyquire('../src/index.js', {
       './logger.js': fakeLogger,
       './operation.js': fakeOperation,
@@ -38,7 +38,7 @@ describe('common', function() {
     });
   });
 
-  it('should correctly export the common modules', function() {
+  it('should correctly export the common modules', () => {
     assert.deepEqual(common, {
       logger: fakeLogger,
       Operation: fakeOperation,

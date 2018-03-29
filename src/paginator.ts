@@ -188,7 +188,7 @@ paginator.run_ = function(parsedArguments, originalMethod) {
     this.runAsStream_(parsedArguments, originalMethod)
       .on('error', callback)
       .pipe(
-        concat(function(results) {
+        concat((results) => {
           callback(null, results);
         })
       );
@@ -226,7 +226,7 @@ paginator.runAsStream_ = function(parsedArguments, originalMethod) {
 
   const stream = limiter.stream;
 
-  stream.once('reading', function() {
+  stream.once('reading', () => {
     makeRequest(query);
   });
 
@@ -246,7 +246,7 @@ paginator.runAsStream_ = function(parsedArguments, originalMethod) {
 
     resultsToSend -= results.length;
 
-    split(results, stream, function(streamEnded) {
+    split(results, stream, (streamEnded) => {
       if (streamEnded) {
         return;
       }

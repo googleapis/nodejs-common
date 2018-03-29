@@ -23,57 +23,57 @@ function fakeLogDriver(config) {
   return config;
 }
 
-describe('logger base-functionality', function() {
+describe('logger base-functionality', () => {
   let logger;
 
-  before(function() {
+  before(() => {
     logger = proxyquire('../src/logger.js', {
       'log-driver': fakeLogDriver,
     });
   });
 
-  it('should expose the default list of levels', function() {
+  it('should expose the default list of levels', () => {
     assert.deepEqual(logger.LEVELS, LEVELS);
   });
 
-  it('should create a logger with the correct levels', function() {
+  it('should create a logger with the correct levels', () => {
     assert.deepEqual(logger().levels, LEVELS);
   });
 
-  it('should create a logger with custom levels', function() {
+  it('should create a logger with custom levels', () => {
     const customLevels = ['level-1', 'level-2', 'level-3'];
     assert.deepEqual(logger({levels: customLevels}).levels, customLevels);
   });
 
-  it('should use a specified level', function() {
+  it('should use a specified level', () => {
     const level = 'level';
     assert.strictEqual(logger({level}).level, level);
   });
 
-  it('should treat a single arguments as the level', function() {
+  it('should treat a single arguments as the level', () => {
     const level = 'level';
     assert.strictEqual(logger(level).level, level);
   });
 
-  it('should default level to error', function() {
+  it('should default level to error', () => {
     assert.strictEqual(logger().level, 'error');
   });
 
-  describe('formatting', function() {
+  describe('formatting', () => {
     const LEVEL = 'level-name';
     const TAG = 'tag-name';
     const MESSAGES = ['message-1', 'message-2'];
 
-    it('should correctly format without a tag', function() {
+    it('should correctly format without a tag', () => {
       const formatted = logger().format(LEVEL, MESSAGES[0], MESSAGES[1]);
 
       assert.strictEqual(formatted, 'LEVEL-NAME message-1 message-2');
     });
 
-    it('should correctly format with a tag', function() {
+    it('should correctly format with a tag', () => {
       const formatted = logger({
-        tag: TAG,
-      }).format(LEVEL, MESSAGES[0], MESSAGES[1]);
+                          tag: TAG,
+                        }).format(LEVEL, MESSAGES[0], MESSAGES[1]);
 
       assert.strictEqual(formatted, 'LEVEL-NAME:tag-name: message-1 message-2');
     });

@@ -95,7 +95,7 @@ function Service(config, options) {
 Service.prototype.getProjectId = function(callback) {
   const self = this;
 
-  this.authClient.getProjectId(function(err, projectId) {
+  this.authClient.getProjectId((err, projectId) => {
     if (err) {
       callback(err);
       return;
@@ -137,7 +137,7 @@ Service.prototype.request_ = function(reqOpts, callback) {
   }
 
   reqOpts.uri = uriComponents
-    .map(function(uriComponent) {
+    .map((uriComponent) => {
       const trimSlashesRegex = /^\/*|\/*$/g;
       return uriComponent.replace(trimSlashesRegex, '');
     })

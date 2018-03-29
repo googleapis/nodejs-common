@@ -74,7 +74,7 @@ function ServiceObject(config) {
   if (config.methods) {
     const allMethodNames = Object.keys(ServiceObject.prototype);
     allMethodNames
-      .filter(function(methodName) {
+      .filter((methodName) => {
         return (
           // All ServiceObjects need `request`.
           !/^request/.test(methodName) &&
@@ -84,7 +84,7 @@ function ServiceObject(config) {
           !config.methods[methodName]
         );
       })
-      .forEach(function(methodName) {
+      .forEach((methodName) => {
         self[methodName] = undefined;
       });
   }
@@ -150,7 +150,7 @@ ServiceObject.prototype.delete = function(callback) {
 
   // The `request` method may have been overridden to hold any special behavior.
   // Ensure we call the original `request` method.
-  ServiceObject.prototype.request.call(this, reqOpts, function(err, resp) {
+  ServiceObject.prototype.request.call(this, reqOpts, (err, resp) => {
     callback(err, resp);
   });
 };
@@ -163,7 +163,7 @@ ServiceObject.prototype.delete = function(callback) {
  * @param {boolean} callback.exists - Whether the object exists or not.
  */
 ServiceObject.prototype.exists = function(callback) {
-  this.get(function(err) {
+  this.get((err) => {
     if (err) {
       if (err.code === 404) {
         callback(null, false);
@@ -218,7 +218,7 @@ ServiceObject.prototype.get = function(config, callback) {
     callback(null, instance, apiResponse);
   }
 
-  this.getMetadata(function(err, metadata) {
+  this.getMetadata((err, metadata) => {
     if (err) {
       if (err.code === 404 && autoCreate) {
         const args: any[] = [];
@@ -263,7 +263,7 @@ ServiceObject.prototype.getMetadata = function(callback) {
 
   // The `request` method may have been overridden to hold any special behavior.
   // Ensure we call the original `request` method.
-  ServiceObject.prototype.request.call(this, reqOpts, function(err, resp) {
+  ServiceObject.prototype.request.call(this, reqOpts, (err, resp) => {
     if (err) {
       callback(err, null, resp);
       return;
@@ -337,7 +337,7 @@ ServiceObject.prototype.request_ = function(reqOpts, callback) {
 
   reqOpts.uri = uriComponents
     .filter(exec('trim')) // Limit to non-empty strings.
-    .map(function(uriComponent: any) {
+    .map((uriComponent: any) => {
       const trimSlashesRegex = /^\/*|\/*$/g;
       return uriComponent.replace(trimSlashesRegex, '');
     })
