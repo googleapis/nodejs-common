@@ -8,9 +8,11 @@
     "node": ">=4.0.0"
   },
   "repository": "googleapis/nodejs-common",
-  "main": "./src/index.js",
+  "main": "./build/src/index.js",
+  "types": "./build/src/index.d.ts",
   "files": [
-    "src",
+    "build/src",
+    "package.json",
     "AUTHORS",
     "CONTRIBUTORS",
     "LICENSE"
@@ -42,6 +44,8 @@
     "test-no-cover": "repo-tools test run --cmd mocha -- build/test/*.js --no-timeouts",
     "test": "npm run compile && repo-tools test run --cmd npm -- run cover",
     "posttest": "npm run license-check",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
     "license-check": "jsgl --local .",
     "compile": "tsc -p .",
     "fix": "gts fix"
