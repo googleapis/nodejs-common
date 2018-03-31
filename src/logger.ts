@@ -27,35 +27,50 @@ const logDriver = require('log-driver');
  */
 const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
+interface LoggerOptions {
+  /**
+   * The minimum log level that will print to the console. (Default: `error`)
+   */
+  level?: string;
+
+  /**
+   * The list of levels to use. (Default: logger.LEVELS)
+   */
+  levels?: string[];
+
+  /**
+   * A tag to use in log messages.
+   */
+  tag?: string;
+}
+
 /**
  * Create a logger to print output to the console.
  *
- * @param {string=|object=} options - Configuration object. If a string, it is
- *     treated as `options.level`.
- * @param {string=} options.level - The minimum log level that will print to the
- *     console. (Default: `error`)
- * @param {Array.<string>=} options.levels - The list of levels to use. (Default:
- *     logger.LEVELS)
+ * @param {string=|object=} options - Configuration object. If a string, it is treated as `options.level`.
+ * @param {string=} options.level - The minimum log level that will print to the console. (Default: `error`)
+ * @param {Array.<string>=} options.levels - The list of levels to use. (Default: logger.LEVELS)
  * @param {string=} options.tag - A tag to use in log messages.
  */
-function logger(options) {
+function logger(options?: LoggerOptions|string) {
+  let opts: LoggerOptions;
   if (is.string(options)) {
-    options = {
-      level: options,
+    opts = {
+      level: options as string,
     };
+  } else {
+    opts = (options || {}) as LoggerOptions;
   }
 
-  options = options || {};
-
   return logDriver({
-    levels: options.levels || LEVELS,
+    levels: opts.levels || LEVELS,
 
-    level: options.level || 'error',
+    level: opts.level || 'error',
 
     format() {
       const args = [].slice.call(arguments);
       const level = args.shift().toUpperCase();
-      const tag = options.tag ? ':' + options.tag + ':' : '';
+      const tag = opts.tag ? ':' + opts.tag + ':' : '';
       const message = args.join(' ');
       return `${level}${tag} ${message}`;
     },

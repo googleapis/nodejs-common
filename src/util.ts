@@ -18,13 +18,18 @@
  * @module common/util
  */
 
-
 import * as duplexify from 'duplexify';
 import * as ent  from 'ent';
 import * as extend from 'extend';
 import * as is from 'is';
+import * as r from 'request';
+import * as retryRequest from 'retry-request';
+import * as through from 'through2';
+import { Duplex, Stream } from 'stream';
 const googleAuth = require('google-auto-auth');
-const request = require('request').defaults({
+const streamEvents = require('stream-events');
+
+const request = r.defaults({
   timeout: 60000,
   gzip: true,
   forever: true,
@@ -32,16 +37,14 @@ const request = require('request').defaults({
     maxSockets: Infinity,
   },
 });
-import * as retryRequest from 'retry-request';
-import * as streamEvents from 'stream-events';
-import * as through from 'through2';
 
 const util = module.exports;
 
-export class ErrorBody extends Error {
+export interface ErrorBody {
   code?: string;
-  response?: string;
+  response?: r.Response;
   errors?: string;
+  message?: string;
 }
 
 /**
@@ -127,6 +130,10 @@ class PartialFailureError extends Error {
 }
 util.PartialFailureError = PartialFailureError;
 
+interface BodyResponseCallback {
+  (err: Error|null, body: any, res: r.Response): void;
+}
+
 /**
  * Uniformly process an API response.
  *
@@ -135,7 +142,7 @@ util.PartialFailureError = PartialFailureError;
  * @param {*} body - Body value.
  * @param {function} callback - The callback function.
  */
-function handleResp(err, resp, body, callback) {
+function handleResp(err: Error, resp: r.Response, body: any, callback: BodyResponseCallback) {
   callback = callback || util.noop;
 
   const parsedResp = extend(
@@ -153,13 +160,12 @@ util.handleResp = handleResp;
 /**
  * Sniff an incoming HTTP response message for errors.
  *
- * @param {object} httpRespMessage - An incoming HTTP response message from
- *     `request`.
+ * @param {object} httpRespMessage - An incoming HTTP response message from `request`.
  * @return {object} parsedHttpRespMessage - The parsed response.
  * @param {?error} parsedHttpRespMessage.err - An error detected.
  * @param {object} parsedHttpRespMessage.resp - The original response object.
  */
-function parseHttpRespMessage(httpRespMessage) {
+function parseHttpRespMessage(httpRespMessage: r.Response) {
   const parsedHttpRespMessage: any = {
     resp: httpRespMessage,
   };
@@ -179,6 +185,11 @@ function parseHttpRespMessage(httpRespMessage) {
 
 util.parseHttpRespMessage = parseHttpRespMessage;
 
+interface ParsedHttpResponseBody {
+  body: any;
+  err?: Error;
+}
+
 /**
  * Parse the response body from an HTTP request.
  *
@@ -189,8 +200,8 @@ util.parseHttpRespMessage = parseHttpRespMessage;
  *     will try to be JSON.parse'd. If it's successful, the parsed value will be
  *     returned here, otherwise the original value.
  */
-function parseHttpRespBody(body) {
-  const parsedHttpRespBody: any = {
+function parseHttpRespBody(body: any) {
+  const parsedHttpRespBody: ParsedHttpResponseBody = {
     body,
   };
 
@@ -212,26 +223,41 @@ function parseHttpRespBody(body) {
 
 util.parseHttpRespBody = parseHttpRespBody;
 
+interface MakeWritableStreamOptions {
+  /**
+   * A connection instance used to get a token with and send the request through.
+   */
+  connection?: any;
+
+  /**
+   * Metadata to send at the head of the request.
+   */
+  metadata?: { contentType?: string };
+
+  /**
+   * Request object, in the format of a standard Node.js http.request() object.
+   */
+  request?: r.Options;
+
+  makeAuthenticatedRequest(reqOpts: r.Options, fnobj: { onAuthenticated(err: Error|null, authenticatedReqOpts: r.Options): void}): void;
+
+}
+
 /**
  * Take a Duplexify stream, fetch an authenticated connection header, and create
  * an outgoing writable stream.
  *
  * @param {Duplexify} dup - Duplexify stream.
  * @param {object} options - Configuration object.
- * @param {module:common/connection} options.connection - A connection instance,
- *     used to get a token with and send the request through.
- * @param {object} options.metadata - Metadata to send at the head of the
- *     request.
- * @param {object} options.request - Request object, in the format of a standard
- *     Node.js http.request() object.
+ * @param {module:common/connection} options.connection - A connection instance used to get a token with and send the request through.
+ * @param {object} options.metadata - Metadata to send at the head of the request.
+ * @param {object} options.request - Request object, in the format of a standard Node.js http.request() object.
  * @param {string=} options.request.method - Default: "POST".
  * @param {string=} options.request.qs.uploadType - Default: "multipart".
- * @param {string=} options.streamContentType - Default:
- *     "application/octet-stream".
- * @param {function} onComplete - Callback, executed after the writable Request
- *     stream has completed.
+ * @param {string=} options.streamContentType - Default: "application/octet-stream".
+ * @param {function} onComplete - Callback, executed after the writable Request stream has completed.
  */
-function makeWritableStream(dup, options, onComplete) {
+function makeWritableStream(dup: duplexify.Duplexify, options: MakeWritableStreamOptions, onComplete: Function) {
   onComplete = onComplete || util.noop;
 
   const writeStream = through();
@@ -267,12 +293,11 @@ function makeWritableStream(dup, options, onComplete) {
       }
 
       request(authenticatedReqOpts, (err, resp, body) => {
-        util.handleResp(err, resp, body, (err, data) => {
+        util.handleResp(err, resp, body, (err: Error, data: any) => {
           if (err) {
             dup.destroy(err);
             return;
           }
-
           dup.emit('response', resp);
           onComplete(data);
         });
@@ -283,6 +308,13 @@ function makeWritableStream(dup, options, onComplete) {
 
 util.makeWritableStream = makeWritableStream;
 
+interface GoogleError extends Error {
+  code: number;
+  errors?: Array<{
+    reason?: string;
+  }>;
+}
+
 /**
  * Returns true if the API request should be retried, given the error that was
  * given the first time the request was attempted. This is used for rate limit
@@ -291,7 +323,7 @@ util.makeWritableStream = makeWritableStream;
  * @param {error} err - The API error to check if it is appropriate to retry.
  * @return {boolean} True if the API request should be retried, false otherwise.
  */
-function shouldRetryRequest(err) {
+function shouldRetryRequest(err: GoogleError) {
   if (err) {
     if ([429, 500, 502, 503].indexOf(err.code) !== -1) {
       return true;
@@ -315,6 +347,49 @@ function shouldRetryRequest(err) {
 
 util.shouldRetryRequest = shouldRetryRequest;
 
+interface MakeAuthenticatedRequestFactoryConfig {
+  /**
+   * Automatically retry requests if the response is related to rate limits or certain
+   * intermittent server errors. We will exponentially backoff subsequent requests by
+   * default. (default: true)
+   */
+  autoRetry?: boolean;
+
+  /**
+   * Credentials object.
+   */
+  credentials?: any;
+
+  /**
+   * If true, just return the provided request options. Default: false.
+   */
+  customEndpoint?: boolean;
+
+  /**
+   * Account email address, required for PEM/P12 usage.
+   */
+  email?: string;
+
+  /**
+   * Maximum number of automatic retries attempted before returning the error. (default: 3)
+   */
+  maxRetries?: number;
+
+  /**
+   * Path to a .json, .pem, or .p12 keyfile.
+   */
+  keyFile?: string;
+
+  /**
+   * Array of scopes required for the API.
+   */
+  scopes?: string[];
+
+  projectId?: string;
+
+  stream?: Stream;
+}
+
 /**
  * Get a function for making authenticated requests.
  *
@@ -326,16 +401,13 @@ util.shouldRetryRequest = shouldRetryRequest;
  *     We will exponentially backoff subsequent requests by default. (default:
  *     true)
  * @param {object=} config.credentials - Credentials object.
- * @param {boolean=} config.customEndpoint - If true, just return the provided
- *     request options. Default: false.
- * @param {string=} config.email - Account email address, required for PEM/P12
- *     usage.
- * @param {number=} config.maxRetries - Maximum number of automatic retries
- *     attempted before returning the error. (default: 3)
+ * @param {boolean=} config.customEndpoint - If true, just return the provided request options. Default: false.
+ * @param {string=} config.email - Account email address, required for PEM/P12 usage.
+ * @param {number=} config.maxRetries - Maximum number of automatic retries attempted before returning the error. (default: 3)
  * @param {string=} config.keyFile - Path to a .json, .pem, or .p12 keyfile.
  * @param {array} config.scopes - Array of scopes required for the API.
  */
-function makeAuthenticatedRequestFactory(config) {
+function makeAuthenticatedRequestFactory(config: MakeAuthenticatedRequestFactoryConfig) {
   config = config || {};
 
   const googleAutoAuthConfig = extend({}, config);
@@ -346,27 +418,30 @@ function makeAuthenticatedRequestFactory(config) {
 
   const authClient = googleAuth(googleAutoAuthConfig);
 
+  interface MakeAuthenticatedRequestOptions {
+
+  }
+
   /**
    * The returned function that will make an authenticated request.
    *
    * @param {type} reqOpts - Request options in the format `request` expects.
-   * @param {object|function} options - Configuration object or callback
-   *     function.
+   * @param {object|function} options - Configuration object or callback function.
    * @param {function=} options.onAuthenticated - If provided, a request will
    *     not be made. Instead, this function is passed the error & authenticated
    *     request options.
    */
-  function makeAuthenticatedRequest(reqOpts, options) {
-    let stream;
+  function makeAuthenticatedRequest(reqOpts: r.Options, options: MakeAuthenticatedRequestOptions) {
+    let stream: Duplex;
     const reqConfig = extend({}, config);
-    let activeRequest_;
+    let activeRequest_: any;
 
     if (!options) {
       stream = duplexify();
       reqConfig.stream = stream;
     }
 
-    function onAuthenticated(err, authenticatedReqOpts) {
+    function onAuthenticated(err: Error|null, authenticatedReqOpts: r.Options) {
       const autoAuthFailed =
         err &&
         err.message.indexOf('Could not load the default credentials') > -1;
@@ -401,14 +476,14 @@ function makeAuthenticatedRequestFactory(config) {
         if (stream) {
           stream.destroy(err);
         } else {
-          (options.onAuthenticated || options)(err);
+          ((options as any).onAuthenticated || options)(err);
         }
 
         return;
       }
 
-      if (options && options.onAuthenticated) {
-        options.onAuthenticated(null, authenticatedReqOpts);
+      if (options && (options as any).onAuthenticated) {
+        (options as any).onAuthenticated(null, authenticatedReqOpts);
       } else {
         activeRequest_ = util.makeRequest(
           authenticatedReqOpts,
@@ -426,8 +501,8 @@ function makeAuthenticatedRequestFactory(config) {
       authClient.authorizeRequest(reqOpts, onAuthenticated);
     }
 
-    if (stream) {
-      return stream;
+    if (stream!) {
+      return stream!;
     }
 
     return {
@@ -451,6 +526,21 @@ function makeAuthenticatedRequestFactory(config) {
 
 util.makeAuthenticatedRequestFactory = makeAuthenticatedRequestFactory;
 
+interface MakeRequestConfig {
+  /**
+   * Automatically retry requests if the response is related to rate limits or certain intermittent server errors.
+   * We will exponentially backoff subsequent requests by default. (default: true)
+   */
+  autoRetry?: boolean;
+
+  /**
+   * Maximum number of automatic retries attempted before returning the error. (default: 3)
+   */
+  maxRetries?: number;
+
+  stream?: duplexify.Duplexify;
+}
+
 /**
  * Make a request through the `retryRequest` module with built-in error handling
  * and exponential back off.
@@ -465,9 +555,9 @@ util.makeAuthenticatedRequestFactory = makeAuthenticatedRequestFactory;
  *     attempted before returning the error. (default: 3)
  * @param {function} callback - The callback function.
  */
-function makeRequest(reqOpts, config, callback) {
+function makeRequest(reqOpts: r.Options, config?: MakeRequestConfig, callback?: Function) {
   if (is.fn(config)) {
-    callback = config;
+    callback = config as Function;
     config = {};
   }
 
@@ -475,10 +565,8 @@ function makeRequest(reqOpts, config, callback) {
 
   const options = {
     request,
-
     retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
-
-    shouldRetryFn(httpRespMessage) {
+    shouldRetryFn(httpRespMessage: r.Response) {
       const err = util.parseHttpRespMessage(httpRespMessage).err;
       return err && util.shouldRetryRequest(err);
     },
@@ -486,7 +574,7 @@ function makeRequest(reqOpts, config, callback) {
 
   if (config.stream) {
     const dup = config.stream;
-    let requestStream;
+    let requestStream: any;
     const isGetRequest = (reqOpts.method || 'GET').toUpperCase() === 'GET';
 
     if (isGetRequest) {
@@ -504,7 +592,7 @@ function makeRequest(reqOpts, config, callback) {
       .on('response', dup.emit.bind(dup, 'response'))
       .on('complete', dup.emit.bind(dup, 'complete'));
 
-    dup.abort = requestStream.abort;
+    (dup as any).abort = requestStream.abort;
     return;
   } else {
     return retryRequest(reqOpts, options, (err, response, body) => {
@@ -515,6 +603,13 @@ function makeRequest(reqOpts, config, callback) {
 
 util.makeRequest = makeRequest;
 
+interface DecorateRequestOptions {
+  autoPaginate?: any;
+  autoPaginateVal?: any;
+  objectMode?: any;
+  uri: string;
+}
+
 /**
  * Decorate the options about to be made in a request.
  *
@@ -522,7 +617,7 @@ util.makeRequest = makeRequest;
  * @param {string} projectId - The project ID.
  * @return {object} reqOpts - The decorated reqOpts.
  */
-function decorateRequest(reqOpts, projectId) {
+function decorateRequest(reqOpts: r.Options & DecorateRequestOptions, projectId: string) {
   delete reqOpts.autoPaginate;
   delete reqOpts.autoPaginateVal;
   delete reqOpts.objectMode;
@@ -551,16 +646,13 @@ util.decorateRequest = decorateRequest;
  *
  * @throws {Error} If a projectId is required, but one is not provided.
  *
- * @param {*} - Any input value that may contain a placeholder. Arrays and
- *     objects will be looped.
+ * @param {*} - Any input value that may contain a placeholder. Arrays and objects will be looped.
  * @param {string} projectId - A projectId. If not provided
  * @return {*} - The original argument with all placeholders populated.
  */
-function replaceProjectIdToken(value, projectId) {
+function replaceProjectIdToken(value: any, projectId: string) {
   if (is.array(value)) {
-    value = value.map((val) => {
-      return replaceProjectIdToken(val, projectId);
-    });
+    value = (value as string[]).map(v => replaceProjectIdToken(v, projectId));
   }
 
   if (is.object(value) && is.fn(value.hasOwnProperty)) {
@@ -583,6 +675,12 @@ function replaceProjectIdToken(value, projectId) {
 
 util.replaceProjectIdToken = replaceProjectIdToken;
 
+interface GlobalConfig {
+  credentials?: {};
+  keyFilename?: string;
+  interceptors_: {};
+}
+
 /**
  * Extend a global configuration object with user options provided at the time
  * of sub-module instantiation.
@@ -597,7 +695,7 @@ util.replaceProjectIdToken = replaceProjectIdToken;
  * @param  {object=} overrides - The instantiation-time configuration object.
  * @return {object}
  */
-function extendGlobalConfig(globalConfig, overrides) {
+function extendGlobalConfig(globalConfig: GlobalConfig, overrides: GlobalConfig) {
   globalConfig = globalConfig || {};
   overrides = overrides || {};
 
@@ -627,6 +725,10 @@ function extendGlobalConfig(globalConfig, overrides) {
 
 util.extendGlobalConfig = extendGlobalConfig;
 
+interface GlobalContext {
+  config_: {};
+}
+
 /**
  * Merge and validate API configurations.
  *
@@ -635,7 +737,7 @@ util.extendGlobalConfig = extendGlobalConfig;
  * @param {object} localConfig - Service-level configurations.
  * @return {object} config - Merged and validated configuration.
  */
-function normalizeArguments(globalContext, localConfig) {
+function normalizeArguments(globalContext: GlobalContext, localConfig: {}) {
   const globalConfig = globalContext && globalContext.config_;
 
   return util.extendGlobalConfig(globalConfig, localConfig);
@@ -643,17 +745,27 @@ function normalizeArguments(globalContext, localConfig) {
 
 util.normalizeArguments = normalizeArguments;
 
+interface CreateLimiterOptions {
+  /**
+   * The maximum number of API calls to make.
+   */
+  maxApiCalls?: number;
+
+  /**
+   * Options to pass to the Stream constructor.
+   */
+  streamOptions?: any;
+}
+
 /**
  * Limit requests according to a `maxApiCalls` limit.
  *
  * @param {function} makeRequestFn - The function that will be called.
  * @param {object=} options - Configuration object.
- * @param {number} options.maxApiCalls - The maximum number of API calls to
- *     make.
- * @param {object} options.streamOptions - Options to pass to the Stream
- *     constructor.
+ * @param {number} options.maxApiCalls - The maximum number of API calls to make.
+ * @param {object} options.streamOptions - Options to pass to the Stream constructor.
  */
-function createLimiter(makeRequestFn, options) {
+function createLimiter(makeRequestFn: Function, options?: CreateLimiterOptions) {
   options = options || {};
 
   const stream = streamEvents(through.obj(options.streamOptions));
@@ -662,7 +774,7 @@ function createLimiter(makeRequestFn, options) {
   let requestsToMake = -1;
 
   if (is.number(options.maxApiCalls)) {
-    requestsToMake = options.maxApiCalls;
+    requestsToMake = options.maxApiCalls!;
   }
 
   return {
@@ -685,8 +797,8 @@ function createLimiter(makeRequestFn, options) {
 
 util.createLimiter = createLimiter;
 
-function isCustomType(unknown, module) {
-  function getConstructorName(obj) {
+function isCustomType(unknown: any, module: string) {
+  function getConstructorName(obj: Function) {
     return obj.constructor && obj.constructor.name.toLowerCase();
   }
 
@@ -712,13 +824,18 @@ function isCustomType(unknown, module) {
 
 util.isCustomType = isCustomType;
 
+interface PackageJson {
+  name: string;
+  version: string;
+}
+
 /**
  * Create a properly-formatted User-Agent string from a package.json file.
  *
  * @param {object} packageJson - A module's package.json file.
  * @return {string} userAgent - The formatted User-Agent string.
  */
-function getUserAgentFromPackageJson(packageJson) {
+function getUserAgentFromPackageJson(packageJson: PackageJson) {
   const hyphenatedPackageName = packageJson.name
     .replace('@google-cloud', 'gcloud-node') // For legacy purposes.
     .replace('/', '-'); // For UA spec-compliance purposes.
@@ -728,16 +845,26 @@ function getUserAgentFromPackageJson(packageJson) {
 
 util.getUserAgentFromPackageJson = getUserAgentFromPackageJson;
 
+interface PromiseMethod extends Function {
+  promisified_: boolean;
+}
+
+interface PromisifyOptions {
+  /**
+   * Resolve the promise with single arg instead of an array.
+   */
+  singular?: boolean;
+}
+
 /**
  * Wraps a callback style function to conditionally return a promise.
  *
  * @param {function} originalMethod - The method to promisify.
  * @param {object=} options - Promise options.
- * @param {boolean} options.singular - Resolve the promise with single arg
- *     instead of an array.
+ * @param {boolean} options.singular - Resolve the promise with single arg instead of an array.
  * @return {function} wrapped
  */
-function promisify(originalMethod, options) {
+function promisify(originalMethod: PromiseMethod, options?: PromisifyOptions) {
   if (originalMethod.promisified_) {
     return originalMethod;
   }
@@ -785,7 +912,7 @@ function promisify(originalMethod, options) {
           return reject(err);
         }
 
-        if (options.singular && callbackArgs.length === 1) {
+        if (options!.singular && callbackArgs.length === 1) {
           resolve(callbackArgs[0]);
         } else {
           resolve(callbackArgs);
@@ -802,6 +929,13 @@ function promisify(originalMethod, options) {
 
 util.promisify = promisify;
 
+interface PromisifyAllOptions {
+  /**
+   * Array of methods to ignore when promisifying.
+   */
+  exclude?: string[];
+}
+
 /**
  * Promisifies certain Class methods. This will not promisify private or
  * streaming methods.
@@ -809,7 +943,7 @@ util.promisify = promisify;
  * @param {module:common/service} Class - Service class.
  * @param {object=} options - Configuration object.
  */
-function promisifyAll(Class, options) {
+function promisifyAll(Class: Function, options?: PromisifyAllOptions) {
   const exclude = (options && options.exclude) || [];
 
   const methods = Object.keys(Class.prototype).filter((methodName) => {
@@ -838,7 +972,7 @@ util.promisifyAll = promisifyAll;
  * @param {string} propName - Property name.
  * @param {*} value - Value.
  */
-function privatize(object, propName, value) {
+function privatize(object: {}, propName: string, value: any) {
   Object.defineProperty(object, propName, {value, writable: true});
 }
 

@@ -77,6 +77,8 @@
     "@types/mocha": "^5.0.0",
     "@types/node": "^9.4.7",
     "@types/proxyquire": "^1.3.28",
+    "@types/request": "^2.47.0",
+    "@types/through2": "^2.0.33",
     "async": "^2.6.0",
     "codecov": "^3.0.0",
     "eslint": "^4.10.0",
