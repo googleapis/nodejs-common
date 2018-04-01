@@ -21,7 +21,6 @@
 const arrify = require('arrify');
 import * as extend from 'extend';
 import * as is from 'is';
-const exec = require('methmeth');
 
 /**
  * @type {module:common/util}
@@ -336,7 +335,7 @@ ServiceObject.prototype.request_ = function(reqOpts, callback) {
   }
 
   reqOpts.uri = uriComponents
-    .filter(exec('trim')) // Limit to non-empty strings.
+    .filter(x => x.trim()) // Limit to non-empty strings.
     .map((uriComponent: any) => {
       const trimSlashesRegex = /^\/*|\/*$/g;
       return uriComponent.replace(trimSlashesRegex, '');
