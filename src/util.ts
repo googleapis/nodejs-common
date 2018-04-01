@@ -36,7 +36,6 @@ const request = require('request').defaults({
 import * as retryRequest from 'retry-request';
 import * as streamEvents from 'stream-events';
 import * as through from 'through2';
-import * as uniq from 'array-uniq';
 
 const util = module.exports;
 
@@ -100,7 +99,7 @@ util.ApiError = createErrorClass('ApiError', function(errorBody) {
     messages.push('Error during request.');
   }
 
-  this.message = uniq(messages).join(' - ');
+  this.message = Array.from(new Set(messages)).join(' - ');
 });
 
 /**
