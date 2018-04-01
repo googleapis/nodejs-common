@@ -23,7 +23,6 @@ import * as duplexify from 'duplexify';
 import * as ent  from 'ent';
 import * as extend from 'extend';
 import * as is from 'is';
-const createErrorClass = require('create-error-class');
 const googleAuth = require('google-auto-auth');
 const request = require('request').defaults({
   timeout: 60000,
@@ -48,14 +47,12 @@ export class ErrorBody extends Error {
 /**
  * Custom error type for missing project ID errors.
  */
-util.MissingProjectIdError = createErrorClass(
-  'MissingProjectIdError',
-  function() {
-    this.message = `Sorry, we cannot connect to Cloud Services without a project
+class MissingProjectIdError extends Error {
+  message = `Sorry, we cannot connect to Cloud Services without a project
     ID. You may specify one with an environment variable named
     "GOOGLE_CLOUD_PROJECT".`.replace(/ +/g, ' ');
-  }
-);
+}
+util.MissingProjectIdError = MissingProjectIdError;
 
 /**
  * No op.
@@ -74,48 +71,61 @@ util.noop = noop;
  *
  * @param {object} errorBody - Error object.
  */
-util.ApiError = createErrorClass('ApiError', function(errorBody) {
-  this.code = errorBody.code;
-  this.errors = errorBody.errors;
-  this.response = errorBody.response;
-
-  try {
-    this.errors = JSON.parse(this.response.body).error.errors;
-  } catch (e) {
+class ApiError extends Error {
+  code?: number;
+  errors?: any;
+  response?: any;
+  constructor(errorBody) {
+    super();
+    this.code = errorBody.code;
     this.errors = errorBody.errors;
+    this.response = errorBody.response;
+
+    try {
+      this.errors = JSON.parse(this.response.body).error.errors;
+    } catch (e) {
+      this.errors = errorBody.errors;
+    }
+
+    const messages: string[] = [];
+
+    if (errorBody.message) {
+      messages.push(errorBody.message);
+    }
+
+    if (this.errors && this.errors.length === 1) {
+      messages.push(this.errors[0].message);
+    } else if (this.response && this.response.body) {
+      messages.push(ent.decode(errorBody.response.body.toString()));
+    } else if (!errorBody.message) {
+      messages.push('Error during request.');
+    }
+
+    this.message = Array.from(new Set(messages)).join(' - ');
   }
-
-  const messages: string[] = [];
-
-  if (errorBody.message) {
-    messages.push(errorBody.message);
-  }
-
-  if (this.errors && this.errors.length === 1) {
-    messages.push(this.errors[0].message);
-  } else if (this.response && this.response.body) {
-    messages.push(ent.decode(errorBody.response.body.toString()));
-  } else if (!errorBody.message) {
-    messages.push('Error during request.');
-  }
-
-  this.message = Array.from(new Set(messages)).join(' - ');
-});
+}
+util.ApiError = ApiError;
 
 /**
  * Custom error type for partial errors returned from the API.
  *
  * @param {object} b - Error object.
  */
-util.PartialFailureError = createErrorClass('PartialFailureError', function(b) {
-  const errorObject = b;
+class PartialFailureError extends Error {
+  errors?: any;
+  response?: any;
+  constructor(b) {
+    super();
+    const errorObject = b;
 
-  this.errors = errorObject.errors;
-  this.response = errorObject.response;
+    this.errors = errorObject.errors;
+    this.response = errorObject.response;
 
-  const defaultErrorMessage = 'A failure occurred during this request.';
-  this.message = errorObject.message || defaultErrorMessage;
-});
+    const defaultErrorMessage = 'A failure occurred during this request.';
+    this.message = errorObject.message || defaultErrorMessage;
+  }
+}
+util.PartialFailureError = PartialFailureError;
 
 /**
  * Uniformly process an API response.
