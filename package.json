@@ -67,7 +67,6 @@
     "retry-request": "^3.0.0",
     "split-array-stream": "^1.0.0",
     "stream-events": "^1.0.1",
-    "string-format-obj": "^1.1.0",
     "through2": "^2.0.3"
   },
   "devDependencies": {
