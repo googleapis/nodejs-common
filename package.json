@@ -61,7 +61,6 @@
     "google-auto-auth": "^0.10.0",
     "is": "^3.2.0",
     "log-driver": "1.2.7",
-    "methmeth": "^1.1.0",
     "modelo": "^4.2.0",
     "request": "^2.79.0",
     "retry-request": "^3.0.0",
