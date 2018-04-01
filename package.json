@@ -51,7 +51,6 @@
     "fix": "gts fix"
   },
   "dependencies": {
-    "array-uniq": "^1.0.3",
     "arrify": "^1.0.1",
     "concat-stream": "^1.6.0",
     "create-error-class": "^3.0.2",
