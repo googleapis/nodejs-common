@@ -19,7 +19,6 @@
  */
 
 import * as is from 'is';
-const format = require('string-format-obj');
 const logDriver = require('log-driver');
 
 /**
@@ -55,12 +54,10 @@ function logger(options) {
 
     format() {
       const args = [].slice.call(arguments);
-
-      return format('{level}{tag} {message}', {
-        level: args.shift().toUpperCase(),
-        tag: options.tag ? ':' + options.tag + ':' : '',
-        message: args.join(' '),
-      });
+      const level = args.shift().toUpperCase();
+      const tag = options.tag ? ':' + options.tag + ':' : '';
+      const message = args.join(' ');
+      return `${level}${tag} ${message}`;
     },
   });
 }
