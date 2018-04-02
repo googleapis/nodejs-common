@@ -38,7 +38,7 @@ interface ServiceObjectConfig {
   /**
    * The method which creates this object.
    */
-  createMethod: string;
+  createMethod: Function;
 
   /**
    * The identifier of the object. For example, the name of a Storage bucket or Pub/Sub topic.
