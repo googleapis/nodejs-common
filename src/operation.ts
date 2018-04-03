@@ -28,6 +28,7 @@ const modelo = require('modelo');
  */
 const ServiceObject = require('./service-object');
 
+// TODO: improve the typing and required-ness of these properties
 export interface OperationConfig {
   /**
    * The parent object.

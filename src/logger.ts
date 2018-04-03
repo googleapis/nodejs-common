@@ -52,25 +52,27 @@ interface LoggerOptions {
  * @param {Array.<string>=} options.levels - The list of levels to use. (Default: logger.LEVELS)
  * @param {string=} options.tag - A tag to use in log messages.
  */
-function logger(options?: LoggerOptions|string) {
-  let opts: LoggerOptions;
-  if (is.string(options)) {
-    opts = {
-      level: options as string,
+function logger(options?: LoggerOptions);
+function logger(level?: string);
+function logger(optionsOrLevel?: LoggerOptions|string) {
+  let options: LoggerOptions;
+  if (is.string(optionsOrLevel)) {
+    options = {
+      level: optionsOrLevel as string,
     };
   } else {
-    opts = (options || {}) as LoggerOptions;
+    options = (optionsOrLevel || {}) as LoggerOptions;
   }
 
   return logDriver({
-    levels: opts.levels || LEVELS,
+    levels: options.levels || LEVELS,
 
-    level: opts.level || 'error',
+    level: options.level || 'error',
 
     format() {
       const args = [].slice.call(arguments);
       const level = args.shift().toUpperCase();
-      const tag = opts.tag ? ':' + opts.tag + ':' : '';
+      const tag = options.tag ? ':' + options.tag + ':' : '';
       const message = args.join(' ');
       return `${level}${tag} ${message}`;
     },
