@@ -20,8 +20,8 @@
 
 import * as extend from 'extend';
 import * as is from 'is';
-const arrify = require('arrify');
-const split = require('split-array-stream');
+import * as arrify from 'arrify';
+import {split} from 'split-array-stream';
 const concat = require('concat-stream');
 
 /**
@@ -245,7 +245,7 @@ paginator.runAsStream_ = function(parsedArguments: any, originalMethod: Function
 
     resultsToSend -= results.length;
 
-    split(results, stream, (streamEnded: boolean) => {
+    split(results, stream).then(streamEnded => {
       if (streamEnded) {
         return;
       }
