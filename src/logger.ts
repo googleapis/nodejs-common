@@ -27,25 +27,42 @@ const logDriver = require('log-driver');
  */
 const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
+interface LoggerOptions {
+  /**
+   * The minimum log level that will print to the console. (Default: `error`)
+   */
+  level?: string;
+
+  /**
+   * The list of levels to use. (Default: logger.LEVELS)
+   */
+  levels?: string[];
+
+  /**
+   * A tag to use in log messages.
+   */
+  tag?: string;
+}
+
 /**
  * Create a logger to print output to the console.
  *
- * @param {string=|object=} options - Configuration object. If a string, it is
- *     treated as `options.level`.
- * @param {string=} options.level - The minimum log level that will print to the
- *     console. (Default: `error`)
- * @param {Array.<string>=} options.levels - The list of levels to use. (Default:
- *     logger.LEVELS)
+ * @param {string=|object=} options - Configuration object. If a string, it is treated as `options.level`.
+ * @param {string=} options.level - The minimum log level that will print to the console. (Default: `error`)
+ * @param {Array.<string>=} options.levels - The list of levels to use. (Default: logger.LEVELS)
  * @param {string=} options.tag - A tag to use in log messages.
  */
-function logger(options) {
-  if (is.string(options)) {
+function logger(options?: LoggerOptions);
+function logger(level?: string);
+function logger(optionsOrLevel?: LoggerOptions|string) {
+  let options: LoggerOptions;
+  if (is.string(optionsOrLevel)) {
     options = {
-      level: options,
+      level: optionsOrLevel as string,
     };
+  } else {
+    options = (optionsOrLevel || {}) as LoggerOptions;
   }
-
-  options = options || {};
 
   return logDriver({
     levels: options.levels || LEVELS,

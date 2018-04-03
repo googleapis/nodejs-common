@@ -26,7 +26,22 @@ const modelo = require('modelo');
  * @type {module:common/serviceObject}
  * @private
  */
-const ServiceObject = require('./service-object.js');
+const ServiceObject = require('./service-object');
+
+// TODO: improve the typing and required-ness of these properties
+export interface OperationConfig {
+  /**
+   * The parent object.
+   */
+  parent: any;
+
+  /**
+   * The operation ID.
+   */
+  id: string;
+
+  methods: any;
+}
 
 // jscs:disable maximumLineLength
 /**
@@ -42,7 +57,7 @@ const ServiceObject = require('./service-object.js');
  * @param {string} id - The operation ID.
  */
 // jscs:enable maximumLineLength
-function Operation(config) {
+function Operation(config: OperationConfig) {
   const methods = {
     /**
      * Checks to see if an operation exists.
@@ -92,8 +107,8 @@ modelo.inherits(Operation, ServiceObject, events.EventEmitter);
 Operation.prototype.promise = function() {
   const self = this;
 
-  return new self.Promise((resolve, reject) => {
-    self.on('error', reject).on('complete', (metadata) => {
+  return new self.Promise((resolve: Function, reject: (err: Error) => void) => {
+    self.on('error', reject).on('complete', (metadata: any) => {
       resolve([metadata]);
     });
   });
@@ -112,7 +127,7 @@ Operation.prototype.promise = function() {
 Operation.prototype.listenForEvents_ = function() {
   const self = this;
 
-  this.on('newListener', (event) => {
+  this.on('newListener', (event: string) => {
     if (event === 'complete') {
       self.completeListeners++;
 
@@ -123,7 +138,7 @@ Operation.prototype.listenForEvents_ = function() {
     }
   });
 
-  this.on('removeListener', (event) => {
+  this.on('removeListener', (event: string) => {
     if (event === 'complete' && --self.completeListeners === 0) {
       self.hasActiveListeners = false;
     }
@@ -141,8 +156,8 @@ Operation.prototype.listenForEvents_ = function() {
  *
  * @param {function} callback
  */
-Operation.prototype.poll_ = function(callback) {
-  this.getMetadata((err, resp) => {
+Operation.prototype.poll_ = function(callback: (err?: Error|null, resp?: any) => void) {
+  this.getMetadata((err: Error|null, resp: any) => {
     if (err || resp.error) {
       callback(err || resp.error);
       return;
@@ -173,7 +188,7 @@ Operation.prototype.startPolling_ = function() {
     return;
   }
 
-  this.poll_((err, metadata) => {
+  this.poll_((err: Error|null, metadata: any) => {
     if (err) {
       self.emit('error', err);
       return;

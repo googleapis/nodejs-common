@@ -19,6 +19,7 @@
  */
 
 import * as extend from 'extend';
+import * as r from 'request';
 const arrify = require('arrify');
 
 /**
@@ -28,6 +29,31 @@ const arrify = require('arrify');
 const util = require('./util');
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
+
+interface ServiceConfig {
+  /**
+   * The base URL to make API requests to.
+   */
+  baseUrl: string;
+
+  /**
+   * The scopes required for the request.
+   */
+  scopes: string[];
+
+  projectIdRequired?: boolean;
+  packageJson: {};
+}
+
+interface ServiceOptions {
+  interceptors_?: any;
+  projectId?: string;
+  promise?: any;
+  credentials?: any;
+  keyFilename?: string;
+  email?: string;
+  token?: string;
+}
 
 /**
  * Service is a base class, meant to be inherited from by a "service," like
@@ -43,7 +69,7 @@ const PROJECT_ID_TOKEN = '{{projectId}}';
  * @param {string[]} config.scopes - The scopes required for the request.
  * @param {object=} options - [Configuration object](#/docs).
  */
-function Service(config, options) {
+function Service(config: ServiceConfig, options?: ServiceOptions) {
   options = options || {};
 
   util.privatize(this, 'baseUrl', config.baseUrl);
@@ -79,7 +105,7 @@ function Service(config, options) {
 
   if (isCloudFunctionEnv) {
     this.interceptors.push({
-      request(reqOpts) {
+      request(reqOpts: r.Options) {
         reqOpts.forever = false;
         return reqOpts;
       },
@@ -92,10 +118,10 @@ function Service(config, options) {
  *
  * @param {function} callback - The callback function.
  */
-Service.prototype.getProjectId = function(callback) {
+Service.prototype.getProjectId = function(callback: (err: Error|null, projectId?: string) => void) {
   const self = this;
 
-  this.authClient.getProjectId((err, projectId) => {
+  this.authClient.getProjectId((err: Error|null, projectId: string) => {
     if (err) {
       callback(err);
       return;
@@ -109,6 +135,11 @@ Service.prototype.getProjectId = function(callback) {
   });
 };
 
+interface ExtendedRequestOptions {
+  interceptors_?: any;
+  uri: string;
+}
+
 /**
  * Make an authenticated API request.
  *
@@ -118,7 +149,7 @@ Service.prototype.getProjectId = function(callback) {
  * @param {string} reqOpts.uri - A URI relative to the baseUrl.
  * @param {function} callback - The callback function passed to `request`.
  */
-Service.prototype.request_ = function(reqOpts, callback) {
+Service.prototype.request_ = function(reqOpts: r.Options & ExtendedRequestOptions, callback: (err: Error|null) => void) {
   reqOpts = extend(true, {}, reqOpts);
 
   const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -179,7 +210,7 @@ Service.prototype.request_ = function(reqOpts, callback) {
  * @param {string} reqOpts.uri - A URI relative to the baseUrl.
  * @param {function} callback - The callback function passed to `request`.
  */
-Service.prototype.request = function(reqOpts, callback) {
+Service.prototype.request = function(reqOpts: r.Options, callback: (err: Error|null) => void) {
   Service.prototype.request_.call(this, reqOpts, callback);
 };
 
@@ -191,7 +222,7 @@ Service.prototype.request = function(reqOpts, callback) {
  * @param {object} reqOpts - Request options that are passed to `request`.
  * @param {string} reqOpts.uri - A URI relative to the baseUrl.
  */
-Service.prototype.requestStream = function(reqOpts) {
+Service.prototype.requestStream = function(reqOpts: r.Options) {
   return Service.prototype.request_.call(this, reqOpts);
 };
 

@@ -21,12 +21,45 @@
 const arrify = require('arrify');
 import * as extend from 'extend';
 import * as is from 'is';
+import * as r from 'request';
 
 /**
  * @type {module:common/util}
  * @private
  */
-const util = require('./util.js');
+const util = require('./util');
+
+interface ServiceObjectConfig {
+  /**
+   * The base URL to make API requests to.
+   */
+  baseUrl: string;
+
+  /**
+   * The method which creates this object.
+   */
+  createMethod: Function;
+
+  /**
+   * The identifier of the object. For example, the name of a Storage bucket or Pub/Sub topic.
+   */
+  id?: string;
+
+  /**
+   * A map of each method name that should be inherited.
+   */
+  methods?: { [methodName: string]: {
+    /**
+     * Default request options for this particular method. A common use case is when `setMetadata` requires a `PUT` method to override the default `PATCH`.
+     */
+    reqOpts: r.Options;
+  }};
+
+  /**
+   * The parent service instance. For example, an instance of Storage if the object is Bucket.
+   */
+  parent?: {};
+}
 
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
@@ -49,15 +82,14 @@ const util = require('./util.js');
  * @param {string} config.createMethod - The method which creates this object.
  * @param {string=} config.id - The identifier of the object. For example, the
  *     name of a Storage bucket or Pub/Sub topic.
- * @param {object=} config.methods - A map of each method name that should be
- *     inherited.
+ * @param {object=} config.methods - A map of each method name that should be inherited.
  * @param {object} config.methods[].reqOpts - Default request options for this
  *     particular method. A common use case is when `setMetadata` requires a
  *     `PUT` method to override the default `PATCH`.
  * @param {object} config.parent - The parent service instance. For example, an
  *     instance of Storage if the object is Bucket.
  */
-function ServiceObject(config) {
+function ServiceObject(config: ServiceObjectConfig) {
   const self = this;
 
   util.privatize(this, 'metadata', {});
@@ -80,13 +112,25 @@ function ServiceObject(config) {
           // The ServiceObject didn't redefine the method.
           self[methodName] === ServiceObject.prototype[methodName] &&
           // This method isn't wanted.
-          !config.methods[methodName]
+          !config.methods![methodName]
         );
       })
       .forEach((methodName) => {
         self[methodName] = undefined;
       });
   }
+}
+
+interface CreateOptions {
+
+}
+
+interface CodeError extends Error {
+  code: number;
+}
+
+interface InstanceResponseCallback {
+  (err: Error|null, instance: any, apiResponse: r.Response): void;
 }
 
 /**
@@ -98,12 +142,12 @@ function ServiceObject(config) {
  * @param {object} callback.instance - The instance.
  * @param {object} callback.apiResponse - The full API response.
  */
-ServiceObject.prototype.create = function(options, callback) {
+ServiceObject.prototype.create = function(options: CreateOptions, callback: InstanceResponseCallback) {
   const self = this;
   const args = [this.id];
 
   if (is.fn(options)) {
-    callback = options;
+    callback = options as InstanceResponseCallback;
   }
 
   if (is.object(options)) {
@@ -112,7 +156,7 @@ ServiceObject.prototype.create = function(options, callback) {
 
   // Wrap the callback to return *this* instance of the object, not the newly-
   // created one.
-  function onCreate(err, instance) {
+  function onCreate(err: Error, instance: any) {
     const args = [].slice.call(arguments);
 
     if (!err) {
@@ -128,6 +172,10 @@ ServiceObject.prototype.create = function(options, callback) {
   this.createMethod.apply(null, args);
 };
 
+interface DeleteCallback {
+  (err: Error|null, apiResponse?: r.Response): void;
+}
+
 /**
  * Delete the object.
  *
@@ -135,7 +183,7 @@ ServiceObject.prototype.create = function(options, callback) {
  * @param {?error} callback.err - An error returned while making this request.
  * @param {object} callback.apiResponse - The full API response.
  */
-ServiceObject.prototype.delete = function(callback) {
+ServiceObject.prototype.delete = function(callback: DeleteCallback) {
   const methodConfig = this.methods.delete || {};
   callback = callback || util.noop;
 
@@ -149,10 +197,14 @@ ServiceObject.prototype.delete = function(callback) {
 
   // The `request` method may have been overridden to hold any special behavior.
   // Ensure we call the original `request` method.
-  ServiceObject.prototype.request.call(this, reqOpts, (err, resp) => {
+  ServiceObject.prototype.request.call(this, reqOpts, (err: Error|null, resp: r.Response) => {
     callback(err, resp);
   });
 };
+
+interface ExistsCallback {
+  (err: Error|null, exists?: boolean): void;
+}
 
 /**
  * Check if the object exists.
@@ -161,21 +213,26 @@ ServiceObject.prototype.delete = function(callback) {
  * @param {?error} callback.err - An error returned while making this request.
  * @param {boolean} callback.exists - Whether the object exists or not.
  */
-ServiceObject.prototype.exists = function(callback) {
-  this.get((err) => {
+ServiceObject.prototype.exists = function(callback: ExistsCallback) {
+  this.get((err: Error & { code: number}) => {
     if (err) {
       if (err.code === 404) {
         callback(null, false);
       } else {
         callback(err);
       }
-
       return;
     }
-
     callback(null, true);
   });
 };
+
+interface GetConfig {
+  /**
+   * Create the object if it doesn't already exist.
+   */
+  autoCreate?: boolean;
+}
 
 /**
  * Get the object if it exists. Optionally have the object created if an options
@@ -183,18 +240,17 @@ ServiceObject.prototype.exists = function(callback) {
  *
  * @param {object=} config - The configuration object that will be used to
  *     create the object if necessary.
- * @param {boolean} config.autoCreate - Create the object if it doesn't already
- *     exist.
+ * @param {boolean} config.autoCreate - Create the object if it doesn't already exist.
  * @param {function} callback - The callback function.
  * @param {?error} callback.err - An error returned while making this request.
  * @param {object} callback.instance - The instance.
  * @param {object} callback.apiResponse - The full API response.
  */
-ServiceObject.prototype.get = function(config, callback) {
+ServiceObject.prototype.get = function(config: GetConfig, callback: InstanceResponseCallback) {
   const self = this;
 
   if (is.fn(config)) {
-    callback = config;
+    callback = config as InstanceResponseCallback;
     config = {};
   }
 
@@ -203,7 +259,7 @@ ServiceObject.prototype.get = function(config, callback) {
   const autoCreate = config.autoCreate && is.fn(this.create);
   delete config.autoCreate;
 
-  function onCreate(err, instance, apiResponse) {
+  function onCreate(err: CodeError|null, instance: any, apiResponse: r.Response) {
     if (err) {
       if (err.code === 409) {
         self.get(config, callback);
@@ -217,7 +273,7 @@ ServiceObject.prototype.get = function(config, callback) {
     callback(null, instance, apiResponse);
   }
 
-  this.getMetadata((err, metadata) => {
+  this.getMetadata((err: CodeError|null, metadata: any) => {
     if (err) {
       if (err.code === 404 && autoCreate) {
         const args: any[] = [];
@@ -248,7 +304,7 @@ ServiceObject.prototype.get = function(config, callback) {
  * @param {object} callback.metadata - The metadata for this object.
  * @param {object} callback.apiResponse - The full API response.
  */
-ServiceObject.prototype.getMetadata = function(callback) {
+ServiceObject.prototype.getMetadata = function(callback: (err: Error|null, metadata?: any, apiResponse?: r.Response) => void) {
   const self = this;
 
   const methodConfig = this.methods.getMetadata || {};
@@ -262,7 +318,7 @@ ServiceObject.prototype.getMetadata = function(callback) {
 
   // The `request` method may have been overridden to hold any special behavior.
   // Ensure we call the original `request` method.
-  ServiceObject.prototype.request.call(this, reqOpts, (err, resp) => {
+  ServiceObject.prototype.request.call(this, reqOpts, (err: Error|null, resp?: r.Response) => {
     if (err) {
       callback(err, null, resp);
       return;
@@ -283,7 +339,7 @@ ServiceObject.prototype.getMetadata = function(callback) {
  * @param {object} callback.instance - The instance.
  * @param {object} callback.apiResponse - The full API response.
  */
-ServiceObject.prototype.setMetadata = function(metadata, callback) {
+ServiceObject.prototype.setMetadata = function(metadata: any, callback: (err: Error|null, resp?: r.Response) => void) {
   const self = this;
 
   callback = callback || util.noop;
@@ -302,7 +358,7 @@ ServiceObject.prototype.setMetadata = function(metadata, callback) {
 
   // The `request` method may have been overridden to hold any special behavior.
   // Ensure we call the original `request` method.
-  ServiceObject.prototype.request.call(this, reqOpts, function(err, resp) {
+  ServiceObject.prototype.request.call(this, reqOpts, function(err: Error|null, resp?: r.Response) {
     if (err) {
       callback(err, resp);
       return;
@@ -314,6 +370,11 @@ ServiceObject.prototype.setMetadata = function(metadata, callback) {
   });
 };
 
+interface ExtendedRequestOptions {
+  interceptors_?: any;
+  uri: string;
+}
+
 /**
  * Make an authenticated API request.
  *
@@ -323,7 +384,7 @@ ServiceObject.prototype.setMetadata = function(metadata, callback) {
  * @param {string} reqOpts.uri - A URI relative to the baseUrl.
  * @param {function} callback - The callback function passed to `request`.
  */
-ServiceObject.prototype.request_ = function(reqOpts, callback) {
+ServiceObject.prototype.request_ = function(reqOpts: r.Options & ExtendedRequestOptions, callback: Function) {
   reqOpts = extend(true, {}, reqOpts);
 
   const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -363,7 +424,7 @@ ServiceObject.prototype.request_ = function(reqOpts, callback) {
  * @param {string} reqOpts.uri - A URI relative to the baseUrl.
  * @param {function} callback - The callback function passed to `request`.
  */
-ServiceObject.prototype.request = function(reqOpts, callback) {
+ServiceObject.prototype.request = function(reqOpts: r.Options, callback: Function) {
   ServiceObject.prototype.request_.call(this, reqOpts, callback);
 };
 
@@ -375,7 +436,7 @@ ServiceObject.prototype.request = function(reqOpts, callback) {
  * @param {object} reqOpts - Request options that are passed to `request`.
  * @param {string} reqOpts.uri - A URI relative to the baseUrl.
  */
-ServiceObject.prototype.requestStream = function(reqOpts) {
+ServiceObject.prototype.requestStream = function(reqOpts: r.Options) {
   return ServiceObject.prototype.request_.call(this, reqOpts);
 };
 

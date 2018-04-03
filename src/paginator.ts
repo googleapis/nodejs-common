@@ -18,11 +18,11 @@
  * @module common/paginator
  */
 
-const arrify = require('arrify');
-const concat = require('concat-stream');
 import * as extend from 'extend';
 import * as is from 'is';
+const arrify = require('arrify');
 const split = require('split-array-stream');
+const concat = require('concat-stream');
 
 /**
  * @type {module:common/util}
@@ -56,9 +56,8 @@ const paginator:any = {};
  * @param {function} Class - The parent class of the methods to extend.
  * @param {string|string[]} methodNames - Name(s) of the methods to extend.
  */
-paginator.extend = function(Class, methodNames) {
-  methodNames = arrify(methodNames);
-
+paginator.extend = function(Class: any, methodNames: string|string[]) {
+  methodNames = arrify(methodNames) as string[];
   methodNames.forEach(function(methodName) {
     const originalMethod = Class.prototype[methodName];
 
@@ -85,7 +84,7 @@ paginator.extend = function(Class, methodNames) {
  * @param {string} methodName - Name of the method to streamify.
  * @return {function} - Wrapped function.
  */
-paginator.streamify = function(methodName) {
+paginator.streamify = function(methodName: string) {
   return function() {
     const parsedArguments = paginator.parseArguments_(arguments);
     const originalMethod = this[methodName + '_'] || this[methodName];
@@ -100,7 +99,7 @@ paginator.streamify = function(methodName) {
  * @param {array} args - The original `arguments` pseduo-array that the original
  *     method received.
  */
-paginator.parseArguments_ = function(args) {
+paginator.parseArguments_ = function(args: any[]) {
   let query;
   let autoPaginate = true;
   let maxApiCalls = -1;
@@ -179,7 +178,7 @@ paginator.parseArguments_ = function(args) {
  * @param {function} originalMethod - The cached method that accepts a callback
  *     and returns `nextQuery` to receive more results.
  */
-paginator.run_ = function(parsedArguments, originalMethod) {
+paginator.run_ = function(parsedArguments: any, originalMethod: Function) {
   const query = parsedArguments.query;
   const callback = parsedArguments.callback;
   const autoPaginate = parsedArguments.autoPaginate;
@@ -188,7 +187,7 @@ paginator.run_ = function(parsedArguments, originalMethod) {
     this.runAsStream_(parsedArguments, originalMethod)
       .on('error', callback)
       .pipe(
-        concat((results) => {
+        concat((results: any) => {
           callback(null, results);
         })
       );
@@ -215,7 +214,7 @@ paginator.run_ = function(parsedArguments, originalMethod) {
  *     and returns `nextQuery` to receive more results.
  * @return {stream} - Readable object stream.
  */
-paginator.runAsStream_ = function(parsedArguments, originalMethod) {
+paginator.runAsStream_ = function(parsedArguments: any, originalMethod: Function) {
   const query = parsedArguments.query;
   let resultsToSend = parsedArguments.maxResults;
 
@@ -230,11 +229,11 @@ paginator.runAsStream_ = function(parsedArguments, originalMethod) {
     makeRequest(query);
   });
 
-  function makeRequest(query) {
+  function makeRequest(query: any) {
     originalMethod(query, onResultSet);
   }
 
-  function onResultSet(err, results, nextQuery) {
+  function onResultSet(err: Error, results: any, nextQuery: any) {
     if (err) {
       stream.destroy(err);
       return;
@@ -246,7 +245,7 @@ paginator.runAsStream_ = function(parsedArguments, originalMethod) {
 
     resultsToSend -= results.length;
 
-    split(results, stream, (streamEnded) => {
+    split(results, stream, (streamEnded: boolean) => {
       if (streamEnded) {
         return;
       }
