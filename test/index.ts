@@ -15,37 +15,16 @@
  */
 
 import * as assert from 'assert';
-import * as proxyquire from 'proxyquire';
-
-const fakeLogger = {};
-const fakeOperation = {};
-const fakePaginator = {};
-const fakeService = {};
-const fakeServiceObject = {};
-const fakeUtil = {};
+const common = require('../src');
 
 describe('common', () => {
-  let common;
-
-  before(() => {
-    common = proxyquire('../src/index.js', {
-      './logger.js': fakeLogger,
-      './operation.js': fakeOperation,
-      './paginator.js': fakePaginator,
-      './service.js': fakeService,
-      './service-object.js': fakeServiceObject,
-      './util.js': fakeUtil,
-    });
-  });
-
   it('should correctly export the common modules', () => {
-    assert.deepEqual(common, {
-      logger: fakeLogger,
-      Operation: fakeOperation,
-      paginator: fakePaginator,
-      Service: fakeService,
-      ServiceObject: fakeServiceObject,
-      util: fakeUtil,
-    });
+    assert(common.logger);
+    assert(common.logger);
+    assert(common.Operation);
+    assert(common.paginator);
+    assert(common.Service);
+    assert(common.ServiceObject);
+    assert(common.util);
   });
 });
