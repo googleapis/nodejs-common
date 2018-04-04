@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {Service} from './service';
+
 /**
  * @type {module:common/logger}
  * @private
@@ -36,7 +38,7 @@ exports.paginator = require('./paginator');
  * @type {module:common/service}
  * @private
  */
-exports.Service = require('./service');
+exports.Service = Service;
 
 /**
  * @type {module:common/serviceObject}
