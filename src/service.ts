@@ -21,6 +21,7 @@
 import * as extend from 'extend';
 import * as r from 'request';
 import * as arrify from 'arrify';
+import * as pify from 'pify';
 
 /**
  * @type {module:common/util}
@@ -128,19 +129,23 @@ export class Service {
    *
    * @param {function} callback - The callback function.
    */
-  getProjectId(callback: (err: Error|null, projectId?: string) => void) {
-    this.authClient.getProjectId((err: Error|null, projectId: string) => {
-      if (err) {
-        callback(err);
-        return;
-      }
+  getProjectId(): Promise<string>;
+  getProjectId(callback: (err: Error|null, projectId?: string) => void): void;
+  getProjectId(callback?: (err: Error|null, projectId?: string) => void): Promise<string>|void {
+    if (!callback) {
+      return this.getProjectIdAsync();
+    }
+    this.getProjectIdAsync()
+        .then(p => callback(null, p))
+        .catch(e => callback(e));
+  }
 
-      if (this.projectId === PROJECT_ID_TOKEN && projectId) {
-        this.projectId = projectId;
-      }
-
-      callback(null, this.projectId);
-    });
+  protected async getProjectIdAsync(): Promise<string> {
+    const projectId = await pify(this.authClient.getProjectId)();
+    if (this.projectId === PROJECT_ID_TOKEN && projectId) {
+      this.projectId = projectId;
+    }
+    return this.projectId;
   }
 
   /**
