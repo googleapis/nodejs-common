@@ -18,7 +18,7 @@
  * @module common/service-object
  */
 
-const arrify = require('arrify');
+import * as arrify from 'arrify';
 import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';

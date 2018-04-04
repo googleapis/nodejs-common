@@ -26,8 +26,8 @@ import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import * as through from 'through2';
 import { Duplex, Stream } from 'stream';
+import * as streamEvents from 'stream-events';
 const googleAuth = require('google-auto-auth');
-const streamEvents = require('stream-events');
 
 const request = r.defaults({
   timeout: 60000,

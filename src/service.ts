@@ -20,7 +20,7 @@
 
 import * as extend from 'extend';
 import * as r from 'request';
-const arrify = require('arrify');
+import * as arrify from 'arrify';
 
 /**
  * @type {module:common/util}
