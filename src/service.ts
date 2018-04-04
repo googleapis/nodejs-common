@@ -22,6 +22,7 @@ import * as extend from 'extend';
 import * as r from 'request';
 import * as arrify from 'arrify';
 import * as pify from 'pify';
+import {PackageJson} from './types';
 
 /**
  * @type {module:common/util}
@@ -48,7 +49,7 @@ export interface ServiceConfig {
   scopes: string[];
 
   projectIdRequired?: boolean;
-  packageJson: {};
+  packageJson: PackageJson;
 }
 
 export interface ServiceOptions {
@@ -63,16 +64,18 @@ export interface ServiceOptions {
 
 export class Service {
 
-  baseUrl: string;
-  globalInterceptors;
-  interceptors;
-  private packageJson;
-  projectId: string;
-  projectIdRequired: boolean;
-  Promise;
+  private baseUrl: string;
+  private globalInterceptors;
+  private interceptors: ({ request(opts: r.Options): r.Options})[];
+  private packageJson: PackageJson;
+  private projectId: string;
+  private projectIdRequired: boolean;
+  private Promise: Promise<{}>;
+  // TODO: make this private
   makeAuthenticatedRequest;
+  // TODO: make this private
   authClient;
-  getCredentials;
+  private getCredentials;
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like
