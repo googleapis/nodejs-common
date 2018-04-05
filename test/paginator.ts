@@ -16,141 +16,98 @@
 
 import * as assert from 'assert';
 import * as extend from 'extend';
-import * as proxyquire from 'proxyquire';
 import * as stream from 'stream';
 import * as through from 'through2';
 import * as uuid from 'uuid';
+import * as sinon from 'sinon';
 
-let paginator = require('../src/paginator.js');
-const util = extend({}, require('../src/util.js'));
-
-let overrides: any = {};
-
-function override(name, object) {
-  const cachedObject = extend({}, object);
-  overrides[name] = {};
-
-  Object.keys(object).forEach((methodName) =>{
-    if (typeof object[methodName] !== 'function') {
-      return;
-    }
-
-    object[methodName] = function () {
-      const args = arguments;
-
-      if (overrides[name][methodName]) {
-        return overrides[name][methodName].apply(this, args);
-      }
-
-      return cachedObject[methodName].apply(this, args);
-    };
-  });
-}
-
-function resetOverrides() {
-  overrides = Object.keys(overrides).reduce(function(acc, name) {
-    acc[name] = {};
-    return acc;
-  }, {});
-}
+import { paginator, Paginator } from '../src/paginator';
+const util = require('../src/util');
 
 describe('paginator', () => {
   const UUID = uuid.v1();
+  function FakeClass() { }
 
-  function FakeClass() {}
-
-  before(() => {
-    override('util', util);
-    paginator = proxyquire('../src/paginator.js', {
-      './util.js': util,
-    });
-    override('paginator', paginator);
-  });
-
+  let sandbox: sinon.SinonSandbox;
   beforeEach(() => {
-    FakeClass.prototype = {
-      methodToExtend() {
-        return UUID;
-      },
+    sandbox = sinon.createSandbox();
+    FakeClass.prototype.methodToExtend = () => {
+      return UUID;
     };
-    resetOverrides();
+    delete FakeClass.prototype.methodToExtend_;
+  });
+  afterEach(() => {
+    sandbox.restore();
   });
 
-  after(() => {
-    resetOverrides();
-  });
+  function stub(methodName: keyof Paginator, stub: (...args: any[]) => void) {
+    return sandbox.stub(paginator, methodName).callsFake(stub);
+  }
 
   describe('extend', () => {
     it('should overwrite a method on a class', () => {
       const originalMethod = FakeClass.prototype.methodToExtend;
       paginator.extend(FakeClass, 'methodToExtend');
       const overwrittenMethod = FakeClass.prototype.methodToExtend;
-
       assert.notEqual(originalMethod, overwrittenMethod);
     });
 
     it('should store the original method as a private member', () => {
       const originalMethod = FakeClass.prototype.methodToExtend;
       paginator.extend(FakeClass, 'methodToExtend');
-
       assert.strictEqual(originalMethod, FakeClass.prototype.methodToExtend_);
     });
 
     it('should accept an array or string method names', () => {
       const originalMethod = FakeClass.prototype.methodToExtend;
-
-      FakeClass.prototype.anotherMethodToExtend = () => {};
+      FakeClass.prototype.anotherMethodToExtend = () => { };
       const anotherMethod = FakeClass.prototype.anotherMethodToExtend;
-
       const methodsToExtend = ['methodToExtend', 'anotherMethodToExtend'];
       paginator.extend(FakeClass, methodsToExtend);
-
       assert.notEqual(originalMethod, FakeClass.prototype.methodToExtend);
       assert.notEqual(anotherMethod, FakeClass.prototype.anotherMethodToExtend);
     });
 
     it('should parse the arguments', (done) => {
-      overrides.paginator.parseArguments_ = (args) => {
+      stub('parseArguments_', args => {
         assert.deepEqual([].slice.call(args), [1, 2, 3]);
         done();
-      };
-
-      overrides.paginator.run_ = util.noop;
-
+      });
+      stub('run_', util.noop);
       paginator.extend(FakeClass, 'methodToExtend');
       FakeClass.prototype.methodToExtend(1, 2, 3);
     });
 
     it('should call router when the original method is called', (done) => {
       const expectedReturnValue = FakeClass.prototype.methodToExtend();
-      const parsedArguments = {a: 'b', c: 'd'};
+      const parsedArguments = { a: 'b', c: 'd' };
 
-      overrides.paginator.parseArguments_ = () => {
+      stub('parseArguments_', () => {
         return parsedArguments;
-      };
+      });
 
-      overrides.paginator.run_ = (args, originalMethod) => {
+      stub('run_', (args, originalMethod) => {
         assert.strictEqual(args, parsedArguments);
         assert.equal(originalMethod(), expectedReturnValue);
         done();
-      };
+      });
 
       paginator.extend(FakeClass, 'methodToExtend');
       FakeClass.prototype.methodToExtend();
     });
 
     it('should maintain `this` context', (done) => {
-      FakeClass.prototype.methodToExtend = function() {
+      FakeClass.prototype.methodToExtend = function () {
         return this.uuid;
       };
 
       const cls = new FakeClass();
       cls.uuid = uuid.v1();
 
-      overrides.paginator.run_ = (args, originalMethod) => {
+      stub('run_', (args, originalMethod) => {
         assert.equal(originalMethod(), cls.uuid);
         done();
-      };
+      });
 
       paginator.extend(FakeClass, 'methodToExtend');
       cls.methodToExtend();
@@ -158,9 +115,9 @@ describe('paginator', () => {
 
     it('should return what the router returns', () => {
       const uniqueValue = 234;
-      overrides.paginator.run_ = () => {
+      stub('run_', () => {
         return uniqueValue;
-      };
+      });
 
       paginator.extend(FakeClass, 'methodToExtend');
       assert.equal(FakeClass.prototype.methodToExtend(), uniqueValue);
@@ -180,66 +137,66 @@ describe('paginator', () => {
     it('should parse the arguments', (done) => {
       const fakeArgs = [1, 2, 3];
 
-      overrides.paginator.parseArguments_ = (args) => {
+      stub('parseArguments_', args => {
         assert.deepEqual(fakeArgs, [].slice.call(args));
         done();
-      };
+      });
 
-      overrides.paginator.runAsStream_ = util.noop;
+      stub('runAsStream_', util.noop);
       FakeClass.prototype.streamMethod.apply(FakeClass.prototype, fakeArgs);
     });
 
     it('should run the method as a stream', (done) => {
-      const parsedArguments = {a: 'b', c: 'd'};
+      const parsedArguments = { a: 'b', c: 'd' };
 
-      overrides.paginator.parseArguments_ = () => {
+      stub('parseArguments_', () => {
         return parsedArguments;
-      };
+      });
 
-      overrides.paginator.runAsStream_ = (args, callback) => {
+      stub('runAsStream_', (args, callback) => {
         assert.strictEqual(args, parsedArguments);
         assert.strictEqual(callback(), UUID);
         done();
-      };
+      });
 
       FakeClass.prototype.streamMethod();
     });
 
     it('should apply the proper context', (done) => {
-      const parsedArguments = {a: 'b', c: 'd'};
+      const parsedArguments = { a: 'b', c: 'd' };
 
-      FakeClass.prototype.methodToExtend = function() {
+      FakeClass.prototype.methodToExtend = function () {
         return this;
       };
 
-      overrides.paginator.parseArguments_ = () => {
+      stub('parseArguments_', () => {
         return parsedArguments;
-      };
+      });
 
-      overrides.paginator.runAsStream_ = (args, callback)  => {
+      stub('runAsStream_', (args, callback) => {
         assert.strictEqual(callback(), FakeClass.prototype);
         done();
-      };
+      });
 
       FakeClass.prototype.streamMethod();
     });
 
     it('should check for a private member', (done) => {
-      const parsedArguments = {a: 'b', c: 'd'};
+      const parsedArguments = { a: 'b', c: 'd' };
       const fakeValue = 123;
 
       FakeClass.prototype.methodToExtend_ = () => {
         return fakeValue;
       };
 
-      overrides.paginator.parseArguments_ = () => {
+      stub('parseArguments_', () => {
         return parsedArguments;
-      };
+      });
 
-      overrides.paginator.runAsStream_ = function(args, callback) {
+      stub('runAsStream_', (args, callback) => {
         assert.strictEqual(callback(), fakeValue);
         done();
-      };
+      });
 
       FakeClass.prototype.streamMethod();
     });
@@ -247,11 +204,11 @@ describe('paginator', () => {
     it('should return a stream', () => {
       const fakeStream = through.obj();
 
-      overrides.paginator.parseArguments_ = util.noop;
+      stub('parseArguments_', util.noop);
 
-      overrides.paginator.runAsStream_ = () => {
+      stub('runAsStream_', () => {
         return fakeStream;
-      };
+      });
 
       const stream = FakeClass.prototype.streamMethod();
 
@@ -306,7 +263,7 @@ describe('paginator', () => {
     });
 
     it('should set maxApiCalls from query.maxApiCalls', () => {
-      const args = [{maxApiCalls: 10}];
+      const args = [{ maxApiCalls: 10 }];
       const parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.maxApiCalls, args[0].maxApiCalls);
@@ -314,35 +271,35 @@ describe('paginator', () => {
     });
 
     it('should set maxResults from query.maxResults', () => {
-      const args = [{maxResults: 10}];
+      const args = [{ maxResults: 10 }];
       const parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.maxResults, args[0].maxResults);
     });
 
     it('should set maxResults from query.pageSize', () => {
-      const args = [{pageSize: 10}];
+      const args = [{ pageSize: 10 }];
       const parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.maxResults, args[0].pageSize);
     });
 
     it('should set autoPaginate: false if there is a maxResults', () => {
-      const args = [{maxResults: 10}, util.noop];
+      const args = [{ maxResults: 10 }, util.noop];
       const parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.autoPaginate, false);
     });
 
     it('should set autoPaginate: false query.autoPaginate', () => {
-      const args = [{autoPaginate: false}, util.noop];
+      const args = [{ autoPaginate: false }, util.noop];
       const parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.autoPaginate, false);
     });
 
     it('should parse streamOptions', () => {
-      const args = [{maxResults: 10, highWaterMark: 8}];
+      const args = [{ maxResults: 10, highWaterMark: 8 }];
       const parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.maxResults, 10);
@@ -353,10 +310,6 @@ describe('paginator', () => {
   });
 
   describe('run_', () => {
-    beforeEach(() => {
-      overrides.paginator.runAsStream_ = util.noop;
-    });
-
     describe('autoPaginate', () => {
       it('should call runAsStream_ when autoPaginate:true', (done) => {
         const parsedArguments = {
@@ -364,11 +317,11 @@ describe('paginator', () => {
           callback: util.noop,
         };
 
-        overrides.paginator.runAsStream_ = (args, originalMethod) => {
+        stub('runAsStream_', (args, originalMethod) => {
           assert.strictEqual(args, parsedArguments);
           originalMethod();
           return through();
-        };
+        });
 
         paginator.run_(parsedArguments, done);
       });
@@ -384,13 +337,13 @@ describe('paginator', () => {
           },
         };
 
-        overrides.paginator.runAsStream_ = () => {
+        stub('runAsStream_', () => {
           const stream = through();
           setImmediate(() => {
             stream.emit('error', error);
           });
           return stream;
-        };
+        });
 
         paginator.run_(parsedArguments, util.noop);
       });
@@ -406,7 +359,7 @@ describe('paginator', () => {
           },
         };
 
-        overrides.paginator.runAsStream_ = () => {
+        stub('runAsStream_', () => {
           const stream = through();
 
           setImmediate(() => {
@@ -418,7 +371,7 @@ describe('paginator', () => {
           });
 
           return stream;
-        };
+        });
 
         paginator.run_(parsedArguments, util.noop);
       });
@@ -434,7 +387,7 @@ describe('paginator', () => {
           },
           callback: done,
         };
-
+        stub('runAsStream_', util.noop);
         paginator.run_(parsedArguments, (query, callback) => {
           assert.deepEqual(query, parsedArguments.query);
           callback();
@@ -451,9 +404,10 @@ describe('paginator', () => {
       },
     };
 
+    let limiterStub: sinon.SinonStub;
     beforeEach(() => {
-      overrides.util.createLimiter = (makeRequest) => {
-        const transformStream = new stream.Transform({objectMode: true});
+      limiterStub = sandbox.stub(util, 'createLimiter').callsFake(makeRequest => {
+        const transformStream = new stream.Transform({ objectMode: true });
         transformStream.destroy = through.obj().destroy.bind(transformStream);
 
         setImmediate(() => {
@@ -464,7 +418,7 @@ describe('paginator', () => {
           makeRequest,
           stream: transformStream,
         };
-      };
+      });
     });
 
     it('should call original method when stream opens', (done) => {
@@ -516,14 +470,15 @@ describe('paginator', () => {
       const maxApiCalls = 10;
 
       it('should create a limiter', (done) => {
-        overrides.util.createLimiter = (makeRequest, options) => {
+        limiterStub.restore();
+        sandbox.stub(util, 'createLimiter').callsFake((makeRequest, options) => {
           assert.strictEqual(options.maxApiCalls, maxApiCalls);
           setImmediate(done);
           return {
             stream: through.obj(),
           };
-        };
-        paginator.runAsStream_({maxApiCalls}, util.noop);
+        });
+        paginator.runAsStream_({ maxApiCalls }, util.noop);
       });
     });
 
@@ -533,7 +488,8 @@ describe('paginator', () => {
       };
 
       it('should pass through stream options', (done) => {
-        overrides.util.createLimiter = function(makeRequest, options) {
+        limiterStub.restore();
+        sandbox.stub(util, 'createLimiter').callsFake((makeRequest, options) => {
           assert.strictEqual(options.streamOptions, streamOptions);
 
           setImmediate(done);
@@ -541,7 +497,7 @@ describe('paginator', () => {
           return {
             stream: through.obj(),
           };
-        };
+        });
 
         paginator.runAsStream_(
           {
@@ -566,7 +522,7 @@ describe('paginator', () => {
         let numResultsReceived = 0;
 
         paginator
-          .runAsStream_({maxResults: limit}, originalMethod)
+          .runAsStream_({ maxResults: limit }, originalMethod)
           .on('data', () => {
             numResultsReceived++;
           })
@@ -578,7 +534,7 @@ describe('paginator', () => {
     });
 
     it('should get more results if nextQuery exists', (done) => {
-      const nextQuery = {a: 'b', c: 'd'};
+      const nextQuery = { a: 'b', c: 'd' };
       let nextQuerySent = false;
 
       function originalMethod(query, callback) {
@@ -607,7 +563,7 @@ describe('paginator', () => {
       }
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
-      rs.on('data', function(result) {
+      rs.on('data', function (result) {
         if (result === 'b') {
           // Pre-maturely end the stream.
           this.end();
@@ -634,7 +590,7 @@ describe('paginator', () => {
       }
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
-      rs.on('data', function(result) {
+      rs.on('data', function (result) {
         if (result === 'b') {
           // Pre-maturely end the stream.
           this.end();

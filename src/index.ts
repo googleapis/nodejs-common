@@ -30,7 +30,7 @@ exports.Operation = require('./operation');
  * @type {module:common/paginator}
  * @private
  */
-exports.paginator = require('./paginator');
+export {paginator} from './paginator';
 
 /**
  * @type {module:common/service}
