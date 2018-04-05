@@ -20,7 +20,6 @@ const common = require('../src');
 describe('common', () => {
   it('should correctly export the common modules', () => {
     assert(common.logger);
-    assert(common.logger);
     assert(common.Operation);
     assert(common.paginator);
     assert(common.Service);

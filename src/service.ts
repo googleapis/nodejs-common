@@ -66,7 +66,7 @@ export class Service {
 
   private baseUrl: string;
   private globalInterceptors;
-  private interceptors: ({ request(opts: r.Options): r.Options})[];
+  private interceptors: Array<{ request(opts: r.Options): r.Options}>;
   private packageJson: PackageJson;
   private projectId: string;
   private projectIdRequired: boolean;
@@ -139,7 +139,7 @@ export class Service {
       return this.getProjectIdAsync();
     }
     this.getProjectIdAsync()
-        .then(p => callback(null, p))
+        .then(p => callback(null, p), e => callback(e))
         .catch(e => callback(e));
   }
 
@@ -161,6 +161,7 @@ export class Service {
    * @param {function} callback - The callback function passed to `request`.
    */
   request_(reqOpts: r.Options & ExtendedRequestOptions, callback?: (err: Error|null) => void) {
+    // TODO: fix the tests so this can be private
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
     const uriComponents = [this.baseUrl];
@@ -219,7 +220,7 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  private request(reqOpts: ExtendedRequestOptions, callback: (err: Error|null) => void) {
+  protected request(reqOpts: ExtendedRequestOptions, callback: (err: Error|null) => void) {
     this.request_(reqOpts, callback);
   }
 
@@ -231,7 +232,7 @@ export class Service {
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
-  private requestStream(reqOpts: ExtendedRequestOptions) {
+  protected requestStream(reqOpts: ExtendedRequestOptions) {
     return this.request_(reqOpts);
   }
 

@@ -37,7 +37,7 @@ util.makeAuthenticatedRequestFactory = (...args) => {
 
 describe('Service', () => {
   let service;
-  const Svc = proxyquire('../src/service', {
+  const Service = proxyquire('../src/service', {
     './util': util,
   }).Service;
 
@@ -61,13 +61,13 @@ describe('Service', () => {
 
   beforeEach(() => {
     makeAuthenticatedRequestFactoryOverride = null;
-    service = new Svc(CONFIG, OPTIONS);
+    service = new Service(CONFIG, OPTIONS);
   });
 
   describe('instantiation', () => {
     it('should not require options', () => {
       assert.doesNotThrow(() => {
-        new Svc(CONFIG);
+        new Service(CONFIG);
       });
     });
 
@@ -120,7 +120,7 @@ describe('Service', () => {
         };
       };
 
-      const service = new Svc(CONFIG, OPTIONS);
+      const service = new Service(CONFIG, OPTIONS);
       assert.strictEqual(service.getCredentials, getCredentials);
     });
 
@@ -134,7 +134,7 @@ describe('Service', () => {
       const options = extend({}, OPTIONS);
       options.interceptors_ = globalInterceptors;
 
-      const service = new Svc(fakeCfg, options);
+      const service = new Service(fakeCfg, options);
       assert.strictEqual(service.globalInterceptors, globalInterceptors);
     });
 
@@ -151,7 +151,7 @@ describe('Service', () => {
     });
 
     it('should default projectId with placeholder', () => {
-      const service = new Svc(fakeCfg, {});
+      const service = new Service(fakeCfg, {});
       assert.strictEqual(service.projectId, '{{projectId}}');
     });
 
@@ -160,13 +160,13 @@ describe('Service', () => {
     });
 
     it('should default projectIdRequired to true', () => {
-      const service = new Svc(fakeCfg, OPTIONS);
+      const service = new Service(fakeCfg, OPTIONS);
       assert.strictEqual(service.projectIdRequired, true);
     });
 
     it('should localize the Promise object', () => {
       const FakePromise = () => {};
-      const service = new Svc(fakeCfg, {promise: FakePromise});
+      const service = new Service(fakeCfg, {promise: FakePromise});
 
       assert.strictEqual(service.Promise, FakePromise);
     });
@@ -177,7 +177,7 @@ describe('Service', () => {
 
     it('should disable forever agent for Cloud Function envs', () => {
       process.env.FUNCTION_NAME = 'cloud-function-name';
-      const service = new Svc(CONFIG, OPTIONS);
+      const service = new Service(CONFIG, OPTIONS);
       delete process.env.FUNCTION_NAME;
 
       const interceptor = service.interceptors[0];
@@ -214,7 +214,7 @@ describe('Service', () => {
     });
 
     it('should update and return the project ID if found', (done) => {
-      const service = new Svc(fakeCfg, {});
+      const service = new Service(fakeCfg, {});
       const projectId = 'detected-project-id';
 
       service.authClient = {
@@ -330,7 +330,7 @@ describe('Service', () => {
       describe('false', () => {
         it('should include the projectId', (done) => {
           const config = extend({}, CONFIG, {projectIdRequired: false});
-          const service = new Svc(config, OPTIONS);
+          const service = new Service(config, OPTIONS);
 
           const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
@@ -347,7 +347,7 @@ describe('Service', () => {
       describe('true', () => {
         it('should not include the projectId', (done) => {
           const config = extend({}, CONFIG, {projectIdRequired: true});
-          const service = new Svc(config, OPTIONS);
+          const service = new Service(config, OPTIONS);
 
           const expectedUri = [
             service.baseUrl,
@@ -485,13 +485,13 @@ describe('Service', () => {
     });
 
     after(() => {
-      Svc.prototype.request_ = request_;
+      Service.prototype.request_ = request_;
     });
 
     it('should call through to _request', (done) => {
       const fakeOpts = {};
 
-      Svc.prototype.request_ = (reqOpts, callback) => {
+      Service.prototype.request_ = (reqOpts, callback) => {
         assert.strictEqual(reqOpts, fakeOpts);
         callback!(null);
       };
@@ -504,18 +504,18 @@ describe('Service', () => {
     let request_;
 
     before(() => {
-      request_ = Svc.prototype.request_;
+      request_ = Service.prototype.request_;
     });
 
     after(() => {
-      Svc.prototype.request_ = request_;
+      Service.prototype.request_ = request_;
     });
 
     it('should return whatever _request returns', () => {
       const fakeOpts = {};
       const fakeStream = {};
 
-      Svc.prototype.request_ = function(reqOpts) {
+      Service.prototype.request_ = function(reqOpts) {
         assert.strictEqual(reqOpts, fakeOpts);
         return fakeStream;
       };
