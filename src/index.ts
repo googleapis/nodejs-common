@@ -36,7 +36,7 @@ exports.paginator = require('./paginator');
  * @type {module:common/service}
  * @private
  */
-exports.Service = require('./service');
+export {Service} from './service';
 
 /**
  * @type {module:common/serviceObject}

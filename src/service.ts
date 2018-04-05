@@ -21,6 +21,8 @@
 import * as extend from 'extend';
 import * as r from 'request';
 import * as arrify from 'arrify';
+import * as pify from 'pify';
+import {PackageJson} from './types';
 
 /**
  * @type {module:common/util}
@@ -30,7 +32,12 @@ const util = require('./util');
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 
-interface ServiceConfig {
+export type ExtendedRequestOptions = r.Options & {
+  interceptors_?: any;
+  uri: string;
+};
+
+export interface ServiceConfig {
   /**
    * The base URL to make API requests to.
    */
@@ -42,10 +49,10 @@ interface ServiceConfig {
   scopes: string[];
 
   projectIdRequired?: boolean;
-  packageJson: {};
+  packageJson: PackageJson;
 }
 
-interface ServiceOptions {
+export interface ServiceOptions {
   interceptors_?: any;
   projectId?: string;
   promise?: any;
@@ -55,175 +62,178 @@ interface ServiceOptions {
   token?: string;
 }
 
-/**
- * Service is a base class, meant to be inherited from by a "service," like
- * BigQuery or Storage.
- *
- * This handles making authenticated requests by exposing a `makeReq_` function.
- *
- * @constructor
- * @alias module:common/service
- *
- * @param {object} config - Configuration object.
- * @param {string} config.baseUrl - The base URL to make API requests to.
- * @param {string[]} config.scopes - The scopes required for the request.
- * @param {object=} options - [Configuration object](#/docs).
- */
-function Service(config: ServiceConfig, options?: ServiceOptions) {
-  options = options || {};
+export class Service {
 
-  util.privatize(this, 'baseUrl', config.baseUrl);
-  util.privatize(this, 'globalInterceptors', arrify(options.interceptors_));
-  util.privatize(this, 'interceptors', []);
-  util.privatize(this, 'packageJson', config.packageJson);
-  util.privatize(this, 'projectId', options.projectId || PROJECT_ID_TOKEN);
-  util.privatize(this, 'projectIdRequired', config.projectIdRequired !== false);
-  util.privatize(this, 'Promise', options.promise || Promise);
+  private baseUrl: string;
+  private globalInterceptors;
+  private interceptors: Array<{ request(opts: r.Options): r.Options}>;
+  private packageJson: PackageJson;
+  private projectId: string;
+  private projectIdRequired: boolean;
+  private Promise: Promise<{}>;
+  // TODO: make this private
+  makeAuthenticatedRequest;
+  // TODO: make this private
+  authClient;
+  private getCredentials;
 
-  const reqCfg = extend({}, config, {
-    projectIdRequired: this.projectIdRequired,
-    projectId: this.projectId,
-    credentials: options.credentials,
-    keyFile: options.keyFilename,
-    email: options.email,
-    token: options.token,
-  });
+  /**
+   * Service is a base class, meant to be inherited from by a "service," like
+   * BigQuery or Storage.
+   *
+   * This handles making authenticated requests by exposing a `makeReq_` function.
+   *
+   * @constructor
+   * @alias module:common/service
+   *
+   * @param {object} config - Configuration object.
+   * @param {string} config.baseUrl - The base URL to make API requests to.
+   * @param {string[]} config.scopes - The scopes required for the request.
+   * @param {object=} options - [Configuration object](#/docs).
+   */
+  constructor(config: ServiceConfig, options?: ServiceOptions) {
+    options = options || {};
 
-  util.privatize(
-    this,
-    'makeAuthenticatedRequest',
-    util.makeAuthenticatedRequestFactory(reqCfg)
-  );
-  util.privatize(this, 'authClient', this.makeAuthenticatedRequest.authClient);
-  util.privatize(
-    this,
-    'getCredentials',
-    this.makeAuthenticatedRequest.getCredentials
-  );
+    this.baseUrl = config.baseUrl;
+    this.globalInterceptors = arrify(options.interceptors_);
+    this.interceptors = [];
+    this.packageJson = config.packageJson;
+    this.projectId = options.projectId || PROJECT_ID_TOKEN;
+    this.projectIdRequired = config.projectIdRequired !== false;
+    this.Promise = options.promise || Promise;
 
-  const isCloudFunctionEnv = !!process.env.FUNCTION_NAME;
-
-  if (isCloudFunctionEnv) {
-    this.interceptors.push({
-      request(reqOpts: r.Options) {
-        reqOpts.forever = false;
-        return reqOpts;
-      },
+    const reqCfg = extend({}, config, {
+      projectIdRequired: this.projectIdRequired,
+      projectId: this.projectId,
+      credentials: options.credentials,
+      keyFile: options.keyFilename,
+      email: options.email,
+      token: options.token,
     });
+
+    this.makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(reqCfg);
+    this.authClient = this.makeAuthenticatedRequest.authClient;
+    this.getCredentials = this.makeAuthenticatedRequest.getCredentials;
+
+    const isCloudFunctionEnv = !!process.env.FUNCTION_NAME;
+
+    if (isCloudFunctionEnv) {
+      this.interceptors.push({
+        request(reqOpts: r.Options) {
+          reqOpts.forever = false;
+          return reqOpts;
+        },
+      });
+    }
   }
-}
 
-/**
- * Get and update the Service's project ID.
- *
- * @param {function} callback - The callback function.
- */
-Service.prototype.getProjectId = function(callback: (err: Error|null, projectId?: string) => void) {
-  const self = this;
+  /**
+   * Get and update the Service's project ID.
+   *
+   * @param {function} callback - The callback function.
+   */
+  getProjectId(): Promise<string>;
+  getProjectId(callback: (err: Error|null, projectId?: string) => void): void;
+  getProjectId(callback?: (err: Error|null, projectId?: string) => void): Promise<string>|void {
+    if (!callback) {
+      return this.getProjectIdAsync();
+    }
+    this.getProjectIdAsync()
+        .then(p => callback(null, p), e => callback(e))
+        .catch(e => callback(e));
+  }
 
-  this.authClient.getProjectId((err: Error|null, projectId: string) => {
-    if (err) {
-      callback(err);
-      return;
+  protected async getProjectIdAsync(): Promise<string> {
+    const projectId = await pify(this.authClient.getProjectId)();
+    if (this.projectId === PROJECT_ID_TOKEN && projectId) {
+      this.projectId = projectId;
+    }
+    return this.projectId;
+  }
+
+  /**
+   * Make an authenticated API request.
+   *
+   * @private
+   *
+   * @param {object} reqOpts - Request options that are passed to `request`.
+   * @param {string} reqOpts.uri - A URI relative to the baseUrl.
+   * @param {function} callback - The callback function passed to `request`.
+   */
+  request_(reqOpts: r.Options & ExtendedRequestOptions, callback?: (err: Error|null) => void) {
+    // TODO: fix the tests so this can be private
+    reqOpts = extend(true, {}, reqOpts);
+    const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
+    const uriComponents = [this.baseUrl];
+
+    if (this.projectIdRequired) {
+      uriComponents.push('projects');
+      uriComponents.push(this.projectId);
     }
 
-    if (self.projectId === PROJECT_ID_TOKEN && projectId) {
-      self.projectId = projectId;
+    uriComponents.push(reqOpts.uri);
+
+    if (isAbsoluteUrl) {
+      uriComponents.splice(0, uriComponents.indexOf(reqOpts.uri));
     }
 
-    callback(null, self.projectId);
-  });
-};
+    reqOpts.uri = uriComponents
+      .map((uriComponent) => {
+        const trimSlashesRegex = /^\/*|\/*$/g;
+        return uriComponent.replace(trimSlashesRegex, '');
+      })
+      .join('/')
+      // Some URIs have colon separators.
+      // Bad: https://.../projects/:list
+      // Good: https://.../projects:list
+      .replace(/\/:/g, ':');
 
-interface ExtendedRequestOptions {
-  interceptors_?: any;
-  uri: string;
+    // Interceptors should be called in the order they were assigned.
+    const combinedInterceptors = [].slice
+      .call(this.globalInterceptors)
+      .concat(this.interceptors)
+      .concat(arrify(reqOpts.interceptors_));
+
+    let interceptor;
+
+    while ((interceptor = combinedInterceptors.shift()) && interceptor.request) {
+      reqOpts = interceptor.request(reqOpts);
+    }
+
+    delete reqOpts.interceptors_;
+
+    const pkg = this.packageJson;
+    reqOpts.headers = extend({}, reqOpts.headers, {
+      'User-Agent': util.getUserAgentFromPackageJson(pkg),
+      'x-goog-api-client': `gl-node/${process.versions.node} gccl/${pkg.version}`,
+    });
+
+    return this.makeAuthenticatedRequest(reqOpts, callback);
+  }
+
+  /**
+   * Make an authenticated API request.
+   *
+   * @private
+   *
+   * @param {object} reqOpts - Request options that are passed to `request`.
+   * @param {string} reqOpts.uri - A URI relative to the baseUrl.
+   * @param {function} callback - The callback function passed to `request`.
+   */
+  protected request(reqOpts: ExtendedRequestOptions, callback: (err: Error|null) => void) {
+    this.request_(reqOpts, callback);
+  }
+
+  /**
+   * Make an authenticated API request.
+   *
+   * @private
+   *
+   * @param {object} reqOpts - Request options that are passed to `request`.
+   * @param {string} reqOpts.uri - A URI relative to the baseUrl.
+   */
+  protected requestStream(reqOpts: ExtendedRequestOptions) {
+    return this.request_(reqOpts);
+  }
+
 }
-
-/**
- * Make an authenticated API request.
- *
- * @private
- *
- * @param {object} reqOpts - Request options that are passed to `request`.
- * @param {string} reqOpts.uri - A URI relative to the baseUrl.
- * @param {function} callback - The callback function passed to `request`.
- */
-Service.prototype.request_ = function(reqOpts: r.Options & ExtendedRequestOptions, callback: (err: Error|null) => void) {
-  reqOpts = extend(true, {}, reqOpts);
-
-  const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
-
-  const uriComponents = [this.baseUrl];
-
-  if (this.projectIdRequired) {
-    uriComponents.push('projects');
-    uriComponents.push(this.projectId);
-  }
-
-  uriComponents.push(reqOpts.uri);
-
-  if (isAbsoluteUrl) {
-    uriComponents.splice(0, uriComponents.indexOf(reqOpts.uri));
-  }
-
-  reqOpts.uri = uriComponents
-    .map((uriComponent) => {
-      const trimSlashesRegex = /^\/*|\/*$/g;
-      return uriComponent.replace(trimSlashesRegex, '');
-    })
-    .join('/')
-    // Some URIs have colon separators.
-    // Bad: https://.../projects/:list
-    // Good: https://.../projects:list
-    .replace(/\/:/g, ':');
-
-  // Interceptors should be called in the order they were assigned.
-  const combinedInterceptors = [].slice
-    .call(this.globalInterceptors)
-    .concat(this.interceptors)
-    .concat(arrify(reqOpts.interceptors_));
-
-  let interceptor;
-
-  while ((interceptor = combinedInterceptors.shift()) && interceptor.request) {
-    reqOpts = interceptor.request(reqOpts);
-  }
-
-  delete reqOpts.interceptors_;
-
-  const pkg = this.packageJson;
-  reqOpts.headers = extend({}, reqOpts.headers, {
-    'User-Agent': util.getUserAgentFromPackageJson(pkg),
-    'x-goog-api-client': `gl-node/${process.versions.node} gccl/${pkg.version}`,
-  });
-
-  return this.makeAuthenticatedRequest(reqOpts, callback);
-};
-
-/**
- * Make an authenticated API request.
- *
- * @private
- *
- * @param {object} reqOpts - Request options that are passed to `request`.
- * @param {string} reqOpts.uri - A URI relative to the baseUrl.
- * @param {function} callback - The callback function passed to `request`.
- */
-Service.prototype.request = function(reqOpts: r.Options, callback: (err: Error|null) => void) {
-  Service.prototype.request_.call(this, reqOpts, callback);
-};
-
-/**
- * Make an authenticated API request.
- *
- * @private
- *
- * @param {object} reqOpts - Request options that are passed to `request`.
- * @param {string} reqOpts.uri - A URI relative to the baseUrl.
- */
-Service.prototype.requestStream = function(reqOpts: r.Options) {
-  return Service.prototype.request_.call(this, reqOpts);
-};
-
-module.exports = Service;

@@ -17,9 +17,12 @@
 import * as assert from 'assert';
 import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
+import {Service, ServiceConfig} from '../src/service';
 proxyquire.noPreserveCache();
 
-const util = require('../src/util.js');
+const fakeCfg = {} as ServiceConfig;
+
+const util = require('../src/util');
 
 const makeAuthenticatedRequestFactoryCache =
   util.makeAuthenticatedRequestFactory;
@@ -33,8 +36,10 @@ util.makeAuthenticatedRequestFactory = (...args) => {
 };
 
 describe('Service', () => {
-  let Service;
   let service;
+  const Service = proxyquire('../src/service', {
+    './util': util,
+  }).Service;
 
   const CONFIG = {
     scopes: [],
@@ -54,12 +59,6 @@ describe('Service', () => {
     token: 'token',
   };
 
-  before(() => {
-    Service = proxyquire('../src/service.js', {
-      './util.js': util,
-    });
-  });
-
   beforeEach(() => {
     makeAuthenticatedRequestFactoryOverride = null;
     service = new Service(CONFIG, OPTIONS);
@@ -75,7 +74,7 @@ describe('Service', () => {
     it('should create an authenticated request factory', () => {
       const authenticatedRequest = {};
 
-      makeAuthenticatedRequestFactoryOverride = function(config) {
+      makeAuthenticatedRequestFactoryOverride = config => {
         const expectedConfig = extend({}, CONFIG, {
           credentials: OPTIONS.credentials,
           keyFile: OPTIONS.keyFilename,
@@ -135,7 +134,7 @@ describe('Service', () => {
       const options = extend({}, OPTIONS);
       options.interceptors_ = globalInterceptors;
 
-      const service = new Service({}, options);
+      const service = new Service(fakeCfg, options);
       assert.strictEqual(service.globalInterceptors, globalInterceptors);
     });
 
@@ -152,7 +151,7 @@ describe('Service', () => {
     });
 
     it('should default projectId with placeholder', () => {
-      const service = new Service({}, {});
+      const service = new Service(fakeCfg, {});
       assert.strictEqual(service.projectId, '{{projectId}}');
     });
 
@@ -161,13 +160,13 @@ describe('Service', () => {
     });
 
     it('should default projectIdRequired to true', () => {
-      const service = new Service({}, OPTIONS);
+      const service = new Service(fakeCfg, OPTIONS);
       assert.strictEqual(service.projectIdRequired, true);
     });
 
     it('should localize the Promise object', () => {
       const FakePromise = () => {};
-      const service = new Service({}, {promise: FakePromise});
+      const service = new Service(fakeCfg, {promise: FakePromise});
 
       assert.strictEqual(service.Promise, FakePromise);
     });
@@ -208,14 +207,14 @@ describe('Service', () => {
         },
       };
 
-      service.getProjectId(function(err) {
+      service.getProjectId(err => {
         assert.strictEqual(err, error);
         done();
       });
     });
 
     it('should update and return the project ID if found', (done) => {
-      const service = new Service({}, {});
+      const service = new Service(fakeCfg, {});
       const projectId = 'detected-project-id';
 
       service.authClient = {
@@ -492,9 +491,9 @@ describe('Service', () => {
     it('should call through to _request', (done) => {
       const fakeOpts = {};
 
-      Service.prototype.request_ = function(reqOpts, callback) {
+      Service.prototype.request_ = (reqOpts, callback) => {
         assert.strictEqual(reqOpts, fakeOpts);
-        callback();
+        callback!(null);
       };
 
       service.request(fakeOpts, done);

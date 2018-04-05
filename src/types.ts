@@ -1,5 +1,5 @@
-/**
- * Copyright 2016 Google Inc. All Rights Reserved.
+/*!
+ * Copyright 2018 Google LLC. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-import * as assert from 'assert';
-const common = require('../src');
-
-describe('common', () => {
-  it('should correctly export the common modules', () => {
-    assert(common.logger);
-    assert(common.Operation);
-    assert(common.paginator);
-    assert(common.Service);
-    assert(common.ServiceObject);
-    assert(common.util);
-  });
-});
+export interface PackageJson {
+  name: string;
+  version: string;
+}
