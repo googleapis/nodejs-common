@@ -799,42 +799,28 @@ describe('ServiceObject', () => {
     });
   });
 
-  describe.skip('request', () => {
+  describe('request', () => {
 
     it('should call through to request_', (done) => {
       const fakeOptions = {} as ExtendedRequestOptions;
-
-      sandbox.stub(ServiceObject.prototype, 'request_').callsFake((reqOpts, callback) => {
+      serviceObject.request_ = (reqOpts, callback) => {
         assert.strictEqual(reqOpts, fakeOptions);
-        callback();
-      });
-
-      serviceObject.request_ = () => {
-        done(new Error('Should call to the prototype directly.'));
+        done();
       };
-
-      serviceObject.request(fakeOptions, done);
+      serviceObject.request(fakeOptions, util.noop);
     });
   });
 
-  describe.skip('requestStream', () => {
+  describe('requestStream', () => {
 
-    it('should call through to request_', () => {
+    it('should call through to request_', (done) => {
       const fakeOptions = {} as ExtendedRequestOptions;
-      const fakeStream = {};
-
-      sandbox.stub(ServiceObject.prototype, 'request_').callsFake((reqOpts) =>{
-        assert.strictEqual(reqOpts, fakeOptions);
-        return fakeStream;
-      });
-
       const serviceObject = new ServiceObject(CONFIG);
-      serviceObject.request_ = () => {
-        throw new Error('Should call to the prototype directly.');
+      serviceObject.request_ = (reqOpts) => {
+        assert.strictEqual(reqOpts, fakeOptions);
+        done();
       };
-
-      const stream = serviceObject.requestStream(fakeOptions);
-      assert.strictEqual(stream, fakeStream);
+      serviceObject.requestStream(fakeOptions);
     });
   });
 });
