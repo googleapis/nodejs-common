@@ -20,13 +20,8 @@
 
 import * as events from 'events';
 import * as extend from 'extend';
+import {ServiceObject} from './service-object';
 const modelo = require('modelo');
-
-/**
- * @type {module:common/serviceObject}
- * @private
- */
-const ServiceObject = require('./service-object');
 
 // TODO: improve the typing and required-ness of these properties
 export interface OperationConfig {

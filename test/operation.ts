@@ -15,37 +15,22 @@
  */
 
 import * as assert from 'assert';
-import * as proxyquire from 'proxyquire';
 import {EventEmitter} from 'events';
+import * as sinon from 'sinon';
+import {ServiceObject} from '../src/service-object';
 
+const Operation = require('../src/operation');
 const util = require('../src/util');
-
-const fakeModelo: any = {
-  inherits() {
-    this.calledWith_ = arguments;
-    return require('modelo').inherits.apply(this, arguments);
-  },
-};
-
-function FakeServiceObject() {
-  this.serviceObjectArguments_ = arguments;
-}
 
 describe('Operation', () => {
   const FAKE_SERVICE = {};
   const OPERATION_ID = '/a/b/c/d';
 
-  let Operation;
   let operation;
-
-  before(() => {
-    Operation = proxyquire('../src/operation.js', {
-      modelo: fakeModelo,
-      './service-object.js': FakeServiceObject,
-    });
-  });
+  let sandbox: sinon.SinonSandbox;
 
   beforeEach(() => {
+    sandbox = sinon.createSandbox();
     operation = new Operation({
       parent: FAKE_SERVICE,
       id: OPERATION_ID,
@@ -53,23 +38,23 @@ describe('Operation', () => {
     operation.Promise = Promise;
   });
 
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   describe('instantiation', () => {
     it('should extend ServiceObject and EventEmitter', () => {
-      const args = fakeModelo.calledWith_;
-
-      assert.strictEqual(args[0], Operation);
-      assert.strictEqual(args[1], FakeServiceObject);
-      assert.strictEqual(args[2], EventEmitter);
+      const svcObj = ServiceObject;
+      assert(operation instanceof Operation);
+      assert(operation instanceof svcObj);
+      assert(operation.on);
     });
 
     it('should pass ServiceObject the correct config', () => {
-      const config = operation.serviceObjectArguments_[0];
-
-      assert.strictEqual(config.baseUrl, '');
-      assert.strictEqual(config.parent, FAKE_SERVICE);
-      assert.strictEqual(config.id, OPERATION_ID);
-
-      assert.deepEqual(config.methods, {
+      assert.strictEqual(operation.baseUrl, '');
+      assert.strictEqual(operation.parent, FAKE_SERVICE);
+      assert.strictEqual(operation.id, OPERATION_ID);
+      assert.deepEqual(operation.methods, {
         exists: true,
         get: true,
         getMetadata: {
@@ -82,12 +67,8 @@ describe('Operation', () => {
 
     it('should allow overriding baseUrl', () => {
       const baseUrl = 'baseUrl';
-
-      const operation = new Operation({
-        baseUrl,
-      });
-
-      assert.strictEqual(operation.serviceObjectArguments_[0].baseUrl, baseUrl);
+      const operation = new Operation({baseUrl});
+      assert.strictEqual(operation.baseUrl, baseUrl);
     });
 
     it('should localize listener variables', () => {
@@ -96,16 +77,12 @@ describe('Operation', () => {
     });
 
     it('should call listenForEvents_', () => {
-      const listenForEvents = Operation.prototype.listenForEvents_;
       let called = false;
-
-      Operation.prototype.listenForEvents_ = () => {
+      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(() => {
         called = true;
-      };
-
+      });
       new Operation(FAKE_SERVICE, OPERATION_ID);
       assert.strictEqual(called, true);
-      Operation.prototype.listenForEvents_ = listenForEvents;
     });
   });
 
@@ -158,7 +135,6 @@ describe('Operation', () => {
       operation.startPolling_ = () => {
         done();
       };
-
       operation.on('complete', util.noop);
     });
 
@@ -275,41 +251,24 @@ describe('Operation', () => {
   });
 
   describe('startPolling_', () => {
-    let listenForEvents_;
-
-    before(() => {
-      listenForEvents_ = Operation.prototype.listenForEvents_;
-    });
-
-    after(() => {
-      Operation.prototype.listenForEvents_ = listenForEvents_;
-    });
 
     beforeEach(() => {
-      Operation.prototype.listenForEvents_ = util.noop;
+      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(util.noop);
       operation.hasActiveListeners = true;
-    });
-
-    afterEach(() => {
-      operation.hasActiveListeners = false;
     });
 
     it('should not call getMetadata if no listeners', (done) => {
       operation.hasActiveListeners = false;
-
       operation.getMetadata = done; // if called, test will fail.
-
       operation.startPolling_();
       done();
     });
 
     it('should call getMetadata if listeners are registered', (done) => {
       operation.hasActiveListeners = true;
-
       operation.getMetadata = () => {
         done();
       };
-
       operation.startPolling_();
     });
 
