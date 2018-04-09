@@ -52,7 +52,6 @@
   },
   "dependencies": {
     "arrify": "^1.0.1",
-    "concat-stream": "^1.6.2",
     "duplexify": "^3.5.4",
     "ent": "^2.2.0",
     "extend": "^3.0.1",
@@ -69,7 +68,6 @@
   "devDependencies": {
     "@google-cloud/nodejs-repo-tools": "^2.2.6",
     "@types/arrify": "^1.0.3",
-    "@types/concat-stream": "^1.6.0",
     "@types/duplexify": "^3.5.0",
     "@types/ent": "^2.2.1",
     "@types/extend": "^3.0.0",
