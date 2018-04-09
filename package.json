@@ -33,6 +33,12 @@
     "Stephen Sawchuk <sawchuk@gmail.com>",
     "Tim Swast <swast@google.com>"
   ],
+  "nyc": {
+    "exclude": [
+      "build/test",
+      "samples"
+    ]
+  },
   "scripts": {
     "publish-module": "node ../../scripts/publish.js common",
     "generate-scaffolding": "repo-tools generate all",
