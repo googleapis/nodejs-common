@@ -52,7 +52,6 @@
   },
   "dependencies": {
     "arrify": "^1.0.1",
-    "concat-stream": "^1.6.2",
     "duplexify": "^3.5.4",
     "ent": "^2.2.0",
     "extend": "^3.0.1",
@@ -64,13 +63,11 @@
     "request": "^2.85.0",
     "retry-request": "^3.3.1",
     "split-array-stream": "^2.0.0",
-    "stream-events": "^1.0.3",
-    "through2": "^2.0.3"
+    "stream-events": "^1.0.3"
   },
   "devDependencies": {
     "@google-cloud/nodejs-repo-tools": "^2.2.6",
     "@types/arrify": "^1.0.3",
-    "@types/concat-stream": "^1.6.0",
     "@types/duplexify": "^3.5.0",
     "@types/ent": "^2.2.1",
     "@types/extend": "^3.0.0",
@@ -100,6 +97,7 @@
     "proxyquire": "^2.0.1",
     "sinon": "^4.5.0",
     "source-map-support": "^0.5.4",
+    "through2": "^2.0.3",
     "typescript": "^2.8.1",
     "uuid": "^3.2.1"
   }
