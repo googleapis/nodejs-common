@@ -64,8 +64,7 @@
     "request": "^2.85.0",
     "retry-request": "^3.3.1",
     "split-array-stream": "^2.0.0",
-    "stream-events": "^1.0.3",
-    "through2": "^2.0.3"
+    "stream-events": "^1.0.3"
   },
   "devDependencies": {
     "@google-cloud/nodejs-repo-tools": "^2.2.6",
@@ -100,6 +99,7 @@
     "proxyquire": "^2.0.1",
     "sinon": "^4.5.0",
     "source-map-support": "^0.5.4",
+    "through2": "^2.0.3",
     "typescript": "^2.8.1",
     "uuid": "^3.2.1"
   }

@@ -24,8 +24,7 @@ import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
-import * as through from 'through2';
-import { Duplex, Stream } from 'stream';
+import { Duplex, Transform, Stream } from 'stream';
 import * as streamEvents from 'stream-events';
 const googleAuth = require('google-auto-auth');
 
@@ -260,7 +259,7 @@ interface MakeWritableStreamOptions {
 function makeWritableStream(dup: duplexify.Duplexify, options: MakeWritableStreamOptions, onComplete: Function) {
   onComplete = onComplete || util.noop;
 
-  const writeStream = through();
+  const writeStream = new Transform();
   dup.setWritable(writeStream);
 
   const defaultReqOpts = {
@@ -768,7 +767,9 @@ interface CreateLimiterOptions {
 function createLimiter(makeRequestFn: Function, options?: CreateLimiterOptions) {
   options = options || {};
 
-  const stream = streamEvents(through.obj(options.streamOptions));
+  const streamOptions = options.streamOptions || {};
+  streamOptions.objectMode = true;
+  const stream = streamEvents(new Transform(streamOptions));
 
   let requestsMade = 0;
   let requestsToMake = -1;
