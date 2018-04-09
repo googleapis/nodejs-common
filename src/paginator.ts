@@ -22,7 +22,6 @@ import * as extend from 'extend';
 import * as is from 'is';
 import * as arrify from 'arrify';
 import { split } from 'split-array-stream';
-const concat = require('concat-stream');
 
 /**
  * @type {module:common/util}
@@ -184,13 +183,22 @@ export class Paginator {
     const autoPaginate = parsedArguments.autoPaginate;
 
     if (autoPaginate) {
+      const results = new Array<any>();
       paginator.runAsStream_(parsedArguments, originalMethod)
         .on('error', callback)
-        .pipe(
-          concat((results: any) => {
-            callback(null, results);
-          })
-        );
+        .on('data', data => results.push(data))
+        .on('end', () => {
+          if (results.length > 0) {
+            if (typeof results[0] === 'string') {
+              return callback(null, results.join(''));
+            } else if (results[0] instanceof Buffer) {
+              return callback(null, Buffer.concat(results))
+            } else if (Array.isArray(results[0])) {
+              return callback(null, [].concat.apply([], results));
+            }
+          }
+          callback(null, results);
+        });
     } else {
       originalMethod(query, callback);
     }
