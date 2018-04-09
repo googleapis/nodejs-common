@@ -183,22 +183,11 @@ export class Paginator {
     const autoPaginate = parsedArguments.autoPaginate;
 
     if (autoPaginate) {
-      const results = new Array<any>();
+      const results = new Array<{}>();
       paginator.runAsStream_(parsedArguments, originalMethod)
         .on('error', callback)
         .on('data', data => results.push(data))
-        .on('end', () => {
-          if (results.length > 0) {
-            if (typeof results[0] === 'string') {
-              return callback(null, results.join(''));
-            } else if (results[0] instanceof Buffer) {
-              return callback(null, Buffer.concat(results))
-            } else if (Array.isArray(results[0])) {
-              return callback(null, [].concat.apply([], results));
-            }
-          }
-          callback(null, results);
-        });
+        .on('end', () => callback(null, results));
     } else {
       originalMethod(query, callback);
     }

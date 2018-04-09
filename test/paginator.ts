@@ -349,27 +349,22 @@ describe('paginator', () => {
       });
 
       it('should return all results on end', (done) => {
-        const results = ['a', 'b', 'c'];
+        const results = [{a: 1}, {b: 2}, {c: 3}];
 
         const parsedArguments = {
           autoPaginate: true,
           callback(err, results_) {
-            assert.deepEqual(results_.toString().split(''), results);
+            assert.deepStrictEqual(results_, results);
             done();
           },
         };
 
         stub('runAsStream_', () => {
-          const stream = through();
-
+          const stream = through.obj();
           setImmediate(() => {
-            results.forEach((result) => {
-              stream.push(result);
-            });
-
+            results.forEach(result => stream.push(result));
             stream.push(null);
           });
-
           return stream;
         });
 
