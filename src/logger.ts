@@ -52,7 +52,7 @@ export class Logger {
 
   [kTag]: string;
   // tslint:disable-next-line:no-any
-  [logLevel: string]: (...args: any[]) => void;
+  [logLevel: string]: (...args: any[]) => this;
 
   /**
    * Create a logger to print output to the console.
@@ -82,9 +82,12 @@ export class Logger {
           const args = Array.prototype.slice.call(arguments);
           args.unshift(level);
           console.log(this[kFormat].apply(this, args));
+          return this;
         };
       } else {
-        this[level] = () => {};
+        this[level] = function() {
+          return this;
+        };
       }
     }
   }

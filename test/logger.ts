@@ -73,6 +73,12 @@ describe('Logger', () => {
     }
   });
 
+  it('can chain log calls', () => {
+    const logger = new Logger({level: 'info'});
+    logger.error('hi').warn('bye');
+    assert.strictEqual(getHighestLogLevel(lines, LEVELS), 'warn');
+  });
+
   it('should use a specified level', () => {
     const level = 'level-2';
     const logger = new Logger({level, levels: customLevels});
@@ -119,7 +125,7 @@ describe('logger', () => {
   class FakeLogger implements Logger {
     static DEFAULT_OPTIONS = Logger.DEFAULT_OPTIONS;
     // tslint:disable-next-line:no-any
-    [logLevel: string]: (...args: any[]) => void;
+    [logLevel: string]: (...args: any[]) => this;
     [kTag] = '';
     // tslint:disable-next-line:no-any
     [kFormat](...args: any[]): string {
