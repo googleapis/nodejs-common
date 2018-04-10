@@ -16,23 +16,16 @@
 
 import * as assert from 'assert';
 import * as extend from 'extend';
-import * as proxyquire from 'proxyquire';
+import * as sinon from 'sinon';
+import {ServiceObject, ExtendedRequestOptions} from '../src/service-object';
+import * as SO from '../src/service-object';
 
 const util = require('../src/util');
 
-let promisified = false;
-const fakeUtil = extend({}, util, {
-  promisifyAll(Class) {
-    if (Class.name === 'ServiceObject') {
-      promisified = true;
-    }
-  },
-});
-
 describe('ServiceObject', () => {
-  let ServiceObject;
-  let serviceObject;
-  let originalRequest;
+
+  let serviceObject: ServiceObject;
+  let sandbox: sinon.SinonSandbox;
 
   const CONFIG = {
     baseUrl: 'base-url',
@@ -41,58 +34,57 @@ describe('ServiceObject', () => {
     createMethod: util.noop,
   };
 
-  before(() => {
-    ServiceObject = proxyquire('../src/service-object.js', {
-      './util.js': fakeUtil,
-    });
-
-    originalRequest = ServiceObject.prototype.request;
-  });
-
   beforeEach(() => {
-    ServiceObject.prototype.request = originalRequest;
+    sandbox = sinon.createSandbox();
     serviceObject = new ServiceObject(CONFIG);
   });
 
+  afterEach(() => {
+    sandbox.restore();
+  });
+
   describe('instantiation', () => {
-    it('should promisify all the things', () => {
-      assert(promisified);
+    it('should promisify all the things', (done) => {
+      serviceObject.request = (reqOpts, callback) => {
+        callback(null, { statusCode: 123, body: 'sunny'});
+      };
+      (serviceObject as any).delete()
+        .then(r => {
+          assert.equal(r[0].body, 'sunny');
+          assert.equal(r[0].statusCode, 123);
+          done();
+        })
     });
 
     it('should create an empty metadata object', () => {
-      assert.deepEqual(serviceObject.metadata, {});
+      assert.deepEqual((serviceObject as any).metadata, {});
     });
 
     it('should localize the baseUrl', () => {
-      assert.strictEqual(serviceObject.baseUrl, CONFIG.baseUrl);
+      assert.strictEqual((serviceObject as any).baseUrl, CONFIG.baseUrl);
     });
 
     it('should localize the parent instance', () => {
-      assert.strictEqual(serviceObject.parent, CONFIG.parent);
+      assert.strictEqual((serviceObject as any).parent, CONFIG.parent);
     });
 
     it('should localize the ID', () => {
-      assert.strictEqual(serviceObject.id, CONFIG.id);
+      assert.strictEqual((serviceObject as any).id, CONFIG.id);
     });
 
     it('should localize the createMethod', () => {
-      assert.strictEqual(serviceObject.createMethod, CONFIG.createMethod);
+      assert.strictEqual((serviceObject as any).createMethod, CONFIG.createMethod);
     });
 
     it('should localize the methods', () => {
       const methods = {};
-
-      const config = extend({}, CONFIG, {
-        methods,
-      });
-
+      const config = extend({}, CONFIG, { methods });
       const serviceObject = new ServiceObject(config);
-
-      assert.strictEqual(serviceObject.methods, methods);
+      assert.strictEqual((serviceObject as any).methods, methods);
     });
 
     it('should default methods to an empty object', () => {
-      assert.deepEqual(serviceObject.methods, {});
+      assert.deepEqual((serviceObject as any).methods, {});
     });
 
     it('should clear out methods that are not asked for', () => {
@@ -117,8 +109,7 @@ describe('ServiceObject', () => {
       });
 
       const serviceObject = new ServiceObject(config);
-
-      assert.strictEqual(serviceObject.Promise, FakePromise);
+      assert.strictEqual((serviceObject as any).Promise, FakePromise);
     });
   });
 
@@ -242,17 +233,12 @@ describe('ServiceObject', () => {
 
   describe('delete', () => {
     it('should make the correct request', (done) => {
-      let serviceObject;
-
-      ServiceObject.prototype.request = function(reqOpts) {
+      serviceObject.request = function(reqOpts) {
         assert.strictEqual(this, serviceObject);
         assert.strictEqual(reqOpts.method, 'DELETE');
         assert.strictEqual(reqOpts.uri, '');
-
         done();
       };
-
-      serviceObject = new ServiceObject(CONFIG);
       serviceObject.delete(assert.ifError);
     });
 
@@ -266,22 +252,21 @@ describe('ServiceObject', () => {
         },
       };
 
-      ServiceObject.prototype.request = function(reqOpts_) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts_) => {
         assert.strictEqual(reqOpts_.method, method.reqOpts.method);
         assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
         done();
-      };
+      });
 
       const serviceObject = new ServiceObject(CONFIG);
-      serviceObject.methods.delete = method;
+      (serviceObject as any).methods.delete = method;
       serviceObject.delete();
     });
 
     it('should not require a callback', () => {
-      ServiceObject.prototype.request = function(reqOpts, callback) {
+      serviceObject.request = (reqOpts, callback) => {
         callback();
       };
-
       assert.doesNotThrow(() => {
         serviceObject.delete();
       });
@@ -291,12 +276,12 @@ describe('ServiceObject', () => {
       const error = new Error('Error.');
       const apiResponse = {};
 
-      ServiceObject.prototype.request = function(reqOpts, callback) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts, callback) => {
         callback(error, apiResponse);
-      };
+      });
 
       const serviceObject = new ServiceObject(CONFIG);
-      serviceObject.delete(function(err, apiResponse_) {
+      serviceObject.delete((err, apiResponse_) => {
         assert.strictEqual(err, error);
         assert.strictEqual(apiResponse_, apiResponse);
         done();
@@ -310,7 +295,7 @@ describe('ServiceObject', () => {
         done();
       };
 
-      serviceObject.exists();
+      serviceObject.exists(() => {});
     });
 
     it('should execute callback with false if 404', (done) => {
@@ -365,7 +350,7 @@ describe('ServiceObject', () => {
       serviceObject.getMetadata = () => {
         done();
       };
-      serviceObject.get(undefined, assert.ifError);
+      serviceObject.get(undefined as any, assert.ifError);
     });
 
     it('should execute callback with error & metadata', (done) => {
@@ -405,7 +390,7 @@ describe('ServiceObject', () => {
     describe('autoCreate', () => {
       let AUTO_CREATE_CONFIG;
 
-      const ERROR = {code: 404};
+      const ERROR = {code: 404} as any;
       const METADATA = {};
 
       beforeEach(() => {
@@ -419,7 +404,7 @@ describe('ServiceObject', () => {
       });
 
       it('should not auto create if there is no create method', (done) => {
-        serviceObject.create = undefined;
+        serviceObject.create = undefined as any;
 
         serviceObject.get(AUTO_CREATE_CONFIG, function(err) {
           assert.strictEqual(err, ERROR);
@@ -457,7 +442,7 @@ describe('ServiceObject', () => {
             serviceObject.get = function(config, callback) {
               assert.deepEqual(config, {});
               callback(); // done()
-            };
+            } as any;
 
             callback(error, null, apiResponse);
           };
@@ -479,7 +464,7 @@ describe('ServiceObject', () => {
             serviceObject.get = function(config, callback) {
               assert.deepEqual(config, {});
               callback(); // done()
-            };
+            } as any;
 
             callback(error);
           };
@@ -492,13 +477,12 @@ describe('ServiceObject', () => {
 
   describe('getMetadata', () => {
     it('should make the correct request', (done) => {
-      ServiceObject.prototype.request = function(reqOpts) {
+      serviceObject.request = function(reqOpts) {
         assert.strictEqual(this, serviceObject);
         assert.strictEqual(reqOpts.uri, '');
         done();
       };
-
-      serviceObject.getMetadata();
+      serviceObject.getMetadata(() => {});
     });
 
     it('should extend the request options with defaults', (done) => {
@@ -511,24 +495,24 @@ describe('ServiceObject', () => {
         },
       };
 
-      ServiceObject.prototype.request = function(reqOpts_) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts_) => {
         assert.strictEqual(reqOpts_.method, method.reqOpts.method);
         assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
         done();
-      };
+      });
 
       const serviceObject = new ServiceObject(CONFIG);
-      serviceObject.methods.getMetadata = method;
-      serviceObject.getMetadata();
+      (serviceObject as any).methods.getMetadata = method;
+      serviceObject.getMetadata(() => {});
     });
 
     it('should execute callback with error & apiResponse', (done) => {
       const error = new Error('Error.');
       const apiResponse = {};
 
-      ServiceObject.prototype.request = function(reqOpts, callback) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts, callback) => {
         callback(error, apiResponse);
-      };
+      });
 
       serviceObject.getMetadata(function(err, metadata, apiResponse_) {
         assert.strictEqual(err, error);
@@ -541,13 +525,13 @@ describe('ServiceObject', () => {
     it('should update metadata', (done) => {
       const apiResponse = {};
 
-      ServiceObject.prototype.request = function(reqOpts, callback) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts, callback) => {
         callback(null, apiResponse);
-      };
+      });
 
       serviceObject.getMetadata(function(err) {
         assert.ifError(err);
-        assert.strictEqual(serviceObject.metadata, apiResponse);
+        assert.strictEqual((serviceObject as any).metadata, apiResponse);
         done();
       });
     });
@@ -555,9 +539,9 @@ describe('ServiceObject', () => {
     it('should execute callback with metadata & API response', (done) => {
       const apiResponse = {};
 
-      ServiceObject.prototype.request = function(reqOpts, callback) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts, callback) => {
         callback(null, apiResponse);
-      };
+      });
 
       serviceObject.getMetadata(function(err, metadata, apiResponse_) {
         assert.ifError(err);
@@ -571,15 +555,13 @@ describe('ServiceObject', () => {
   describe('setMetadata', () => {
     it('should make the correct request', (done) => {
       const metadata = {};
-
-      ServiceObject.prototype.request = function(reqOpts) {
+      serviceObject.request = function(reqOpts) {
         assert.strictEqual(this, serviceObject);
         assert.strictEqual(reqOpts.method, 'PATCH');
         assert.strictEqual(reqOpts.uri, '');
         assert.strictEqual(reqOpts.json, metadata);
         done();
       };
-
       serviceObject.setMetadata(metadata);
     });
 
@@ -604,15 +586,15 @@ describe('ServiceObject', () => {
 
       const expectedJson = extend(true, {}, metadataDefault, metadata);
 
-      ServiceObject.prototype.request = function(reqOpts_) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts_) => {
         assert.strictEqual(reqOpts_.method, method.reqOpts.method);
         assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
         assert.deepEqual(reqOpts_.json, expectedJson);
         done();
-      };
+      });
 
       const serviceObject = new ServiceObject(CONFIG);
-      serviceObject.methods.setMetadata = method;
+      (serviceObject as any).methods.setMetadata = method;
       serviceObject.setMetadata(metadata);
     });
 
@@ -620,9 +602,9 @@ describe('ServiceObject', () => {
       const error = new Error('Error.');
       const apiResponse = {};
 
-      ServiceObject.prototype.request = function(reqOpts, callback) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts, callback) => {
         callback(error, apiResponse);
-      };
+      });
 
       serviceObject.setMetadata({}, function(err, apiResponse_) {
         assert.strictEqual(err, error);
@@ -634,13 +616,13 @@ describe('ServiceObject', () => {
     it('should update metadata', (done) => {
       const apiResponse = {};
 
-      ServiceObject.prototype.request = function(reqOpts, callback) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts, callback) => {
         callback(null, apiResponse);
-      };
+      });
 
-      serviceObject.setMetadata({}, function(err) {
+      serviceObject.setMetadata({}, (err) => {
         assert.ifError(err);
-        assert.strictEqual(serviceObject.metadata, apiResponse);
+        assert.strictEqual((serviceObject as any).metadata, apiResponse);
         done();
       });
     });
@@ -648,9 +630,9 @@ describe('ServiceObject', () => {
     it('should execute callback with metadata & API response', (done) => {
       const apiResponse = {};
 
-      ServiceObject.prototype.request = function(reqOpts, callback) {
+      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts, callback) =>{
         callback(null, apiResponse);
-      };
+      });
 
       serviceObject.setMetadata({}, function(err, apiResponse_) {
         assert.ifError(err);
@@ -671,12 +653,12 @@ describe('ServiceObject', () => {
 
     it('should compose the correct request', (done) => {
       const expectedUri = [
-        serviceObject.baseUrl,
-        serviceObject.id,
+        (serviceObject as any).baseUrl,
+        (serviceObject as any).id,
         reqOpts.uri,
       ].join('/');
 
-      serviceObject.parent.request = function(reqOpts_, callback) {
+      (serviceObject as any).parent.request = function(reqOpts_, callback) {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.deepEqual(reqOpts_.interceptors_, []);
@@ -687,14 +669,14 @@ describe('ServiceObject', () => {
     });
 
     it('should not require a service object ID', (done) => {
-      const expectedUri = [serviceObject.baseUrl, reqOpts.uri].join('/');
+      const expectedUri = [(serviceObject as any).baseUrl, reqOpts.uri].join('/');
 
-      serviceObject.parent.request = function(reqOpts) {
+      (serviceObject as any).parent.request = function(reqOpts) {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
 
-      serviceObject.id = undefined;
+      (serviceObject as any).id = undefined;
 
       serviceObject.request_(reqOpts, assert.ifError);
     });
@@ -702,7 +684,7 @@ describe('ServiceObject', () => {
     it('should support absolute uris', (done) => {
       const expectedUri = 'http://www.google.com';
 
-      serviceObject.parent.request = function(reqOpts) {
+      (serviceObject as any).parent.request = function(reqOpts) {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
@@ -716,12 +698,12 @@ describe('ServiceObject', () => {
       };
 
       const expectedUri = [
-        serviceObject.baseUrl,
-        serviceObject.id,
+        (serviceObject as any).baseUrl,
+        (serviceObject as any).id,
         // reqOpts.uri (reqOpts.uri is an empty string, so it should be removed)
       ].join('/');
 
-      serviceObject.parent.request = function(reqOpts_) {
+      (serviceObject as any).parent.request = function(reqOpts_) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -734,11 +716,11 @@ describe('ServiceObject', () => {
         uri: '//1/2//',
       };
 
-      const expectedUri = [serviceObject.baseUrl, serviceObject.id, '1/2'].join(
+      const expectedUri = [(serviceObject as any).baseUrl, (serviceObject as any).id, '1/2'].join(
         '/'
       );
 
-      serviceObject.parent.request = function(reqOpts_) {
+      (serviceObject as any).parent.request = function(reqOpts_) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -748,7 +730,7 @@ describe('ServiceObject', () => {
 
     it('should extend interceptors from child ServiceObjects', (done) => {
       const parent = new ServiceObject(CONFIG);
-      parent.interceptors.push({
+      (parent as any).interceptors.push({
         request(reqOpts) {
           reqOpts.parent = true;
           return reqOpts;
@@ -756,14 +738,14 @@ describe('ServiceObject', () => {
       });
 
       const child = new ServiceObject(extend({}, CONFIG, {parent}));
-      child.interceptors.push({
+      (child as any).interceptors.push({
         request(reqOpts) {
           reqOpts.child = true;
           return reqOpts;
         },
       });
 
-      parent.parent.request = function(reqOpts) {
+      (parent as any).parent.request = function(reqOpts) {
         assert.deepEqual(reqOpts.interceptors_[0].request({}), {
           child: true,
         });
@@ -779,15 +761,15 @@ describe('ServiceObject', () => {
     });
 
     it('should pass a clone of the interceptors', (done) => {
-      serviceObject.interceptors.push({
+      (serviceObject as any).interceptors.push({
         request(reqOpts) {
           reqOpts.one = true;
           return reqOpts;
         },
       });
 
-      serviceObject.parent.request = function(reqOpts) {
-        const serviceObjectInterceptors = serviceObject.interceptors;
+      (serviceObject as any).parent.request = function(reqOpts) {
+        const serviceObjectInterceptors = (serviceObject as any).interceptors;
         assert.deepEqual(reqOpts.interceptors_, serviceObjectInterceptors);
         assert.notStrictEqual(reqOpts.interceptors_, serviceObjectInterceptors);
         done();
@@ -800,12 +782,12 @@ describe('ServiceObject', () => {
       const fakeObj = {};
 
       const expectedUri = [
-        serviceObject.baseUrl,
-        serviceObject.id,
+        (serviceObject as any).baseUrl,
+        (serviceObject as any).id,
         reqOpts.uri,
       ].join('/');
 
-      serviceObject.parent.requestStream = function(reqOpts_) {
+      (serviceObject as any).parent.requestStream = function(reqOpts_) {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.deepEqual(reqOpts_.interceptors_, []);
@@ -818,58 +800,27 @@ describe('ServiceObject', () => {
   });
 
   describe('request', () => {
-    let request_;
-
-    before(() => {
-      request_ = ServiceObject.prototype.request_;
-    });
-
-    after(() => {
-      ServiceObject.prototype.request_ = request_;
-    });
 
     it('should call through to request_', (done) => {
-      const fakeOptions = {};
-
-      ServiceObject.prototype.request_ = function(reqOpts, callback) {
+      const fakeOptions = {} as ExtendedRequestOptions;
+      serviceObject.request_ = (reqOpts, callback) => {
         assert.strictEqual(reqOpts, fakeOptions);
-        callback();
+        done();
       };
-
-      serviceObject.request_ = () => {
-        done(new Error('Should call to the prototype directly.'));
-      };
-
-      serviceObject.request(fakeOptions, done);
+      serviceObject.request(fakeOptions, util.noop);
     });
   });
 
   describe('requestStream', () => {
-    let request_;
 
-    before(() => {
-      request_ = ServiceObject.prototype.request_;
-    });
-
-    after(() => {
-      ServiceObject.prototype.request_ = request_;
-    });
-
-    it('should call through to request_', () => {
-      const fakeOptions = {};
-      const fakeStream = {};
-
-      ServiceObject.prototype.request_ = function(reqOpts) {
+    it('should call through to request_', (done) => {
+      const fakeOptions = {} as ExtendedRequestOptions;
+      const serviceObject = new ServiceObject(CONFIG);
+      serviceObject.request_ = (reqOpts) => {
         assert.strictEqual(reqOpts, fakeOptions);
-        return fakeStream;
+        done();
       };
-
-      serviceObject.request_ = () => {
-        throw new Error('Should call to the prototype directly.');
-      };
-
-      const stream = serviceObject.requestStream(fakeOptions);
-      assert.strictEqual(stream, fakeStream);
+      serviceObject.requestStream(fakeOptions);
     });
   });
 });
