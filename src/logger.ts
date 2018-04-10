@@ -43,6 +43,9 @@ const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 export const kFormat = Symbol('Logger formatter');
 export const kTag = Symbol('Logger tag format');
 
+/**
+ * A class representing a basic logger that emits logs to stdout.
+ */
 export class Logger {
   /**
    * Default logger options.
@@ -50,7 +53,14 @@ export class Logger {
   static DEFAULT_OPTIONS:
       Readonly<LoggerOptions> = {level: 'error', levels: LEVELS, tag: ''};
 
+  // TODO: Mark this private when TypeScript 2.9 comes out.
+  // See https://github.com/Microsoft/TypeScript/issues/20080 for more
+  // information.
   [kTag]: string;
+
+  /**
+   * Emits a log at this log level.
+   */
   // tslint:disable-next-line:no-any
   [logLevel: string]: (...args: any[]) => this;
 
@@ -78,25 +88,22 @@ export class Logger {
     for (let i = 0; i < options.levels.length; i++) {
       const level = options.levels[i];
       if (i <= levelIndex) {
-        this[level] = function() {
-          const args = Array.prototype.slice.call(arguments);
+        this[level] = (...args) => {
           args.unshift(level);
           console.log(this[kFormat].apply(this, args));
           return this;
         };
       } else {
-        this[level] = function() {
-          return this;
-        };
+        this[level] = () => this;
       }
     }
   }
 
+  // TODO: Mark this as protected when TypeScript 2.9 comes out.
   // tslint:disable-next-line:no-any
-  [kFormat](...fnArgs: any[]): string {
-    const args = Array.prototype.slice.call(arguments);
-    const level = args[0].toUpperCase();
-    const message = args.slice(1).join(' ');
+  [kFormat](level: string, ...args: any[]): string {
+    level = level.toUpperCase();
+    const message = args.join(' ');
     return `${level}${this[kTag]} ${message}`;
   }
 }

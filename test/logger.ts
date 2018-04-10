@@ -128,7 +128,7 @@ describe('logger', () => {
     [logLevel: string]: (...args: any[]) => this;
     [kTag] = '';
     // tslint:disable-next-line:no-any
-    [kFormat](...args: any[]): string {
+    [kFormat](level: string, ...args: any[]): string {
       return 'foo';
     }
     constructor(options: Partial<LoggerOptions>) {

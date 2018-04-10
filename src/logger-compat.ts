@@ -27,33 +27,35 @@ function isString(obj: any): obj is string {
   return is.string(obj);
 }
 
+function createLogger(optionsOrLevel?: Partial<LoggerOptions>|string) {
+  // Canonicalize input.
+  if (isString(optionsOrLevel)) {
+    optionsOrLevel = {
+      level: optionsOrLevel,
+    };
+  }
+  const options: LoggerOptions =
+      Object.assign({}, Logger.DEFAULT_OPTIONS, optionsOrLevel);
+  const result = new Logger(options);
+  Object.defineProperty(result, 'format', {
+    get() {
+      return result[kFormat];
+    },
+    // tslint:disable-next-line:no-any
+    set(value: (...args: any[]) => string) {
+      result[kFormat] = value.bind(result);
+    }
+  });
+  return Object.assign(
+      // tslint:disable-next-line:no-any
+      result as Logger & {format: (...args: any[]) => string},
+      {levels: options.levels, level: options.level});
+}
+
+const LEVELS = Logger.DEFAULT_OPTIONS.levels;
+
 /**
  * Create a logger to print output to the console.
  * Omitted options will default to values provided in defaultLoggerOptions.
  */
-export const logger = Object.assign(
-    function logger(optionsOrLevel?: Partial<LoggerOptions>|string) {
-      // Canonicalize input.
-      if (isString(optionsOrLevel)) {
-        optionsOrLevel = {
-          level: optionsOrLevel,
-        };
-      }
-      const options: LoggerOptions =
-          Object.assign({}, Logger.DEFAULT_OPTIONS, optionsOrLevel);
-      const result = new Logger(options);
-      Object.defineProperty(result, 'format', {
-        get() {
-          return result[kFormat];
-        },
-        // tslint:disable-next-line:no-any
-        set(value: (...args: any[]) => string) {
-          result[kFormat] = value.bind(result);
-        }
-      });
-      return Object.assign(
-          // tslint:disable-next-line:no-any
-          result as Logger & {format: (...args: any[]) => string},
-          {levels: options.levels, level: options.level});
-    },
-    {LEVELS: Logger.DEFAULT_OPTIONS.levels});
+export const logger = Object.assign(createLogger, {LEVELS});
