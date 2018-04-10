@@ -1,5 +1,5 @@
 /*!
- * Copyright 2016 Google Inc. All Rights Reserved.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,66 +18,82 @@
  * @module common/logger
  */
 
-import * as is from 'is';
-const logDriver = require('log-driver');
-
-/**
- * The default list of log levels.
- * @type {string[]}
- */
-const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
-
-interface LoggerOptions {
+export interface LoggerOptions {
   /**
-   * The minimum log level that will print to the console. (Default: `error`)
+   * The minimum log level that will print to the console.
    */
-  level?: string;
+  level: string|false;
 
   /**
-   * The list of levels to use. (Default: logger.LEVELS)
+   * The list of levels to use.
    */
-  levels?: string[];
+  levels: string[];
 
   /**
    * A tag to use in log messages.
    */
-  tag?: string;
+  tag: string;
 }
 
 /**
- * Create a logger to print output to the console.
- *
- * @param {string=|object=} options - Configuration object. If a string, it is treated as `options.level`.
- * @param {string=} options.level - The minimum log level that will print to the console. (Default: `error`)
- * @param {Array.<string>=} options.levels - The list of levels to use. (Default: logger.LEVELS)
- * @param {string=} options.tag - A tag to use in log messages.
+ * The default list of log levels.
  */
-function logger(options?: LoggerOptions);
-function logger(level?: string);
-function logger(optionsOrLevel?: LoggerOptions|string) {
-  let options: LoggerOptions;
-  if (is.string(optionsOrLevel)) {
-    options = {
-      level: optionsOrLevel as string,
-    };
-  } else {
-    options = (optionsOrLevel || {}) as LoggerOptions;
+const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
+
+export const kFormat = Symbol('Logger formatter');
+export const kTag = Symbol('Logger tag format');
+
+export class Logger {
+  /**
+   * Default logger options.
+   */
+  static DEFAULT_OPTIONS:
+      Readonly<LoggerOptions> = {level: 'error', levels: LEVELS, tag: ''};
+
+  [kTag]: string;
+  // tslint:disable-next-line:no-any
+  [logLevel: string]: (...args: any[]) => void;
+
+  /**
+   * Create a logger to print output to the console.
+   */
+  constructor(opts?: Partial<LoggerOptions>) {
+    const options: LoggerOptions =
+        Object.assign({}, Logger.DEFAULT_OPTIONS, opts);
+    this[kTag] = options.tag ? ':' + options.tag + ':' : '';
+
+    // Determine lowest log level.
+    // If the given level is set to false, don't log anything.
+    let levelIndex = -1;
+    if (options.level !== false) {
+      levelIndex = options.level ? options.levels.indexOf(options.level) :
+                                   options.levels.length - 1;
+      if (levelIndex === -1) {
+        throw new Error(`Logger: options.level [${
+            options.level}] is not one of options.levels [${
+            options.levels.join(', ')}]`);
+      }
+    }
+
+    for (let i = 0; i < options.levels.length; i++) {
+      const level = options.levels[i];
+      if (i <= levelIndex) {
+        this[level] = function() {
+          const args = Array.prototype.slice.call(arguments);
+          args.unshift(level);
+          console.log(this[kFormat].apply(this, args));
+        };
+      } else {
+        this[level] = () => {};
+      }
+    }
   }
 
-  return logDriver({
-    levels: options.levels || LEVELS,
-
-    level: options.level || 'error',
-
-    format() {
-      const args = [].slice.call(arguments);
-      const level = args.shift().toUpperCase();
-      const tag = options.tag ? ':' + options.tag + ':' : '';
-      const message = args.join(' ');
-      return `${level}${tag} ${message}`;
-    },
-  });
+  // tslint:disable-next-line:no-any
+  [kFormat](...fnArgs: any[]): string {
+    const args = Array.prototype.slice.call(arguments);
+    const level = args[0].toUpperCase();
+    const message = args.slice(1).join(' ');
+    return `${level}${this[kTag]} ${message}`;
+  }
 }
-
-module.exports = logger;
-module.exports.LEVELS = LEVELS;

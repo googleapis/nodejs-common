@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-/**
- * @type {module:common/logger}
- * @private
- */
-exports.logger = require('./logger');
+export {Logger} from './logger';
+export {logger} from './logger-compat';
 
 /**
  * @type {module:common/operation}
