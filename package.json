@@ -57,7 +57,6 @@
     "extend": "^3.0.1",
     "google-auto-auth": "^0.10.0",
     "is": "^3.2.1",
-    "modelo": "^4.2.3",
     "pify": "^3.0.0",
     "request": "^2.85.0",
     "retry-request": "^3.3.1",

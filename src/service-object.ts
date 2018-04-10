@@ -22,6 +22,7 @@ import * as arrify from 'arrify';
 import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
+import { EventEmitter } from 'events';
 
 /**
  * @type {module:common/util}
@@ -49,12 +50,12 @@ export interface ServiceObjectConfig {
   /**
    * The base URL to make API requests to.
    */
-  baseUrl: string;
+  baseUrl?: string;
 
   /**
    * The method which creates this object.
    */
-  createMethod: Function;
+  createMethod?: Function;
 
   /**
    * The identifier of the object. For example, the name of a Storage bucket or Pub/Sub topic.
@@ -73,13 +74,7 @@ export interface ServiceObjectConfig {
 }
 
 export interface Methods {
-  [methodName: string]: {
-    /**
-     * Default request options for this particular method. A common use case is
-     * when `setMetadata` requires a `PUT` method to override the default `PATCH`.
-     */
-    reqOpts: r.Options;
-  };
+  [methodName: string]: any;
 }
 
 export interface CreateOptions {
@@ -116,16 +111,16 @@ export interface GetConfig {
  * shared behaviors. Note that any method can be overridden when the service
  * object requires specific behavior.
  */
-class ServiceObject {
+class ServiceObject extends EventEmitter {
 
   private metadata: any;
-  private baseUrl: string;
+  baseUrl?: string;
   private parent: any;
   private id?: string;
-  private createMethod: Function;
+  private createMethod?: Function;
   private methods: Methods;
   private interceptors: any;
-  private Promise: any;
+  protected Promise: any;
 
   /*
   * @constructor
@@ -146,6 +141,7 @@ class ServiceObject {
   *     instance of Storage if the object is Bucket.
   */
   constructor(config: ServiceObjectConfig) {
+    super();
     this.metadata = {};
     this.baseUrl = config.baseUrl;
     this.parent = config.parent; // Parent class.
@@ -212,7 +208,7 @@ class ServiceObject {
 
     args.push(onCreate);
 
-    this.createMethod.apply(null, args);
+    this.createMethod!.apply(null, args);
   }
 
   /**
@@ -424,7 +420,7 @@ class ServiceObject {
     }
 
     reqOpts.uri = uriComponents
-      .filter(x => x.trim()) // Limit to non-empty strings.
+      .filter(x => x!.trim()) // Limit to non-empty strings.
       .map((uriComponent: any) => {
         const trimSlashesRegex = /^\/*|\/*$/g;
         return uriComponent.replace(trimSlashesRegex, '');

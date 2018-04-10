@@ -18,8 +18,8 @@ import * as assert from 'assert';
 import {EventEmitter} from 'events';
 import * as sinon from 'sinon';
 import {ServiceObject} from '../src/service-object';
+import {Operation} from '../src/operation';
 
-const Operation = require('../src/operation');
 const util = require('../src/util');
 
 describe('Operation', () => {
@@ -33,7 +33,7 @@ describe('Operation', () => {
     sandbox = sinon.createSandbox();
     operation = new Operation({
       parent: FAKE_SERVICE,
-      id: OPERATION_ID,
+      id: OPERATION_ID
     });
     operation.Promise = Promise;
   });
@@ -78,10 +78,10 @@ describe('Operation', () => {
 
     it('should call listenForEvents_', () => {
       let called = false;
-      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(() => {
+      sandbox.stub(Operation.prototype as any, 'listenForEvents_').callsFake(() => {
         called = true;
       });
-      new Operation(FAKE_SERVICE, OPERATION_ID);
+      new Operation({} as any);
       assert.strictEqual(called, true);
     });
   });
@@ -253,7 +253,7 @@ describe('Operation', () => {
   describe('startPolling_', () => {
 
     beforeEach(() => {
-      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(util.noop);
+      sandbox.stub(Operation.prototype as any, 'listenForEvents_').callsFake(util.noop);
       operation.hasActiveListeners = true;
     });
 
