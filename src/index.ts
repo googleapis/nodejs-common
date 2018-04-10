@@ -26,7 +26,7 @@ export {logger} from './logger-compat';
  * @type {module:common/operation}
  * @private
  */
-exports.Operation = require('./operation');
+export {Operation} from './operation';
 
 /**
  * @type {module:common/paginator}

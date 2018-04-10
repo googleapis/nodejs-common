@@ -53,7 +53,7 @@ describe('ServiceObject', () => {
           assert.equal(r[0].body, 'sunny');
           assert.equal(r[0].statusCode, 123);
           done();
-        })
+        });
     });
 
     it('should create an empty metadata object', () => {
