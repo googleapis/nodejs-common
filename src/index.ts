@@ -50,4 +50,4 @@ export {ServiceObject} from './service-object';
  * @type {module:common/util}
  * @private
  */
-exports.util = require('./util');
+export {util} from './util';

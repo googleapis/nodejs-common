@@ -22,20 +22,8 @@ import * as arrify from 'arrify';
 import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
-import { EventEmitter } from 'events';
-
-/**
- * @type {module:common/util}
- * @private
- */
-const util = require('./util');
-
-export interface GoogleError extends Error {
-  code: number;
-  errors?: Array<{
-    reason?: string;
-  }>;
-}
+import {EventEmitter} from 'events';
+import { util, GoogleError } from './util';
 
 export type ExtendedRequestOptions = r.Options & {
   interceptors_?: any;

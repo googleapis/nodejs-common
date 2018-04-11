@@ -20,9 +20,8 @@ import * as stream from 'stream';
 import * as through from 'through2';
 import * as uuid from 'uuid';
 import * as sinon from 'sinon';
-
 import { paginator, Paginator } from '../src/paginator';
-const util = require('../src/util');
+import { util } from '../src/util';
 
 describe('paginator', () => {
   const UUID = uuid.v1();

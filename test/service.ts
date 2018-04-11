@@ -18,11 +18,11 @@ import * as assert from 'assert';
 import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
 import {Service, ServiceConfig} from '../src/service';
+import { util } from '../src/util';
+
 proxyquire.noPreserveCache();
 
 const fakeCfg = {} as ServiceConfig;
-
-const util = require('../src/util');
 
 const makeAuthenticatedRequestFactoryCache =
   util.makeAuthenticatedRequestFactory;

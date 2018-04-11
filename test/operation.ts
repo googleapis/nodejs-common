@@ -19,8 +19,7 @@ import {EventEmitter} from 'events';
 import * as sinon from 'sinon';
 import {ServiceObject} from '../src/service-object';
 import {Operation} from '../src/operation';
-
-const util = require('../src/util');
+import { util } from '../src/util';
 
 describe('Operation', () => {
   const FAKE_SERVICE = {};
