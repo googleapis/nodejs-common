@@ -37,7 +37,16 @@ const request = r.defaults({
   },
 });
 
-export interface PromisifyAllOptions {
+export interface MakeAuthenticatedRequest {
+  (reqOpts: DecorateRequestOptions, optionsOrCallback?: MakeAuthenticatedRequestOptions|OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify;
+  getCredentials: Function;
+  authClient: any;
+}
+
+export type Abortable = { abort(): void };
+export type AbortableDuplex = duplexify.Duplexify & Abortable;
+
+export interface PromisifyAllOptions extends PromisifyOptions {
   /**
    * Array of methods to ignore when promisifying.
    */
@@ -122,11 +131,15 @@ export interface MakeAuthenticatedRequestFactoryConfig {
 
   projectId?: string;
 
-  stream?: Stream;
+  stream?: duplexify.Duplexify;
 }
 
 export interface MakeAuthenticatedRequestOptions {
+  onAuthenticated: OnAuthenticatedCallback;
+}
 
+export interface OnAuthenticatedCallback {
+  (err: Error|null, reqOpts?: DecorateRequestOptions): void;
 }
 
 
@@ -156,7 +169,7 @@ export interface MakeWritableStreamOptions {
   makeAuthenticatedRequest(reqOpts: r.Options, fnobj: { onAuthenticated(err: Error|null, authenticatedReqOpts: r.Options): void}): void;
 }
 
-export interface DecorateRequestOptions {
+export interface DecorateRequestOptions extends r.OptionsWithUri {
   autoPaginate?: any;
   autoPaginateVal?: any;
   objectMode?: any;
@@ -481,17 +494,20 @@ export class Util {
      *     not be made. Instead, this function is passed the error & authenticated
      *     request options.
      */
-    const makeAuthenticatedRequest = (reqOpts: r.Options, options: MakeAuthenticatedRequestOptions) => {
-      let stream: Duplex;
+    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions): duplexify.Duplexify;
+    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions, options?: MakeAuthenticatedRequestOptions|OnAuthenticatedCallback): void|Abortable;
+    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions, callback?: OnAuthenticatedCallback): void|Abortable;
+    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions, optionsOrCallback?: MakeAuthenticatedRequestOptions|OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify {
+      let stream: duplexify.Duplexify;
       const reqConfig = extend({}, config);
       let activeRequest_: any;
 
-      if (!options) {
+      if (!optionsOrCallback) {
         stream = duplexify();
         reqConfig.stream = stream;
       }
 
-      const onAuthenticated = (err: Error|null, authenticatedReqOpts: r.Options) => {
+      const onAuthenticated = (err: Error|null, authenticatedReqOpts: DecorateRequestOptions) => {
         const autoAuthFailed =
           err &&
           err.message.indexOf('Could not load the default credentials') > -1;
@@ -510,7 +526,7 @@ export class Util {
 
           try {
             authenticatedReqOpts = util.decorateRequest(
-              authenticatedReqOpts as any,
+              authenticatedReqOpts,
               projectId
             );
             err = null;
@@ -522,23 +538,35 @@ export class Util {
           }
         }
 
+        let options!: MakeAuthenticatedRequestOptions;
+        let callback!: OnAuthenticatedCallback;
+        switch (typeof optionsOrCallback) {
+          case 'object':
+            options = optionsOrCallback as MakeAuthenticatedRequestOptions;
+            callback = options.onAuthenticated;
+            break;
+          case 'function':
+            callback = optionsOrCallback as OnAuthenticatedCallback;
+            break;
+        }
+
         if (err) {
           if (stream) {
             stream.destroy(err);
           } else {
-            ((options as any).onAuthenticated || options)(err);
+            callback(err);
           }
 
           return;
         }
 
-        if (options && (options as any).onAuthenticated) {
-          (options as any).onAuthenticated(null, authenticatedReqOpts);
+        if (options && options.onAuthenticated) {
+          callback(null, authenticatedReqOpts);
         } else {
           activeRequest_ = util.makeRequest(
             authenticatedReqOpts,
-            reqConfig as any,
-            options as any
+            reqConfig,
+            callback
           );
         }
       }
@@ -565,11 +593,11 @@ export class Util {
       };
     }
 
-    (makeAuthenticatedRequest as any).getCredentials = authClient.getCredentials.bind(
+    (makeAuthenticatedRequest as MakeAuthenticatedRequest).getCredentials = authClient.getCredentials.bind(
       authClient
     );
 
-    (makeAuthenticatedRequest as any).authClient = authClient;
+    (makeAuthenticatedRequest as MakeAuthenticatedRequest).authClient = authClient;
 
     return makeAuthenticatedRequest;
   }
@@ -588,12 +616,15 @@ export class Util {
    *     attempted before returning the error. (default: 3)
    * @param {function} callback - The callback function.
    */
-  makeRequest(reqOpts: r.Options, config?: MakeRequestConfig, callback?: Function) {
-    if (is.fn(config)) {
-      callback = config as Function;
-      config = {};
+  makeRequest(reqOpts: r.Options, callback: BodyResponseCallback);
+  makeRequest(reqOpts: r.Options, config: MakeRequestConfig, callback: BodyResponseCallback);
+  makeRequest(reqOpts: r.Options, configOrCallback: MakeRequestConfig|BodyResponseCallback, callback?: BodyResponseCallback) {
+    let config: MakeRequestConfig = {};
+    if (is.fn(configOrCallback)) {
+      callback = configOrCallback as BodyResponseCallback;
+    } else {
+      config = configOrCallback as MakeRequestConfig;
     }
-
     config = config || {};
 
     const options = {
@@ -606,7 +637,7 @@ export class Util {
     };
 
     if (config.stream) {
-      const dup = config.stream;
+      const dup = config.stream as AbortableDuplex;
       let requestStream: any;
       const isGetRequest = (reqOpts.method || 'GET').toUpperCase() === 'GET';
 
@@ -625,11 +656,11 @@ export class Util {
         .on('response', dup.emit.bind(dup, 'response'))
         .on('complete', dup.emit.bind(dup, 'complete'));
 
-      (dup as any).abort = requestStream.abort;
+      dup.abort = requestStream.abort;
       return;
     } else {
       return retryRequest(reqOpts, options, (err, response, body) => {
-        util.handleResp(err, response, body, callback as any);
+        util.handleResp(err, response, body, callback!);
       });
     }
   }
@@ -641,7 +672,7 @@ export class Util {
    * @param {string} projectId - The project ID.
    * @return {object} reqOpts - The decorated reqOpts.
    */
-  decorateRequest(reqOpts: r.Options & DecorateRequestOptions, projectId: string) {
+  decorateRequest(reqOpts: DecorateRequestOptions, projectId: string) {
     delete reqOpts.autoPaginate;
     delete reqOpts.autoPaginateVal;
     delete reqOpts.objectMode;
@@ -745,9 +776,9 @@ export class Util {
    * @param {object} localConfig - Service-level configurations.
    * @return {object} config - Merged and validated configuration.
    */
-  normalizeArguments(globalContext: GlobalContext, localConfig: {}) {
-    const globalConfig = globalContext && globalContext.config_;
-    return util.extendGlobalConfig(globalConfig as any, localConfig as any);
+  normalizeArguments(globalContext: GlobalContext, localConfig: GlobalConfig) {
+    const globalConfig = globalContext && globalContext.config_ as GlobalConfig;
+    return util.extendGlobalConfig(globalConfig, localConfig);
   }
 
   /**
@@ -916,9 +947,8 @@ export class Util {
 
     methods.forEach((methodName) => {
       const originalMethod = Class.prototype[methodName];
-
       if (!originalMethod.promisified_) {
-        Class.prototype[methodName] = util.promisify(originalMethod, options as any);
+        Class.prototype[methodName] = util.promisify(originalMethod, options);
       }
     });
   }
