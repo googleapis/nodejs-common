@@ -19,7 +19,8 @@ import * as extend from 'extend';
 import * as sinon from 'sinon';
 import {ServiceObject, ExtendedRequestOptions} from '../src/service-object';
 import * as SO from '../src/service-object';
-import { util } from '../src/util';
+import { util, GoogleError } from '../src/util';
+import * as r from 'request';
 
 describe('ServiceObject', () => {
 
@@ -47,8 +48,8 @@ describe('ServiceObject', () => {
       serviceObject.request = (reqOpts, callback) => {
         callback(null, { statusCode: 123, body: 'sunny'});
       };
-      (serviceObject as any).delete()
-        .then(r => {
+      (serviceObject.delete() as any)
+        .then((r: any) => {
           assert.equal(r[0].body, 'sunny');
           assert.equal(r[0].statusCode, 123);
           done();
@@ -119,7 +120,7 @@ describe('ServiceObject', () => {
       });
       const options = {};
 
-      function createMethod(id, options_, callback) {
+      function createMethod(id: string, options_: {}, callback: (err: Error|null, a: {}, b: {}) => void) {
         assert.strictEqual(id, config.id);
         assert.strictEqual(options_, options);
         callback(null, {}, {}); // calls done()
@@ -134,7 +135,7 @@ describe('ServiceObject', () => {
         createMethod,
       });
 
-      function createMethod(id, options, callback) {
+      function createMethod(id: string, options: Function, callback: Function) {
         assert.strictEqual(id, config.id);
         assert.strictEqual(typeof options, 'function');
         assert.strictEqual(callback, undefined);
@@ -154,7 +155,7 @@ describe('ServiceObject', () => {
       const error = new Error('Error.');
       const apiResponse = {};
 
-      function createMethod(id, options_, callback) {
+      function createMethod(id: string, options_: {}, callback: Function) {
         callback(error, null, apiResponse);
       }
 
@@ -175,7 +176,7 @@ describe('ServiceObject', () => {
 
       const apiResponse = {};
 
-      function createMethod(id, options_, callback) {
+      function createMethod(id: string, options_: {}, callback: Function) {
         callback(null, {}, apiResponse);
       }
 
@@ -198,7 +199,7 @@ describe('ServiceObject', () => {
         metadata: {},
       };
 
-      function createMethod(id, options_, callback) {
+      function createMethod(id: string, options_: {}, callback: Function) {
         callback(null, instance, {});
       }
 
@@ -218,12 +219,12 @@ describe('ServiceObject', () => {
 
       const args = ['a', 'b', 'c', 'd', 'e', 'f'];
 
-      function createMethod(id, options_, callback) {
+      function createMethod(id: string, options_: {}, callback: Function) {
         callback.apply(null, args);
       }
 
       const serviceObject = new ServiceObject(config);
-      serviceObject.create(options, (...args) => {
+      serviceObject.create(options, (...args: any[]) => {
         assert.deepEqual([].slice.call(args), args);
         done();
       });
@@ -298,8 +299,11 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with false if 404', (done) => {
-      serviceObject.get = function(callback) {
-        callback({code: 404});
+      const error = new GoogleError();
+      error.code = 404;
+      serviceObject.get = function(configOrCallback: SO.GetConfig|SO.InstanceResponseCallback, callback?: SO.InstanceResponseCallback) {
+        callback = typeof configOrCallback === 'function' ? configOrCallback : callback;
+        callback!(error);
       };
 
       serviceObject.exists(function(err, exists) {
@@ -310,10 +314,12 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with error if not 404', (done) => {
-      const error = {code: 500};
+      const error = new GoogleError();
+      error.code = 500;
 
-      serviceObject.get = function(callback) {
-        callback(error);
+      serviceObject.get = function(configOrCallback: SO.GetConfig|SO.InstanceResponseCallback, callback?: SO.InstanceResponseCallback) {
+        callback = typeof configOrCallback === 'function' ? configOrCallback : callback;
+        callback!(error);
       };
 
       serviceObject.exists(function(err, exists) {
@@ -324,8 +330,9 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with true if no error', (done) => {
-      serviceObject.get = function(callback) {
-        callback();
+      serviceObject.get = function(configOrCallback: SO.GetConfig|SO.InstanceResponseCallback, callback?: SO.InstanceResponseCallback) {
+        callback = typeof configOrCallback === 'function' ? configOrCallback : callback;
+        callback!(null);
       };
 
       serviceObject.exists(function(err, exists) {
@@ -387,7 +394,7 @@ describe('ServiceObject', () => {
     });
 
     describe('autoCreate', () => {
-      let AUTO_CREATE_CONFIG;
+      let AUTO_CREATE_CONFIG: {};
 
       const ERROR = {code: 404} as any;
       const METADATA = {};
@@ -416,37 +423,37 @@ describe('ServiceObject', () => {
           maxResults: 5,
         });
 
-        serviceObject.create = function(config_) {
+        serviceObject.create = function(config_: SO.InstanceResponseCallback) {
           assert.strictEqual(config_, config);
           done();
         };
 
-        serviceObject.get(config, assert.ifError);
+        serviceObject.get(config as any, assert.ifError);
       });
 
       it('should pass only a callback to create if no config', (done) => {
-        serviceObject.create = function(callback) {
-          callback(); // done()
+        serviceObject.create = function(callback: SO.InstanceResponseCallback) {
+          callback(null); // done()
         };
-
         serviceObject.get(AUTO_CREATE_CONFIG, done);
       });
 
       describe('error', () => {
         it('should execute callback with error & API response', (done) => {
           const error = new Error('Error.');
-          const apiResponse = {};
+          const apiResponse = {} as r.Response;
 
-          serviceObject.create = function(callback) {
-            serviceObject.get = function(config, callback) {
+          serviceObject.create = function(optionsOrCallback?: SO.CreateOptions|SO.InstanceResponseCallback, callback?: SO.InstanceResponseCallback) {
+            callback = typeof optionsOrCallback === 'function' ? optionsOrCallback : callback;
+            serviceObject.get = function(configOrCallback: SO.GetConfig|SO.InstanceResponseCallback, callback?: SO.InstanceResponseCallback) {
+              const config = configOrCallback as SO.GetConfig;
               assert.deepEqual(config, {});
-              callback(); // done()
-            } as any;
-
-            callback(error, null, apiResponse);
+              callback!(null); // done()
+            };
+            callback!(error, null, apiResponse);
           };
 
-          serviceObject.get(AUTO_CREATE_CONFIG, function(err, instance, resp) {
+          serviceObject.get(AUTO_CREATE_CONFIG, (err, instance, resp) => {
             assert.strictEqual(err, error);
             assert.strictEqual(instance, null);
             assert.strictEqual(resp, apiResponse);
@@ -459,13 +466,13 @@ describe('ServiceObject', () => {
             code: 409,
           };
 
-          serviceObject.create = function(callback) {
-            serviceObject.get = function(config, callback) {
+          serviceObject.create = function(callback: SO.InstanceResponseCallback) {
+            serviceObject.get = function(config: {}, callback: SO.InstanceResponseCallback) {
               assert.deepEqual(config, {});
-              callback(); // done()
+              callback(null, null, {} as r.Response); // done()
             } as any;
 
-            callback(error);
+            callback(error as any, null, null as any);
           };
 
           serviceObject.get(AUTO_CREATE_CONFIG, done);
@@ -642,7 +649,7 @@ describe('ServiceObject', () => {
   });
 
   describe('request_', () => {
-    let reqOpts;
+    let reqOpts: ExtendedRequestOptions;
 
     beforeEach(() => {
       reqOpts = {
@@ -657,7 +664,7 @@ describe('ServiceObject', () => {
         reqOpts.uri,
       ].join('/');
 
-      (serviceObject as any).parent.request = function(reqOpts_, callback) {
+      (serviceObject as any).parent.request = function(reqOpts_: ExtendedRequestOptions, callback: () => void) {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.deepEqual(reqOpts_.interceptors_, []);
@@ -670,7 +677,7 @@ describe('ServiceObject', () => {
     it('should not require a service object ID', (done) => {
       const expectedUri = [(serviceObject as any).baseUrl, reqOpts.uri].join('/');
 
-      (serviceObject as any).parent.request = function(reqOpts) {
+      (serviceObject as any).parent.request = function(reqOpts: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
@@ -683,7 +690,7 @@ describe('ServiceObject', () => {
     it('should support absolute uris', (done) => {
       const expectedUri = 'http://www.google.com';
 
-      (serviceObject as any).parent.request = function(reqOpts) {
+      (serviceObject as any).parent.request = function(reqOpts: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
@@ -702,7 +709,7 @@ describe('ServiceObject', () => {
         // reqOpts.uri (reqOpts.uri is an empty string, so it should be removed)
       ].join('/');
 
-      (serviceObject as any).parent.request = function(reqOpts_) {
+      (serviceObject as any).parent.request = function(reqOpts_: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -719,7 +726,7 @@ describe('ServiceObject', () => {
         '/'
       );
 
-      (serviceObject as any).parent.request = function(reqOpts_) {
+      (serviceObject as any).parent.request = function(reqOpts_: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -730,21 +737,21 @@ describe('ServiceObject', () => {
     it('should extend interceptors from child ServiceObjects', (done) => {
       const parent = new ServiceObject(CONFIG);
       (parent as any).interceptors.push({
-        request(reqOpts) {
-          reqOpts.parent = true;
+        request(reqOpts: ExtendedRequestOptions) {
+          (reqOpts as any).parent = true;
           return reqOpts;
         },
       });
 
       const child = new ServiceObject(extend({}, CONFIG, {parent}));
       (child as any).interceptors.push({
-        request(reqOpts) {
-          reqOpts.child = true;
+        request(reqOpts: ExtendedRequestOptions) {
+          (reqOpts as any).child = true;
           return reqOpts;
         },
       });
 
-      (parent as any).parent.request = function(reqOpts) {
+      (parent as any).parent.request = function(reqOpts: ExtendedRequestOptions) {
         assert.deepEqual(reqOpts.interceptors_[0].request({}), {
           child: true,
         });
@@ -761,13 +768,13 @@ describe('ServiceObject', () => {
 
     it('should pass a clone of the interceptors', (done) => {
       (serviceObject as any).interceptors.push({
-        request(reqOpts) {
-          reqOpts.one = true;
+        request(reqOpts: ExtendedRequestOptions) {
+          (reqOpts as any).one = true;
           return reqOpts;
         },
       });
 
-      (serviceObject as any).parent.request = function(reqOpts) {
+      (serviceObject as any).parent.request = function(reqOpts: ExtendedRequestOptions) {
         const serviceObjectInterceptors = (serviceObject as any).interceptors;
         assert.deepEqual(reqOpts.interceptors_, serviceObjectInterceptors);
         assert.notStrictEqual(reqOpts.interceptors_, serviceObjectInterceptors);
@@ -786,7 +793,7 @@ describe('ServiceObject', () => {
         reqOpts.uri,
       ].join('/');
 
-      (serviceObject as any).parent.requestStream = function(reqOpts_) {
+      (serviceObject as any).parent.requestStream = function(reqOpts_: ExtendedRequestOptions) {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.deepEqual(reqOpts_.interceptors_, []);

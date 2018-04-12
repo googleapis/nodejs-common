@@ -22,8 +22,7 @@ import * as extend from 'extend';
 import * as r from 'request';
 import * as arrify from 'arrify';
 import * as pify from 'pify';
-import {PackageJson} from './types';
-import { util } from './util';
+import { util, PackageJson } from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 
@@ -60,17 +59,17 @@ export interface ServiceOptions {
 export class Service {
 
   private baseUrl: string;
-  private globalInterceptors;
+  private globalInterceptors: any;
   private interceptors: Array<{ request(opts: r.Options): r.Options}>;
   private packageJson: PackageJson;
   private projectId: string;
   private projectIdRequired: boolean;
   private Promise: Promise<{}>;
   // TODO: make this private
-  makeAuthenticatedRequest;
+  makeAuthenticatedRequest: any;
   // TODO: make this private
-  authClient;
-  private getCredentials;
+  authClient: any;
+  private getCredentials: any;
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like

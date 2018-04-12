@@ -69,12 +69,8 @@ export interface CreateOptions {
 
 }
 
-export interface CodeError extends Error {
-  code: number;
-}
-
 export interface InstanceResponseCallback {
-  (err: GoogleError|null, instance: any, apiResponse: r.Response): void;
+  (err: GoogleError|null, instance?: any, apiResponse?: r.Response): void;
 }
 
 export interface DeleteCallback {
@@ -109,6 +105,7 @@ class ServiceObject extends EventEmitter {
   private methods: Methods;
   private interceptors: any;
   protected Promise: any;
+  [index: string]: any;
 
   /*
   * @constructor
@@ -167,9 +164,9 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  create(options: CreateOptions, callback?: InstanceResponseCallback);
-  create(callback?: InstanceResponseCallback);
-  create(optionsOrCallback?: CreateOptions|InstanceResponseCallback, callback?: InstanceResponseCallback) {
+  create(options: CreateOptions, callback?: InstanceResponseCallback): void;
+  create(callback?: InstanceResponseCallback): void;
+  create(optionsOrCallback?: CreateOptions|InstanceResponseCallback, callback?: InstanceResponseCallback): void {
     const self = this;
     const args: any[] = [this.id];
 
@@ -185,17 +182,13 @@ class ServiceObject extends EventEmitter {
     // created one.
     function onCreate(err: Error, instance: any) {
       const args = [].slice.call(arguments);
-
       if (!err) {
         self.metadata = instance.metadata;
         args[1] = self; // replace the created `instance` with this one.
       }
-
       callback!.apply(null, args);
     }
-
     args.push(onCreate);
-
     this.createMethod!.apply(null, args);
   }
 
@@ -258,9 +251,9 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(config: GetConfig, callback?: InstanceResponseCallback);
-  get(callback: InstanceResponseCallback);
-  get(configOrCallback: GetConfig|InstanceResponseCallback, callback?: InstanceResponseCallback) {
+  get(config: GetConfig, callback?: InstanceResponseCallback): void;
+  get(callback: InstanceResponseCallback): void;
+  get(configOrCallback: GetConfig|InstanceResponseCallback, callback?: InstanceResponseCallback): void {
     const self = this;
 
     let config: GetConfig = {};
@@ -275,13 +268,12 @@ class ServiceObject extends EventEmitter {
     const autoCreate = config.autoCreate && is.fn(this.create);
     delete config.autoCreate;
 
-    function onCreate(err: CodeError|null, instance: any, apiResponse: r.Response) {
+    function onCreate(err: GoogleError|null, instance: any, apiResponse: r.Response) {
       if (err) {
         if (err.code === 409) {
           self.get(config, callback);
           return;
         }
-
         callback!(err, null, apiResponse);
         return;
       }
