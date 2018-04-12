@@ -23,6 +23,8 @@ import * as request from 'request';
 import * as retryRequest from 'retry-request';
 import * as stream from 'stream';
 import * as streamEvents from 'stream-events';
+import * as sinon from 'sinon';
+import { Util } from '../src/util';
 let duplexify;
 
 export class GoogleError extends Error {
@@ -61,13 +63,17 @@ describe('common/util', () => {
   let util;
   let utilOverrides: any = {};
 
+  function stub(method: keyof Util, meth: (...args: any[]) => void) {
+    return sandbox.stub(util, method).callsFake(meth);
+  }
+
   before(function() {
     util = proxyquire('../src/util', {
       'google-auto-auth': fakeGoogleAutoAuth,
       request: fakeRequest,
       'retry-request': fakeRetryRequest,
       'stream-events': fakeStreamEvents,
-    });
+    }).util;
     const utilCached = extend(true, {}, util);
 
     // Override all util methods, allowing them to be mocked. Overrides are
@@ -88,12 +94,17 @@ describe('common/util', () => {
     duplexify = require('duplexify');
   });
 
+  let sandbox: sinon.SinonSandbox;
   beforeEach(() => {
+    sandbox = sinon.createSandbox();
     googleAutoAuthOverride = null;
     requestOverride = null;
     retryRequestOverride = null;
     streamEventsOverride = null;
     utilOverrides = {};
+  });
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it('should have set correct defaults on Request', () => {
@@ -351,21 +362,20 @@ describe('common/util', () => {
       const returnedBody = {a: 'b', c: 'd'};
       const returnedResp = {a: 'b', c: 'd'};
 
-      utilOverrides.parseHttpRespMessage = function(resp_) {
+      stub('parseHttpRespMessage', resp_ => {
         assert.strictEqual(resp_, resp);
-
         return {
           resp: returnedResp,
         };
-      };
+      });
 
-      utilOverrides.parseHttpRespBody = function(body_) {
+      stub('parseHttpRespBody', body_ => {
         assert.strictEqual(body_, body);
 
         return {
           body: returnedBody,
         };
-      };
+      });
 
       util.handleResp(err, resp, body, function(err, body, resp) {
         assert.deepEqual(err, returnedErr);
@@ -378,9 +388,9 @@ describe('common/util', () => {
     it('should parse response for error', (done) => {
       const error = new Error('Error.');
 
-      utilOverrides.parseHttpRespMessage = () => {
+      sandbox.stub(util, 'parseHttpRespMessage').callsFake(() => {
         return {err: error};
-      };
+      });
 
       util.handleResp(null, {}, {}, function(err) {
         assert.deepEqual(err, error);
@@ -391,9 +401,9 @@ describe('common/util', () => {
     it('should parse body for error', (done) => {
       const error = new Error('Error.');
 
-      utilOverrides.parseHttpRespBody = () => {
+      stub('parseHttpRespBody', () => {
         return {err: error};
-      };
+      });
 
       util.handleResp(null, {}, {}, (err) => {
         assert.deepEqual(err, error);
@@ -402,35 +412,24 @@ describe('common/util', () => {
     });
 
     it('should not parse undefined response', (done) => {
-      utilOverrides.parseHttpRespMessage = () => {
-        done(); // Will throw.
-      };
-
+      stub('parseHttpRespMessage', () => done()); // Will throw.
       util.handleResp(null, null, null, done);
     });
 
     it('should not parse undefined body', (done) => {
-      utilOverrides.parseHttpRespBody = () => {
-        done(); // Will throw.
-      };
-
+      stub('parseHttpRespBody', () => done()); // Will throw.
       util.handleResp(null, null, null, done);
     });
   });
 
   describe('parseHttpRespMessage', () => {
-    it('should build ApiError with non-200 status and message', (done) => {
+    it('should build ApiError with non-200 status and message', () => {
       const httpRespMessage = {statusCode: 400, statusMessage: 'Not Good'};
-
-      utilOverrides.ApiError = function(error_) {
+      const res = util.parseHttpRespMessage(httpRespMessage);
+      const error_ = res.err;
         assert.strictEqual(error_.code, httpRespMessage.statusCode);
         assert.strictEqual(error_.message, httpRespMessage.statusMessage);
         assert.strictEqual(error_.response, httpRespMessage);
-
-        done();
-      };
-
-      util.parseHttpRespMessage(httpRespMessage);
     });
 
     it('should return the original response message', () => {
@@ -567,9 +566,9 @@ describe('common/util', () => {
       fakeStream.write = () => {};
       dup.end = () => {};
 
-      utilOverrides.handleResp = function(err, res, body, callback) {
+      stub('handleResp', (err, res, body, callback) => {
         callback(error);
-      };
+      });
 
       requestOverride = function(reqOpts, callback) {
         callback(error);
@@ -598,9 +597,9 @@ describe('common/util', () => {
 
       fakeStream.write = () => {};
 
-      utilOverrides.handleResp = function(err, res, body, callback) {
+      stub('handleResp', (err, res, body, callback) => {
         callback();
-      };
+      });
 
       requestOverride = function(reqOpts, callback) {
         callback(null, fakeResponse);
@@ -627,9 +626,9 @@ describe('common/util', () => {
 
       fakeStream.write = () => {};
 
-      utilOverrides.handleResp = function(err, res, body, callback) {
+      stub('handleResp', (err, res, body, callback) => {
         callback(null, fakeResponse);
-      };
+      });
 
       requestOverride = function(reqOpts, callback) {
         callback();
@@ -749,11 +748,11 @@ describe('common/util', () => {
         const reqOpts = {a: 'b', c: 'd'};
         const decoratedRequest = {};
 
-        utilOverrides.decorateRequest = function(reqOpts_, projectId) {
+        stub('decorateRequest', (reqOpts_, projectId) => {
           assert.strictEqual(reqOpts_, reqOpts);
           assert.deepEqual(projectId, expectedProjectId);
           return decoratedRequest;
-        };
+        });
 
         makeAuthenticatedRequest(reqOpts, {
           onAuthenticated(err, authenticatedReqOpts) {
@@ -767,11 +766,7 @@ describe('common/util', () => {
       it('should return an error while decorating', (done) => {
         const error = new Error('Error.');
         const reqOpts = {a: 'b', c: 'd'};
-
-        utilOverrides.decorateRequest = () => {
-          throw error;
-        };
-
+        stub('decorateRequest', () => { throw error });
         makeAuthenticatedRequest(reqOpts, {
           onAuthenticated(err) {
             assert.strictEqual(err, error);
@@ -795,10 +790,10 @@ describe('common/util', () => {
       it('should not authenticate requests with a custom API', (done) => {
         const reqOpts = {a: 'b', c: 'd'};
 
-        utilOverrides.makeRequest = function(rOpts) {
+        stub('makeRequest', rOpts => {
           assert.deepEqual(rOpts, reqOpts);
           done();
-        };
+        });
 
         makeAuthenticatedRequest(reqOpts, assert.ifError);
       });
@@ -828,10 +823,10 @@ describe('common/util', () => {
         it('should default to authClient projectId', (done) => {
           authClient.projectId = 'authclient-project-id';
 
-          utilOverrides.decorateRequest = function(reqOpts, projectId) {
+          stub('decorateRequest', (reqOpts, projectId) => {
             assert.strictEqual(projectId, authClient.projectId);
             setImmediate(done);
-          };
+          });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({
             customEndpoint: true,
@@ -853,10 +848,10 @@ describe('common/util', () => {
             projectId: 'project-id',
           };
 
-          utilOverrides.decorateRequest = function(reqOpts, projectId) {
+          stub('decorateRequest', (reqOpts, projectId) => {
             assert.strictEqual(projectId, config.projectId);
             setImmediate(done);
-          };
+          });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
             config
@@ -907,9 +902,9 @@ describe('common/util', () => {
 
         it('should block decorateRequest error', (done) => {
           const decorateRequestError = new Error('Error.');
-          utilOverrides.decorateRequest = () => {
+          stub('decorateRequest', () => {
             throw decorateRequestError;
-          };
+          });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(
@@ -969,10 +964,10 @@ describe('common/util', () => {
         });
 
         it('should return authenticated request to callback', (done) => {
-          utilOverrides.decorateRequest = function(reqOpts_) {
+          stub('decorateRequest', reqOpts_ => {
             assert.strictEqual(reqOpts_, reqOpts);
             return reqOpts;
-          };
+          });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(reqOpts, {
@@ -986,16 +981,16 @@ describe('common/util', () => {
         it('should make request with correct options', (done) => {
           const config = {a: 'b', c: 'd'};
 
-          utilOverrides.decorateRequest = function(reqOpts_) {
+          stub('decorateRequest',reqOpts_ => {
             assert.strictEqual(reqOpts_, reqOpts);
             return reqOpts;
-          };
+          });
 
-          utilOverrides.makeRequest = function(authenticatedReqOpts, cfg, cb) {
+          stub('makeRequest', (authenticatedReqOpts, cfg, cb) =>{
             assert.strictEqual(authenticatedReqOpts, reqOpts);
             assert.deepEqual(cfg, config);
             cb();
-          };
+          });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
             config
@@ -1008,9 +1003,9 @@ describe('common/util', () => {
             abort: done,
           };
 
-          utilOverrides.makeRequest = () => {
+          stub('makeRequest',() => {
             return retryRequest;
-          };
+          });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(reqOpts, assert.ifError).abort();
@@ -1021,9 +1016,9 @@ describe('common/util', () => {
             abort: done, // Will throw if called more than once.
           };
 
-          utilOverrides.makeRequest = () => {
+          stub('makeRequest',() => {
             return retryRequest;
-          };
+          });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
           const request = makeAuthenticatedRequest(reqOpts, assert.ifError);
@@ -1035,12 +1030,12 @@ describe('common/util', () => {
         it('should provide stream to makeRequest', (done) => {
           let stream;
 
-          utilOverrides.makeRequest = function(authenticatedReqOpts, cfg) {
+          stub('makeRequest',(authenticatedReqOpts, cfg) => {
             setImmediate(() => {
               assert.strictEqual(cfg.stream, stream);
               done();
             });
-          };
+          });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
             {}
@@ -1117,13 +1112,13 @@ describe('common/util', () => {
         assert.strictEqual(config.request, fakeRequest);
 
         const error = new Error('Error.');
-        utilOverrides.parseHttpRespMessage = () => {
+        stub('parseHttpRespMessage',() => {
           return {err: error};
-        };
-        utilOverrides.shouldRetryRequest = function(err) {
+        });
+        stub('shouldRetryRequest',err => {
           assert.strictEqual(err, error);
           done();
-        };
+        });
 
         config.shouldRetryFn();
       };
@@ -1326,12 +1321,12 @@ describe('common/util', () => {
           callback(error, response, body);
         };
 
-        utilOverrides.handleResp = function(err, resp, body_) {
+        stub('handleResp',(err, resp, body_) =>{
           assert.strictEqual(err, error);
           assert.strictEqual(resp, response);
           assert.strictEqual(body_, body);
           done();
-        };
+        });
 
         util.makeRequest({}, {}, assert.ifError);
       });
@@ -1413,13 +1408,13 @@ describe('common/util', () => {
 
       utilOverrides.replaceProjectIdToken = function(qs, projectId_) {
         utilOverrides = {};
-        assert.strictEqual(qs, reqOpts.qs);
+        assert.deepStrictEqual(qs, reqOpts.qs);
         assert.strictEqual(projectId_, projectId);
         return decoratedQs;
-      };
+      } ;
 
       const decoratedRequest = util.decorateRequest(reqOpts, projectId);
-      assert.strictEqual(decoratedRequest.qs, decoratedQs);
+      assert.deepStrictEqual(decoratedRequest.qs, decoratedQs);
     });
 
     it('should replace project ID tokens for json object', () => {
@@ -1438,7 +1433,7 @@ describe('common/util', () => {
       };
 
       const decoratedRequest = util.decorateRequest(reqOpts, projectId);
-      assert.strictEqual(decoratedRequest.json, decoratedJson);
+      assert.deepStrictEqual(decoratedRequest.json, decoratedJson);
     });
 
     it('should decorate the request', () => {
@@ -1448,11 +1443,11 @@ describe('common/util', () => {
       };
       const decoratedUri = 'http://decorated';
 
-      utilOverrides.replaceProjectIdToken = function(uri, projectId_) {
+      stub('replaceProjectIdToken',(uri, projectId_) => {
         assert.strictEqual(uri, reqOpts.uri);
         assert.strictEqual(projectId_, projectId);
         return decoratedUri;
-      };
+      });
 
       assert.deepEqual(util.decorateRequest(reqOpts, projectId), {
         uri: decoratedUri,
@@ -1555,11 +1550,11 @@ describe('common/util', () => {
       const local = {a: 'b'};
       let config;
 
-      utilOverrides.extendGlobalConfig = function(globalConfig, localConfig) {
+      stub('extendGlobalConfig',(globalConfig, localConfig) =>{
         assert.strictEqual(globalConfig, fakeContext.config_);
         assert.strictEqual(localConfig, local);
         return fakeContext.config_;
-      };
+      });
 
       config = util.normalizeArguments(fakeContext, local);
       assert.strictEqual(config, fakeContext.config_);

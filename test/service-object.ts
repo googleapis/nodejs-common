@@ -19,8 +19,7 @@ import * as extend from 'extend';
 import * as sinon from 'sinon';
 import {ServiceObject, ExtendedRequestOptions} from '../src/service-object';
 import * as SO from '../src/service-object';
-
-const util = require('../src/util');
+import { util } from '../src/util';
 
 describe('ServiceObject', () => {
 

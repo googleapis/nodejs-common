@@ -23,12 +23,7 @@ import * as r from 'request';
 import * as arrify from 'arrify';
 import * as pify from 'pify';
 import {PackageJson} from './types';
-
-/**
- * @type {module:common/util}
- * @private
- */
-const util = require('./util');
+import { util } from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 

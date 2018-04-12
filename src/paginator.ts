@@ -22,12 +22,9 @@ import * as extend from 'extend';
 import * as is from 'is';
 import * as arrify from 'arrify';
 import { split } from 'split-array-stream';
+import { util } from './util';
 
-/**
- * @type {module:common/util}
- * @private
- */
-const util = require('./util');
+
 
 /*! Developer Documentation
  *
