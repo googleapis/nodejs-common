@@ -23,12 +23,15 @@ import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
 import {EventEmitter} from 'events';
-import { util, GoogleError } from './util';
+import { util, ApiError } from './util';
+import { Service } from '.';
 
 export type ExtendedRequestOptions = r.Options & {
   interceptors_?: any;
   uri: string;
 };
+
+export type GetMetadataCallback = (err: Error|null, metadata?: any, apiResponse?: r.Response) => void;
 
 export interface ExistsCallback {
   (err: Error|null, exists?: boolean): void;
@@ -58,7 +61,7 @@ export interface ServiceObjectConfig {
   /**
    * The parent service instance. For example, an instance of Storage if the object is Bucket.
    */
-  parent?: {};
+  parent: Service;
 }
 
 export interface Methods {
@@ -70,7 +73,7 @@ export interface CreateOptions {
 }
 
 export interface InstanceResponseCallback {
-  (err: GoogleError|null, instance?: any, apiResponse?: r.Response): void;
+  (err: ApiError|null, instance?: any, apiResponse?: r.Response): void;
 }
 
 export interface DeleteCallback {
@@ -99,7 +102,7 @@ class ServiceObject extends EventEmitter {
 
   private metadata: any;
   baseUrl?: string;
-  private parent: any;
+  private parent: Service;
   private id?: string;
   private createMethod?: Function;
   private methods: Methods;
@@ -268,7 +271,7 @@ class ServiceObject extends EventEmitter {
     const autoCreate = config.autoCreate && is.fn(this.create);
     delete config.autoCreate;
 
-    function onCreate(err: GoogleError|null, instance: any, apiResponse: r.Response) {
+    function onCreate(err: ApiError|null, instance: any, apiResponse: r.Response) {
       if (err) {
         if (err.code === 409) {
           self.get(config, callback);
@@ -282,7 +285,7 @@ class ServiceObject extends EventEmitter {
     }
 
     this.getMetadata((e: Error|null, metadata: any) => {
-      const err = e as GoogleError;
+      const err = e as ApiError;
       if (err) {
         if (err.code === 404 && autoCreate) {
           const args: any[] = [];
@@ -313,7 +316,7 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.metadata - The metadata for this object.
    * @param {object} callback.apiResponse - The full API response.
    */
-  getMetadata(callback: (err: Error|null, metadata?: any, apiResponse?: r.Response) => void) {
+  getMetadata(callback: GetMetadataCallback) {
     const self = this;
 
     const methodConfig = this.methods.getMetadata || {};
@@ -327,7 +330,7 @@ class ServiceObject extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special behavior.
     // Ensure we call the original `request` method.
-    this.request(reqOpts, (err: GoogleError|null, resp?: r.Response) => {
+    this.request(reqOpts, (err: ApiError|null, resp?: r.Response) => {
       if (err) {
         callback(err, null, resp);
         return;
@@ -388,7 +391,7 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: ExtendedRequestOptions, callback?: Function) {
+  request_(reqOpts: ExtendedRequestOptions, callback?: r.RequestCallback) {
     reqOpts = extend(true, {}, reqOpts);
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -428,7 +431,7 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: ExtendedRequestOptions, callback: Function) {
+  request(reqOpts: ExtendedRequestOptions, callback: r.RequestCallback) {
     this.request_(reqOpts, callback);
   }
 

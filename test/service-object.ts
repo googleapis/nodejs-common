@@ -19,17 +19,24 @@ import * as extend from 'extend';
 import * as sinon from 'sinon';
 import {ServiceObject, ExtendedRequestOptions} from '../src/service-object';
 import * as SO from '../src/service-object';
-import { util, GoogleError } from '../src/util';
+import { util, ApiError } from '../src/util';
 import * as r from 'request';
+import { Service } from '../src';
 
 describe('ServiceObject', () => {
 
   let serviceObject: ServiceObject;
   let sandbox: sinon.SinonSandbox;
 
+  // This is a simple any cast to allow checking the values of private
+  // variables.  Tests should be refactored so this isn't needed.
+  function pSvc(): any {
+    return serviceObject;
+  }
+
   const CONFIG = {
     baseUrl: 'base-url',
-    parent: {},
+    parent: {} as Service,
     id: 'id',
     createMethod: util.noop,
   };
@@ -46,7 +53,7 @@ describe('ServiceObject', () => {
   describe('instantiation', () => {
     it('should promisify all the things', (done) => {
       serviceObject.request = (reqOpts, callback) => {
-        callback(null, { statusCode: 123, body: 'sunny'});
+        callback(null, { statusCode: 123, body: 'sunny'} as r.RequestResponse, 'sunny');
       };
       (serviceObject.delete() as any)
         .then((r: any) => {
@@ -57,34 +64,34 @@ describe('ServiceObject', () => {
     });
 
     it('should create an empty metadata object', () => {
-      assert.deepEqual((serviceObject as any).metadata, {});
+      assert.deepEqual(pSvc().metadata, {});
     });
 
     it('should localize the baseUrl', () => {
-      assert.strictEqual((serviceObject as any).baseUrl, CONFIG.baseUrl);
+      assert.strictEqual(serviceObject.baseUrl, CONFIG.baseUrl);
     });
 
     it('should localize the parent instance', () => {
-      assert.strictEqual((serviceObject as any).parent, CONFIG.parent);
+      assert.strictEqual(pSvc().parent, CONFIG.parent);
     });
 
     it('should localize the ID', () => {
-      assert.strictEqual((serviceObject as any).id, CONFIG.id);
+      assert.strictEqual(pSvc().id, CONFIG.id);
     });
 
     it('should localize the createMethod', () => {
-      assert.strictEqual((serviceObject as any).createMethod, CONFIG.createMethod);
+      assert.strictEqual(pSvc().createMethod, CONFIG.createMethod);
     });
 
     it('should localize the methods', () => {
       const methods = {};
       const config = extend({}, CONFIG, { methods });
       const serviceObject = new ServiceObject(config);
-      assert.strictEqual((serviceObject as any).methods, methods);
+      assert.deepStrictEqual(pSvc().methods, methods);
     });
 
     it('should default methods to an empty object', () => {
-      assert.deepEqual((serviceObject as any).methods, {});
+      assert.deepEqual(pSvc().methods, {});
     });
 
     it('should clear out methods that are not asked for', () => {
@@ -107,7 +114,6 @@ describe('ServiceObject', () => {
           Promise: FakePromise,
         },
       });
-
       const serviceObject = new ServiceObject(config);
       assert.strictEqual((serviceObject as any).Promise, FakePromise);
     });
@@ -265,7 +271,7 @@ describe('ServiceObject', () => {
 
     it('should not require a callback', () => {
       serviceObject.request = (reqOpts, callback) => {
-        callback();
+        callback(null, null!, null);
       };
       assert.doesNotThrow(() => {
         serviceObject.delete();
@@ -299,7 +305,7 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with false if 404', (done) => {
-      const error = new GoogleError();
+      const error = new ApiError('');
       error.code = 404;
       serviceObject.get = function(configOrCallback: SO.GetConfig|SO.InstanceResponseCallback, callback?: SO.InstanceResponseCallback) {
         callback = typeof configOrCallback === 'function' ? configOrCallback : callback;
@@ -314,7 +320,7 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with error if not 404', (done) => {
-      const error = new GoogleError();
+      const error = new ApiError('');
       error.code = 500;
 
       serviceObject.get = function(configOrCallback: SO.GetConfig|SO.InstanceResponseCallback, callback?: SO.InstanceResponseCallback) {
@@ -537,7 +543,7 @@ describe('ServiceObject', () => {
 
       serviceObject.getMetadata(function(err) {
         assert.ifError(err);
-        assert.strictEqual((serviceObject as any).metadata, apiResponse);
+        assert.strictEqual(pSvc().metadata, apiResponse);
         done();
       });
     });
@@ -572,13 +578,8 @@ describe('ServiceObject', () => {
     });
 
     it('should extend the request options with defaults', (done) => {
-      const metadataDefault = {
-        a: 'b',
-      };
-
-      const metadata = {
-        c: 'd',
-      };
+      const metadataDefault = { a: 'b' };
+      const metadata = { c: 'd' };
 
       const method = {
         reqOpts: {
@@ -593,9 +594,9 @@ describe('ServiceObject', () => {
       const expectedJson = extend(true, {}, metadataDefault, metadata);
 
       sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts_) => {
-        assert.strictEqual(reqOpts_.method, method.reqOpts.method);
-        assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
-        assert.deepEqual(reqOpts_.json, expectedJson);
+        assert.deepStrictEqual(reqOpts_.method, method.reqOpts.method);
+        assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
+        assert.deepStrictEqual(reqOpts_.json, expectedJson);
         done();
       });
 
@@ -628,7 +629,7 @@ describe('ServiceObject', () => {
 
       serviceObject.setMetadata({}, (err) => {
         assert.ifError(err);
-        assert.strictEqual((serviceObject as any).metadata, apiResponse);
+        assert.strictEqual(pSvc().metadata, apiResponse);
         done();
       });
     });
@@ -659,12 +660,12 @@ describe('ServiceObject', () => {
 
     it('should compose the correct request', (done) => {
       const expectedUri = [
-        (serviceObject as any).baseUrl,
-        (serviceObject as any).id,
+        serviceObject.baseUrl,
+        pSvc().id,
         reqOpts.uri,
       ].join('/');
 
-      (serviceObject as any).parent.request = function(reqOpts_: ExtendedRequestOptions, callback: () => void) {
+      pSvc().parent.request = function(reqOpts_: ExtendedRequestOptions, callback: () => void) {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.deepEqual(reqOpts_.interceptors_, []);
@@ -675,14 +676,14 @@ describe('ServiceObject', () => {
     });
 
     it('should not require a service object ID', (done) => {
-      const expectedUri = [(serviceObject as any).baseUrl, reqOpts.uri].join('/');
+      const expectedUri = [serviceObject.baseUrl, reqOpts.uri].join('/');
 
-      (serviceObject as any).parent.request = function(reqOpts: ExtendedRequestOptions) {
+      pSvc().parent.request = function(reqOpts: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
 
-      (serviceObject as any).id = undefined;
+      pSvc().id = undefined;
 
       serviceObject.request_(reqOpts, assert.ifError);
     });
@@ -690,7 +691,7 @@ describe('ServiceObject', () => {
     it('should support absolute uris', (done) => {
       const expectedUri = 'http://www.google.com';
 
-      (serviceObject as any).parent.request = function(reqOpts: ExtendedRequestOptions) {
+      pSvc().parent.request = function(reqOpts: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
@@ -704,12 +705,12 @@ describe('ServiceObject', () => {
       };
 
       const expectedUri = [
-        (serviceObject as any).baseUrl,
-        (serviceObject as any).id,
+        serviceObject.baseUrl,
+        pSvc().id,
         // reqOpts.uri (reqOpts.uri is an empty string, so it should be removed)
       ].join('/');
 
-      (serviceObject as any).parent.request = function(reqOpts_: ExtendedRequestOptions) {
+      pSvc().parent.request = function(reqOpts_: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -722,11 +723,11 @@ describe('ServiceObject', () => {
         uri: '//1/2//',
       };
 
-      const expectedUri = [(serviceObject as any).baseUrl, (serviceObject as any).id, '1/2'].join(
+      const expectedUri = [serviceObject.baseUrl, pSvc().id, '1/2'].join(
         '/'
       );
 
-      (serviceObject as any).parent.request = function(reqOpts_: ExtendedRequestOptions) {
+      pSvc().parent.request = function(reqOpts_: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -767,15 +768,15 @@ describe('ServiceObject', () => {
     });
 
     it('should pass a clone of the interceptors', (done) => {
-      (serviceObject as any).interceptors.push({
+      pSvc().interceptors.push({
         request(reqOpts: ExtendedRequestOptions) {
           (reqOpts as any).one = true;
           return reqOpts;
         },
       });
 
-      (serviceObject as any).parent.request = function(reqOpts: ExtendedRequestOptions) {
-        const serviceObjectInterceptors = (serviceObject as any).interceptors;
+      pSvc().parent.request = function(reqOpts: ExtendedRequestOptions) {
+        const serviceObjectInterceptors = pSvc().interceptors;
         assert.deepEqual(reqOpts.interceptors_, serviceObjectInterceptors);
         assert.notStrictEqual(reqOpts.interceptors_, serviceObjectInterceptors);
         done();
@@ -788,12 +789,12 @@ describe('ServiceObject', () => {
       const fakeObj = {};
 
       const expectedUri = [
-        (serviceObject as any).baseUrl,
-        (serviceObject as any).id,
+        serviceObject.baseUrl,
+        pSvc().id,
         reqOpts.uri,
       ].join('/');
 
-      (serviceObject as any).parent.requestStream = function(reqOpts_: ExtendedRequestOptions) {
+      pSvc().parent.requestStream = function(reqOpts_: ExtendedRequestOptions) {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.deepEqual(reqOpts_.interceptors_, []);

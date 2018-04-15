@@ -142,15 +142,9 @@ export interface OnAuthenticatedCallback {
   (err: Error|null, reqOpts?: DecorateRequestOptions): void;
 }
 
-export class GoogleError extends Error {
-  code?: number;
-  errors?: Array<GoogleInnerError>;
-  response?: r.Response;
-}
-
 export interface GoogleErrorBody {
   code: number;
-  errors?: Array<GoogleInnerError>;
+  errors?: GoogleInnerError[];
   response: r.Response;
   message?: string;
 }
@@ -212,10 +206,10 @@ export class ApiError extends Error {
   response?: r.Response;
   constructor(errorMessage: string);
   constructor(errorBody: GoogleErrorBody);
-  constructor(errorBodyOrMessage: GoogleErrorBody|string) {
+  constructor(errorBodyOrMessage?: GoogleErrorBody|string) {
     super();
     if (typeof errorBodyOrMessage !== 'object') {
-      this.message = errorBodyOrMessage;
+      this.message = errorBodyOrMessage || '';
       return;
     }
     const errorBody = errorBodyOrMessage;
@@ -459,7 +453,7 @@ export class Util {
    * @param {error} err - The API error to check if it is appropriate to retry.
    * @return {boolean} True if the API request should be retried, false otherwise.
    */
-  shouldRetryRequest(err?: GoogleError) {
+  shouldRetryRequest(err?: ApiError) {
     if (err) {
       if ([429, 500, 502, 503].indexOf(err.code!) !== -1) {
         return true;
@@ -499,9 +493,7 @@ export class Util {
    * @param {string=} config.keyFile - Path to a .json, .pem, or .p12 keyfile.
    * @param {array} config.scopes - Array of scopes required for the API.
    */
-  makeAuthenticatedRequestFactory(config?: MakeAuthenticatedRequestFactoryConfig): MakeAuthenticatedRequest {
-    config = config || {};
-
+  makeAuthenticatedRequestFactory(config: MakeAuthenticatedRequestFactoryConfig = {}): MakeAuthenticatedRequest {
     const googleAutoAuthConfig = extend({}, config);
 
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
@@ -545,8 +537,8 @@ export class Util {
         if (!err || autoAuthFailed) {
           let projectId = authClient.projectId;
 
-          if (config!.projectId && config!.projectId !== '{{projectId}}') {
-            projectId = config!.projectId;
+          if (config.projectId && config.projectId !== '{{projectId}}') {
+            projectId = config.projectId;
           }
 
           try {
@@ -594,7 +586,7 @@ export class Util {
             callback
           );
         }
-      }
+      };
 
       if (reqConfig.customEndpoint) {
         // Using a custom API override. Do not use `google-auto-auth` for

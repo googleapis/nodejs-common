@@ -23,7 +23,7 @@ import * as retryRequest from 'retry-request';
 import * as stream from 'stream';
 const streamEvents = require('stream-events');
 import * as sinon from 'sinon';
-import { Util, GoogleError, ApiError, GlobalConfig, DecorateRequestOptions, MakeRequestConfig, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, Abortable, PromisifyAllOptions, MakeWritableStreamOptions } from '../src/util';
+import { Util, ApiError, GlobalConfig, DecorateRequestOptions, MakeRequestConfig, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, Abortable, PromisifyAllOptions, MakeWritableStreamOptions } from '../src/util';
 import * as duplexify from 'duplexify';
 import { ExtendedRequestOptions } from '../src/service';
 
@@ -39,7 +39,7 @@ const fakeBadResp = { statusCode: 400, statusMessage: 'Not Good' } as request.Re
 const fakeReqOpts: ExtendedRequestOptions = {
   uri: 'http://so-fake',
   method: 'GET'
-}
+};
 
 const fakeError = new Error('this error is like so fake');
 
@@ -65,7 +65,7 @@ function fakeRetryRequest() {
   return (retryRequestOverride || retryRequest).apply(null, arguments);
 }
 
-let streamEventsOverride: any;;
+let streamEventsOverride: any;
 function fakeStreamEvents() {
   return (streamEventsOverride || streamEvents).apply(null, arguments);
 }
@@ -337,7 +337,7 @@ describe('common/util', () => {
     });
 
     it('should link the original interceptors_', () => {
-      const interceptors = new Array<{}>();
+      const interceptors: Array<{}> = [];
       const globalConfig = {interceptors_: interceptors};
       util.extendGlobalConfig(globalConfig, {});
       assert.strictEqual(globalConfig.interceptors_, interceptors);
@@ -355,7 +355,7 @@ describe('common/util', () => {
     });
 
     it('uses a no-op callback if none is sent', () => {
-      (util.handleResp as any)(undefined, {}, '');
+      util.handleResp(null, fakeResponse, '');
     });
 
     it('should parse response', (done) => {
@@ -448,7 +448,7 @@ describe('common/util', () => {
         apiErr.errors[0].message,
       ].join(' - ');
 
-      const err = parsedHttpRespBody.err as GoogleError;
+      const err = parsedHttpRespBody.err as ApiError;
       assert.deepEqual(err.errors, apiErr.errors);
       assert.strictEqual(err.code, apiErr.code);
       assert.deepEqual(err.message, expectedErrorMessage);
@@ -753,12 +753,12 @@ describe('common/util', () => {
             assert.strictEqual(authenticatedReqOpts, decoratedRequest);
             done();
           },
-        } as any);
+        });
       });
 
       it('should return an error while decorating', (done) => {
         const error = new Error('Error.');
-        stub('decorateRequest', () => { throw error });
+        stub('decorateRequest', () => { throw error; });
         makeAuthenticatedRequest(fakeReqOpts, {
           onAuthenticated(err: Error) {
             assert.strictEqual(err, error);
@@ -1034,42 +1034,42 @@ describe('common/util', () => {
     });
 
     it('should return false from generic error', () => {
-      const error = new GoogleError('Generic error with no code');
+      const error = new ApiError('Generic error with no code');
       assert.strictEqual(util.shouldRetryRequest(error), false);
     });
 
     it('should return true with error code 429', () => {
-      const error = new GoogleError('429');
+      const error = new ApiError('429');
       error.code = 429;
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 500', () => {
-      const error = new GoogleError('500');
+      const error = new ApiError('500');
       error.code = 500;
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 502', () => {
-      const error = new GoogleError('502');
+      const error = new ApiError('502');
       error.code = 502;
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should return true with error code 503', () => {
-      const error = new GoogleError('503');
+      const error = new ApiError('503');
       error.code = 503;
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
     it('should detect rateLimitExceeded reason', () => {
-      const rateLimitError = new GoogleError('Rate limit error without code.');
+      const rateLimitError = new ApiError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'rateLimitExceeded'}];
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
     });
 
     it('should detect userRateLimitExceeded reason', () => {
-      const rateLimitError = new GoogleError('Rate limit error without code.');
+      const rateLimitError = new ApiError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'userRateLimitExceeded'}];
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
     });

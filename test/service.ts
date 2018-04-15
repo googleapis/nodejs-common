@@ -130,11 +130,9 @@ describe('Service', () => {
     });
 
     it('should preserve the original global interceptors', () => {
-      const globalInterceptors = new Array<any>();
-
+      const globalInterceptors: Array<{}> = [];
       const options = extend({}, OPTIONS);
       options.interceptors_ = globalInterceptors;
-
       const service = new Service(fakeCfg, options);
       assert.strictEqual(service.globalInterceptors, globalInterceptors);
     });

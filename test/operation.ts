@@ -15,14 +15,14 @@
  */
 
 import * as assert from 'assert';
-import {EventEmitter} from 'events';
 import * as sinon from 'sinon';
-import {ServiceObject} from '../src/service-object';
+import {ServiceObject, GetMetadataCallback, ServiceObjectConfig} from '../src/service-object';
 import {Operation} from '../src/operation';
 import { util } from '../src/util';
+import { Service } from '../src';
 
 describe('Operation', () => {
-  const FAKE_SERVICE = {};
+  const FAKE_SERVICE = {} as Service;
   const OPERATION_ID = '/a/b/c/d';
 
   let operation: any;
@@ -66,7 +66,7 @@ describe('Operation', () => {
 
     it('should allow overriding baseUrl', () => {
       const baseUrl = 'baseUrl';
-      const operation = new Operation({baseUrl});
+      const operation = new Operation({baseUrl} as ServiceObjectConfig);
       assert.strictEqual(operation.baseUrl, baseUrl);
     });
 
@@ -77,10 +77,10 @@ describe('Operation', () => {
 
     it('should call listenForEvents_', () => {
       let called = false;
-      sandbox.stub(Operation.prototype as any, 'listenForEvents_').callsFake(() => {
+      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(() => {
         called = true;
       });
-      new Operation({} as any);
+      new Operation({} as ServiceObjectConfig);
       assert.strictEqual(called, true);
     });
   });
@@ -201,8 +201,8 @@ describe('Operation', () => {
           error: {},
         };
 
-        operation.getMetadata = (callback: (err: null, a: {}, b: {}) => void) => {
-          callback(null, apiResponse, apiResponse);
+        operation.getMetadata = (callback: GetMetadataCallback) => {
+          callback(null, apiResponse);
         };
 
         operation.poll_((err: Error) => {
@@ -216,7 +216,7 @@ describe('Operation', () => {
       const apiResponse = {done: false};
 
       beforeEach(() => {
-        operation.getMetadata = (callback: (err: null, a: {}) => void) => {
+        operation.getMetadata = (callback: GetMetadataCallback) => {
           callback(null, apiResponse);
         };
       });
@@ -234,7 +234,7 @@ describe('Operation', () => {
       const apiResponse = {done: true};
 
       beforeEach(() => {
-        operation.getMetadata = (callback: (err: null, a: {}) => void) => {
+        operation.getMetadata = (callback: GetMetadataCallback) => {
           callback(null, apiResponse);
         };
       });
@@ -252,7 +252,7 @@ describe('Operation', () => {
   describe('startPolling_', () => {
 
     beforeEach(() => {
-      sandbox.stub(Operation.prototype as any, 'listenForEvents_').callsFake(util.noop);
+      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(util.noop);
       operation.hasActiveListeners = true;
     });
 
@@ -275,7 +275,7 @@ describe('Operation', () => {
       const error = new Error('Error.');
 
       beforeEach(() => {
-        operation.getMetadata = (callback: (err: Error) => void) => {
+        operation.getMetadata = (callback: GetMetadataCallback) => {
           callback(error);
         };
       });
@@ -294,8 +294,8 @@ describe('Operation', () => {
       const apiResponse = {done: false};
 
       beforeEach(() => {
-        operation.getMetadata = (callback: (err: null, b: {}, c: {}) => void) => {
-          callback(null, apiResponse, apiResponse);
+        operation.getMetadata = (callback: GetMetadataCallback) => {
+          callback(null, apiResponse);
         };
       });
 
@@ -329,8 +329,8 @@ describe('Operation', () => {
       const apiResponse = {done: true};
 
       beforeEach(() => {
-        operation.getMetadata = (callback: (err: null, a: {}, b: {}) => void) => {
-          callback(null, apiResponse, apiResponse);
+        operation.getMetadata = (callback: GetMetadataCallback) => {
+          callback(null, apiResponse);
         };
       });
 

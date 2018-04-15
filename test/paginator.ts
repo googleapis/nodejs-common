@@ -442,7 +442,7 @@ describe('paginator', () => {
 
     it('should push results onto the stream', (done) => {
       const results = ['a', 'b', 'c'];
-      const resultsReceived = new Array<{}>();
+      const resultsReceived: Array<{}> = [];
 
       function originalMethod(query: {}, callback: (err: Error|null, results: {}) => void) {
         setImmediate(() => {

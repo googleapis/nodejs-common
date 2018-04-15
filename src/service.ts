@@ -64,7 +64,7 @@ export class Service {
   private packageJson: PackageJson;
   private projectId: string;
   private projectIdRequired: boolean;
-  private Promise: Promise<{}>;
+  Promise: Promise<{}>;
   // TODO: make this private
   makeAuthenticatedRequest: any;
   // TODO: make this private
@@ -154,7 +154,7 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: r.Options & ExtendedRequestOptions, callback?: (err: Error|null) => void) {
+  request_(reqOpts: r.Options & ExtendedRequestOptions, callback?: r.RequestCallback) {
     // TODO: fix the tests so this can be private
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -214,7 +214,7 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  protected request(reqOpts: ExtendedRequestOptions, callback: (err: Error|null) => void) {
+  request(reqOpts: ExtendedRequestOptions, callback: r.RequestCallback) {
     this.request_(reqOpts, callback);
   }
 
@@ -226,7 +226,7 @@ export class Service {
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
-  protected requestStream(reqOpts: ExtendedRequestOptions) {
+  requestStream(reqOpts: ExtendedRequestOptions) {
     return this.request_(reqOpts);
   }
 
