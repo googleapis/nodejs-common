@@ -794,7 +794,7 @@ export class Util {
 
     const streamOptions = options.streamOptions || {};
     streamOptions.objectMode = true;
-    const stream = streamEvents(new Transform(streamOptions));
+    const stream = streamEvents(new Transform(streamOptions)) as Transform;
 
     let requestsMade = 0;
     let requestsToMake = -1;
