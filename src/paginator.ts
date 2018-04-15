@@ -23,6 +23,7 @@ import * as is from 'is';
 import * as arrify from 'arrify';
 import { split } from 'split-array-stream';
 import { util } from './util';
+import { Transform } from 'stream';
 
 
 
@@ -81,7 +82,7 @@ export class Paginator {
    * @param {string} methodName - Name of the method to streamify.
    * @return {function} - Wrapped function.
    */
-  streamify(methodName: string) {
+  streamify(methodName: string): (...args: any[]) => Transform {
     return function(...args: any[]) {
       const parsedArguments = paginator.parseArguments_(args);
       const originalMethod = this[methodName + '_'] || this[methodName];
