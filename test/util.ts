@@ -1569,7 +1569,7 @@ describe('common/util', () => {
       const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
 
       assert.strictEqual(
-        limiter.stream._readableState.highWaterMark,
+        (limiter.stream as any)._readableState.highWaterMark,
         OPTIONS.streamOptions.highWaterMark
       );
     });
