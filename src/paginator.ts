@@ -31,7 +31,7 @@ export interface ParsedArguments {
    * Query object. This is most commonly an object, but to make the API more
    * simple, it can also be a string in some places.
    */
-  query?: string|ParsedArguments;
+  query?: ParsedArguments;
 
   /**
    * Callback function.
@@ -41,19 +41,19 @@ export interface ParsedArguments {
   /**
    * Auto-pagination enabled.
    */
-  autoPaginate: boolean;
+  autoPaginate?: boolean;
 
   /**
    * Maximum API calls to make.
    */
-  maxApiCalls: number;
+  maxApiCalls?: number;
 
   /**
    * Maximum results to return.
    */
-  maxResults: number;
+  maxResults?: number;
 
-  pageSize: number;
+  pageSize?: number;
 
   streamOptions?: ParsedArguments;
 }
@@ -154,15 +154,15 @@ export class Paginator {
       query = extend<{}, ParsedArguments>(true, {}, query) as ParsedArguments;
 
       // Check if the user only asked for a certain amount of results.
-      if (is.number(query.maxResults)) {
+      if (query.maxResults && is.number(query.maxResults)) {
         // `maxResults` is used API-wide.
         maxResults = query.maxResults;
       } else if (is.number(query.pageSize)) {
         // `pageSize` is Pub/Sub's `maxResults`.
-        maxResults = query.pageSize;
+        maxResults = query.pageSize!;
       }
 
-      if (is.number(query.maxApiCalls)) {
+      if (query.maxApiCalls && is.number(query.maxApiCalls)) {
         maxApiCalls = query.maxApiCalls;
         delete query.maxApiCalls;
       }
@@ -242,7 +242,7 @@ export class Paginator {
    */
   runAsStream_(parsedArguments: ParsedArguments, originalMethod: Function) {
     const query = parsedArguments.query;
-    let resultsToSend = parsedArguments.maxResults;
+    let resultsToSend = parsedArguments.maxResults!;
 
     const limiter = util.createLimiter(makeRequest, {
       maxApiCalls: parsedArguments.maxApiCalls,
