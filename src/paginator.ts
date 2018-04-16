@@ -18,14 +18,45 @@
  * @module common/paginator
  */
 
+import * as arrify from 'arrify';
 import * as extend from 'extend';
 import * as is from 'is';
-import * as arrify from 'arrify';
-import { split } from 'split-array-stream';
-import { util } from './util';
-import { Transform } from 'stream';
+import {split} from 'split-array-stream';
+import {Transform} from 'stream';
 
+import {util} from './util';
 
+export interface ParsedArguments {
+  /**
+   * Query object. This is most commonly an object, but to make the API more
+   * simple, it can also be a string in some places.
+   */
+  query?: ParsedArguments;
+
+  /**
+   * Callback function.
+   */
+  callback?: Function;
+
+  /**
+   * Auto-pagination enabled.
+   */
+  autoPaginate?: boolean;
+
+  /**
+   * Maximum API calls to make.
+   */
+  maxApiCalls?: number;
+
+  /**
+   * Maximum results to return.
+   */
+  maxResults?: number;
+
+  pageSize?: number;
+
+  streamOptions?: ParsedArguments;
+}
 
 /*! Developer Documentation
  *
@@ -47,14 +78,14 @@ import { Transform } from 'stream';
  */
 
 export class Paginator {
-
   /**
    * Cache the original method, then overwrite it on the Class's prototype.
    *
    * @param {function} Class - The parent class of the methods to extend.
    * @param {string|string[]} methodNames - Name(s) of the methods to extend.
    */
-  extend(Class: Function, methodNames: string | string[]) {
+  // tslint:disable-next-line:variable-name
+  extend(Class: Function, methodNames: string|string[]) {
     methodNames = arrify(methodNames) as string[];
     methodNames.forEach(methodName => {
       const originalMethod = Class.prototype[methodName];
@@ -63,6 +94,7 @@ export class Paginator {
       Class.prototype[methodName + '_'] = originalMethod;
 
       // overwrite the original to auto-paginate
+      // tslint:disable-next-line:no-any
       Class.prototype[methodName] = function(...args: any[]) {
         const parsedArguments = paginator.parseArguments_(args);
         return paginator.run_(parsedArguments, originalMethod.bind(this));
@@ -82,7 +114,8 @@ export class Paginator {
    * @param {string} methodName - Name of the method to streamify.
    * @return {function} - Wrapped function.
    */
-  streamify(methodName: string): (...args: any[]) => Transform {
+  streamify(methodName: string) {
+    // tslint:disable-next-line:no-any
     return function(...args: any[]) {
       const parsedArguments = paginator.parseArguments_(args);
       const originalMethod = this[methodName + '_'] || this[methodName];
@@ -96,12 +129,13 @@ export class Paginator {
    * @param {array} args - The original `arguments` pseduo-array that the original
    *     method received.
    */
+  // tslint:disable-next-line:no-any
   parseArguments_(args: any[]) {
-    let query;
+    let query: string|ParsedArguments|undefined;
     let autoPaginate = true;
     let maxApiCalls = -1;
     let maxResults = -1;
-    let callback;
+    let callback: Function|undefined;
 
     const firstArgument = args[0];
     const lastArgument = args[args.length - 1];
@@ -116,28 +150,25 @@ export class Paginator {
       callback = lastArgument;
     }
 
-    if (is.object(query)) {
-      query = extend(true, {}, query);
+    if (typeof query === 'object') {
+      query = extend<{}, ParsedArguments>(true, {}, query) as ParsedArguments;
 
       // Check if the user only asked for a certain amount of results.
-      if (is.number(query.maxResults)) {
+      if (query.maxResults && is.number(query.maxResults)) {
         // `maxResults` is used API-wide.
         maxResults = query.maxResults;
       } else if (is.number(query.pageSize)) {
         // `pageSize` is Pub/Sub's `maxResults`.
-        maxResults = query.pageSize;
+        maxResults = query.pageSize!;
       }
 
-      if (is.number(query.maxApiCalls)) {
+      if (query.maxApiCalls && is.number(query.maxApiCalls)) {
         maxApiCalls = query.maxApiCalls;
         delete query.maxApiCalls;
       }
 
-      if (
-        callback &&
-        (maxResults !== -1 || // The user specified a limit.
-          query.autoPaginate === false)
-      ) {
+      // maxResults is the user specified a limit.
+      if (callback && (maxResults !== -1 || query.autoPaginate === false)) {
         autoPaginate = false;
       }
     }
@@ -148,10 +179,10 @@ export class Paginator {
       maxApiCalls,
       maxResults,
       callback,
-      streamOptions: undefined as any
-    };
+    } as ParsedArguments;
 
-    parsedArguments.streamOptions = extend(true, {}, parsedArguments.query);
+    parsedArguments.streamOptions = extend<{}, ParsedArguments>(
+        true, {}, parsedArguments.query as ParsedArguments);
     delete parsedArguments.streamOptions.autoPaginate;
     delete parsedArguments.streamOptions.maxResults;
     delete parsedArguments.streamOptions.pageSize;
@@ -175,17 +206,17 @@ export class Paginator {
    * @param {function} originalMethod - The cached method that accepts a callback
    *     and returns `nextQuery` to receive more results.
    */
-  run_(parsedArguments: any, originalMethod: Function) {
+  run_(parsedArguments: ParsedArguments, originalMethod: Function) {
     const query = parsedArguments.query;
-    const callback = parsedArguments.callback;
+    const callback = parsedArguments.callback!;
     const autoPaginate = parsedArguments.autoPaginate;
 
     if (autoPaginate) {
       const results = new Array<{}>();
       paginator.runAsStream_(parsedArguments, originalMethod)
-        .on('error', callback)
-        .on('data', (data: {}) => results.push(data))
-        .on('end', () => callback(null, results));
+          .on('error', e => callback(e))
+          .on('data', (data: {}) => results.push(data))
+          .on('end', () => callback(null, results));
     } else {
       originalMethod(query, callback);
     }
@@ -209,9 +240,9 @@ export class Paginator {
    *     and returns `nextQuery` to receive more results.
    * @return {stream} - Readable object stream.
    */
-  runAsStream_(parsedArguments: any, originalMethod: Function) {
+  runAsStream_(parsedArguments: ParsedArguments, originalMethod: Function) {
     const query = parsedArguments.query;
-    let resultsToSend = parsedArguments.maxResults;
+    let resultsToSend = parsedArguments.maxResults!;
 
     const limiter = util.createLimiter(makeRequest, {
       maxApiCalls: parsedArguments.maxApiCalls,
@@ -224,11 +255,12 @@ export class Paginator {
       makeRequest(query);
     });
 
-    function makeRequest(query: any) {
+    function makeRequest(query?: ParsedArguments|string) {
       originalMethod(query, onResultSet);
     }
 
-    function onResultSet(err: Error, results: any, nextQuery: any) {
+    // tslint:disable-next-line:no-any
+    function onResultSet(err: Error, results: any[], nextQuery: any) {
       if (err) {
         stream.destroy(err);
         return;

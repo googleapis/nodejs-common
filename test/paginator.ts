@@ -20,7 +20,7 @@ import * as stream from 'stream';
 import * as through from 'through2';
 import * as uuid from 'uuid';
 import * as sinon from 'sinon';
-import { paginator, Paginator } from '../src/paginator';
+import { paginator, Paginator, ParsedArguments } from '../src/paginator';
 import { util } from '../src/util';
 
 describe('paginator', () => {
@@ -219,7 +219,7 @@ describe('paginator', () => {
     it('should set defaults', () => {
       const parsedArguments = paginator.parseArguments_([]);
 
-      assert.strictEqual(Object.keys(parsedArguments.query).length, 0);
+      assert.strictEqual(Object.keys(parsedArguments.query!).length, 0);
       assert.strictEqual(parsedArguments.autoPaginate, true);
       assert.strictEqual(parsedArguments.maxApiCalls, -1);
       assert.strictEqual(parsedArguments.maxResults, -1);
@@ -266,7 +266,7 @@ describe('paginator', () => {
       const parsedArguments = paginator.parseArguments_(args);
 
       assert.strictEqual(parsedArguments.maxApiCalls, args[0].maxApiCalls);
-      assert.strictEqual(parsedArguments.query.maxApiCalls, undefined);
+      assert.strictEqual(parsedArguments.query!.maxApiCalls, undefined);
     });
 
     it('should set maxResults from query.maxResults', () => {
@@ -356,7 +356,7 @@ describe('paginator', () => {
             assert.deepStrictEqual(results_, results);
             done();
           },
-        };
+        } as ParsedArguments;
 
         stub('runAsStream_', () => {
           const stream = through.obj();
@@ -380,7 +380,7 @@ describe('paginator', () => {
             c: 'd',
           },
           callback: done,
-        };
+        } as ParsedArguments;
         stub('runAsStream_', util.noop);
         paginator.run_(parsedArguments, (query: {}, callback: () => void) => {
           assert.deepEqual(query, parsedArguments.query);
@@ -393,8 +393,8 @@ describe('paginator', () => {
   describe('runAsStream_', () => {
     const PARSED_ARGUMENTS = {
       query: {
-        a: 'b',
-        c: 'd',
+        maxApiCalls: 12345,
+        pageSize: 23456
       },
     };
 
@@ -497,7 +497,7 @@ describe('paginator', () => {
           {
             maxApiCalls: 100,
             streamOptions,
-          },
+          } as ParsedArguments,
           util.noop
         );
       });

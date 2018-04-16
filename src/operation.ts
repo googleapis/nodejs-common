@@ -22,7 +22,6 @@ import * as extend from 'extend';
 import {ServiceObject, ServiceObjectConfig} from './service-object';
 
 export class Operation extends ServiceObject {
-
   completeListeners: number;
   hasActiveListeners: boolean;
 
@@ -37,7 +36,6 @@ export class Operation extends ServiceObject {
    * @param {module:common/service|module:common/serviceObject|module:common/grpcService|module:common/grpcServiceObject} config.parent - The parent object.
    */
   constructor(config: ServiceObjectConfig) {
-
     const methods = {
       /**
        * Checks to see if an operation exists.
@@ -60,11 +58,10 @@ export class Operation extends ServiceObject {
     };
 
     config = extend(
-      {
-        baseUrl: '',
-      },
-      config
-    );
+        {
+          baseUrl: '',
+        },
+        config);
 
     config.methods = config.methods || methods;
     super(config);
@@ -79,17 +76,18 @@ export class Operation extends ServiceObject {
    * @return {promise}
    */
   promise() {
-    return new this.Promise((resolve: Function, reject: (err: Error) => void) => {
-      this.on('error', reject).on('complete', (metadata: any) => {
-        resolve([metadata]);
-      });
-    });
+    return new this.Promise(
+        (resolve: Function, reject: (err: Error) => void) => {
+          this.on('error', reject).on('complete', (metadata: {}) => {
+            resolve([metadata]);
+          });
+        });
   }
 
   /**
    * Begin listening for events on the operation. This method keeps track of how
-   * many "complete" listeners are registered and removed, making sure polling is
-   * handled automatically.
+   * many "complete" listeners are registered and removed, making sure polling
+   * is handled automatically.
    *
    * As long as there is one active "complete" listener, the connection is open.
    * When there are no more listeners, the polling stops.
@@ -125,8 +123,8 @@ export class Operation extends ServiceObject {
    *
    * @param {function} callback
    */
-  protected poll_(callback: (err?: Error|null, resp?: any) => void) {
-    this.getMetadata((err: Error|null, resp: any) => {
+  protected poll_(callback: (err?: Error|null, resp?: {}) => void) {
+    this.getMetadata((err, resp) => {
       if (err || resp.error) {
         callback(err || resp.error);
         return;
@@ -140,11 +138,11 @@ export class Operation extends ServiceObject {
   }
 
   /**
-   * Poll `getMetadata` to check the operation's status. This runs a loop to ping
-   * the API on an interval.
+   * Poll `getMetadata` to check the operation's status. This runs a loop to
+   * ping the API on an interval.
    *
-   * Note: This method is automatically called once a "complete" event handler is
-   * registered on the operation.
+   * Note: This method is automatically called once a "complete" event handler
+   * is registered on the operation.
    *
    * @private
    */
