@@ -25,7 +25,7 @@ import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import { Duplex, Transform, Stream } from 'stream';
-import * as streamEvents from 'stream-events';
+const streamEvents = require('stream-events');
 const googleAuth = require('google-auto-auth');
 
 const request = r.defaults({
@@ -59,7 +59,7 @@ export interface PackageJson {
 }
 
 export interface PromiseMethod extends Function {
-  promisified_: boolean;
+  promisified_?: boolean;
 }
 
 export interface PromisifyOptions {
@@ -88,7 +88,7 @@ export interface GlobalContext {
 export interface GlobalConfig {
   credentials?: {};
   keyFilename?: string;
-  interceptors_: {};
+  interceptors_?: {};
 }
 
 export interface MakeAuthenticatedRequestFactoryConfig {
@@ -142,12 +142,16 @@ export interface OnAuthenticatedCallback {
   (err: Error|null, reqOpts?: DecorateRequestOptions): void;
 }
 
-
-export interface GoogleError extends Error {
+export interface GoogleErrorBody {
   code: number;
-  errors?: Array<{
-    reason?: string;
-  }>;
+  errors?: GoogleInnerError[];
+  response: r.Response;
+  message?: string;
+}
+
+export interface GoogleInnerError {
+  reason?: string;
+  message?: string;
 }
 
 export interface MakeWritableStreamOptions {
@@ -166,7 +170,7 @@ export interface MakeWritableStreamOptions {
    */
   request?: r.Options;
 
-  makeAuthenticatedRequest(reqOpts: r.Options, fnobj: { onAuthenticated(err: Error|null, authenticatedReqOpts: r.Options): void}): void;
+  makeAuthenticatedRequest(reqOpts: r.OptionsWithUri, fnobj: { onAuthenticated(err: Error|null, authenticatedReqOpts?: r.Options): void}): void;
 }
 
 export interface DecorateRequestOptions extends r.OptionsWithUri {
@@ -198,10 +202,18 @@ export class MissingProjectIdError extends Error {
  */
 export class ApiError extends Error {
   code?: number;
-  errors?: any;
-  response?: any;
-  constructor(errorBody) {
+  errors?: GoogleInnerError[];
+  response?: r.Response;
+  constructor(errorMessage: string);
+  constructor(errorBody: GoogleErrorBody);
+  constructor(errorBodyOrMessage?: GoogleErrorBody|string) {
     super();
+    if (typeof errorBodyOrMessage !== 'object') {
+      this.message = errorBodyOrMessage || '';
+      return;
+    }
+    const errorBody = errorBodyOrMessage;
+
     this.code = errorBody.code;
     this.errors = errorBody.errors;
     this.response = errorBody.response;
@@ -219,7 +231,7 @@ export class ApiError extends Error {
     }
 
     if (this.errors && this.errors.length === 1) {
-      messages.push(this.errors[0].message);
+      messages.push(this.errors[0].message!);
     } else if (this.response && this.response.body) {
       messages.push(ent.decode(errorBody.response.body.toString()));
     } else if (!errorBody.message) {
@@ -236,9 +248,9 @@ export class ApiError extends Error {
  * @param {object} b - Error object.
  */
 export class PartialFailureError extends Error {
-  errors?: any;
-  response?: any;
-  constructor(b) {
+  errors?: GoogleInnerError[];
+  response?: r.Response;
+  constructor(b: GoogleErrorBody) {
     super();
     const errorObject = b;
 
@@ -266,7 +278,14 @@ export interface MakeRequestConfig {
    */
   maxRetries?: number;
 
+  retries?: number;
+
   stream?: duplexify.Duplexify;
+
+  request?: any;
+
+  shouldRetryFn?: (response?: r.Response) => boolean;
+
 }
 
 export class Util {
@@ -293,7 +312,7 @@ export class Util {
    * @param {*} body - Body value.
    * @param {function} callback - The callback function.
    */
-  handleResp(err: Error, resp: r.Response, body: any, callback: BodyResponseCallback) {
+  handleResp(err: Error|null, resp?: r.Response|null, body?: any, callback?: BodyResponseCallback) {
     callback = callback || util.noop;
 
     const parsedResp = extend(
@@ -322,7 +341,7 @@ export class Util {
     if (httpRespMessage.statusCode < 200 || httpRespMessage.statusCode > 299) {
       // Unknown error. Format according to ApiError standard.
       parsedHttpRespMessage.err = new ApiError({
-        errors: [],
+        errors: new Array<GoogleInnerError>(),
         code: httpRespMessage.statusCode,
         message: httpRespMessage.statusMessage,
         response: httpRespMessage,
@@ -377,7 +396,7 @@ export class Util {
    * @param {string=} options.streamContentType - Default: "application/octet-stream".
    * @param {function} onComplete - Callback, executed after the writable Request stream has completed.
    */
-  makeWritableStream(dup: duplexify.Duplexify, options: MakeWritableStreamOptions, onComplete: Function) {
+  makeWritableStream(dup: duplexify.Duplexify, options: MakeWritableStreamOptions, onComplete?: Function) {
     onComplete = onComplete || util.noop;
 
     const writeStream = new Transform();
@@ -403,7 +422,7 @@ export class Util {
           body: writeStream,
         },
       ],
-    });
+    }) as r.OptionsWithUri;
 
     options.makeAuthenticatedRequest(reqOpts, {
       onAuthenticated(err, authenticatedReqOpts) {
@@ -412,14 +431,14 @@ export class Util {
           return;
         }
 
-        request(authenticatedReqOpts, (err, resp, body) => {
+        request(authenticatedReqOpts!, (err, resp, body) => {
           util.handleResp(err, resp, body, (err: Error|null, data: any) => {
             if (err) {
               dup.destroy(err);
               return;
             }
             dup.emit('response', resp);
-            onComplete(data);
+            onComplete!(data);
           });
         });
       },
@@ -434,9 +453,9 @@ export class Util {
    * @param {error} err - The API error to check if it is appropriate to retry.
    * @return {boolean} True if the API request should be retried, false otherwise.
    */
-  shouldRetryRequest(err: GoogleError) {
+  shouldRetryRequest(err?: ApiError) {
     if (err) {
-      if ([429, 500, 502, 503].indexOf(err.code) !== -1) {
+      if ([429, 500, 502, 503].indexOf(err.code!) !== -1) {
         return true;
       }
 
@@ -474,9 +493,7 @@ export class Util {
    * @param {string=} config.keyFile - Path to a .json, .pem, or .p12 keyfile.
    * @param {array} config.scopes - Array of scopes required for the API.
    */
-  makeAuthenticatedRequestFactory(config: MakeAuthenticatedRequestFactoryConfig) {
-    config = config || {};
-
+  makeAuthenticatedRequestFactory(config: MakeAuthenticatedRequestFactoryConfig = {}): MakeAuthenticatedRequest {
     const googleAutoAuthConfig = extend({}, config);
 
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
@@ -569,7 +586,7 @@ export class Util {
             callback
           );
         }
-      }
+      };
 
       if (reqConfig.customEndpoint) {
         // Using a custom API override. Do not use `google-auto-auth` for
@@ -592,14 +609,10 @@ export class Util {
         },
       };
     }
-
-    (makeAuthenticatedRequest as MakeAuthenticatedRequest).getCredentials = authClient.getCredentials.bind(
-      authClient
-    );
-
-    (makeAuthenticatedRequest as MakeAuthenticatedRequest).authClient = authClient;
-
-    return makeAuthenticatedRequest;
+    const mar = makeAuthenticatedRequest as MakeAuthenticatedRequest;
+    mar.getCredentials = authClient.getCredentials.bind(authClient);
+    mar.authClient = authClient;
+    return mar;
   }
 
   /**
@@ -616,9 +629,9 @@ export class Util {
    *     attempted before returning the error. (default: 3)
    * @param {function} callback - The callback function.
    */
-  makeRequest(reqOpts: r.Options, callback: BodyResponseCallback);
-  makeRequest(reqOpts: r.Options, config: MakeRequestConfig, callback: BodyResponseCallback);
-  makeRequest(reqOpts: r.Options, configOrCallback: MakeRequestConfig|BodyResponseCallback, callback?: BodyResponseCallback) {
+  makeRequest(reqOpts: r.Options, callback: BodyResponseCallback): Abortable;
+  makeRequest(reqOpts: r.Options, config: MakeRequestConfig, callback: BodyResponseCallback): void|Abortable;
+  makeRequest(reqOpts: r.Options, configOrCallback: MakeRequestConfig|BodyResponseCallback, callback?: BodyResponseCallback): void|Abortable {
     let config: MakeRequestConfig = {};
     if (is.fn(configOrCallback)) {
       callback = configOrCallback as BodyResponseCallback;
@@ -636,33 +649,31 @@ export class Util {
       },
     };
 
-    if (config.stream) {
-      const dup = config.stream as AbortableDuplex;
-      let requestStream: any;
-      const isGetRequest = (reqOpts.method || 'GET').toUpperCase() === 'GET';
-
-      if (isGetRequest) {
-        requestStream = retryRequest(reqOpts, options);
-        dup.setReadable(requestStream);
-      } else {
-        // Streaming writable HTTP requests cannot be retried.
-        requestStream = request(reqOpts);
-        dup.setWritable(requestStream);
-      }
-
-      // Replay the Request events back to the stream.
-      requestStream
-        .on('error', dup.destroy.bind(dup))
-        .on('response', dup.emit.bind(dup, 'response'))
-        .on('complete', dup.emit.bind(dup, 'complete'));
-
-      dup.abort = requestStream.abort;
-      return;
-    } else {
+    if (!config.stream) {
       return retryRequest(reqOpts, options, (err, response, body) => {
         util.handleResp(err, response, body, callback!);
       });
     }
+    const dup = config.stream as AbortableDuplex;
+    let requestStream: any;
+    const isGetRequest = (reqOpts.method || 'GET').toUpperCase() === 'GET';
+
+    if (isGetRequest) {
+      requestStream = retryRequest(reqOpts, options);
+      dup.setReadable(requestStream);
+    } else {
+      // Streaming writable HTTP requests cannot be retried.
+      requestStream = request(reqOpts);
+      dup.setWritable(requestStream);
+    }
+
+    // Replay the Request events back to the stream.
+    requestStream
+      .on('error', dup.destroy.bind(dup))
+      .on('response', dup.emit.bind(dup, 'response'))
+      .on('complete', dup.emit.bind(dup, 'complete'));
+
+    dup.abort = requestStream.abort;
   }
 
   /**

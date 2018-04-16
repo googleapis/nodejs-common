@@ -63,7 +63,7 @@ export class Paginator {
       Class.prototype[methodName + '_'] = originalMethod;
 
       // overwrite the original to auto-paginate
-      Class.prototype[methodName] = function(...args) {
+      Class.prototype[methodName] = function(...args: any[]) {
         const parsedArguments = paginator.parseArguments_(args);
         return paginator.run_(parsedArguments, originalMethod.bind(this));
       };
@@ -184,7 +184,7 @@ export class Paginator {
       const results = new Array<{}>();
       paginator.runAsStream_(parsedArguments, originalMethod)
         .on('error', callback)
-        .on('data', data => results.push(data))
+        .on('data', (data: {}) => results.push(data))
         .on('end', () => callback(null, results));
     } else {
       originalMethod(query, callback);

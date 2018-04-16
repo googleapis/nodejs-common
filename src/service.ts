@@ -22,8 +22,7 @@ import * as extend from 'extend';
 import * as r from 'request';
 import * as arrify from 'arrify';
 import * as pify from 'pify';
-import {PackageJson} from './types';
-import { util } from './util';
+import { util, PackageJson } from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 
@@ -60,17 +59,17 @@ export interface ServiceOptions {
 export class Service {
 
   private baseUrl: string;
-  private globalInterceptors;
+  private globalInterceptors: any;
   private interceptors: Array<{ request(opts: r.Options): r.Options}>;
   private packageJson: PackageJson;
   private projectId: string;
   private projectIdRequired: boolean;
-  private Promise: Promise<{}>;
+  Promise: Promise<{}>;
   // TODO: make this private
-  makeAuthenticatedRequest;
+  makeAuthenticatedRequest: any;
   // TODO: make this private
-  authClient;
-  private getCredentials;
+  authClient: any;
+  private getCredentials: any;
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like
@@ -155,7 +154,7 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: r.Options & ExtendedRequestOptions, callback?: (err: Error|null) => void) {
+  request_(reqOpts: r.Options & ExtendedRequestOptions, callback?: r.RequestCallback) {
     // TODO: fix the tests so this can be private
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -215,7 +214,7 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  protected request(reqOpts: ExtendedRequestOptions, callback: (err: Error|null) => void) {
+  request(reqOpts: ExtendedRequestOptions, callback: r.RequestCallback) {
     this.request_(reqOpts, callback);
   }
 
@@ -227,7 +226,7 @@ export class Service {
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
-  protected requestStream(reqOpts: ExtendedRequestOptions) {
+  requestStream(reqOpts: ExtendedRequestOptions) {
     return this.request_(reqOpts);
   }
 

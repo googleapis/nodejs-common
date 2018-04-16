@@ -17,8 +17,9 @@
 import * as assert from 'assert';
 import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
-import {Service, ServiceConfig} from '../src/service';
+import {Service, ServiceConfig, ExtendedRequestOptions} from '../src/service';
 import { util } from '../src/util';
+import { Request } from 'request';
 
 proxyquire.noPreserveCache();
 
@@ -26,8 +27,8 @@ const fakeCfg = {} as ServiceConfig;
 
 const makeAuthenticatedRequestFactoryCache =
   util.makeAuthenticatedRequestFactory;
-let makeAuthenticatedRequestFactoryOverride;
-util.makeAuthenticatedRequestFactory = (...args) => {
+let makeAuthenticatedRequestFactoryOverride: any;
+util.makeAuthenticatedRequestFactory = (...args: any[]) => {
   if (makeAuthenticatedRequestFactoryOverride) {
     return makeAuthenticatedRequestFactoryOverride.apply(this, args);
   }
@@ -36,7 +37,7 @@ util.makeAuthenticatedRequestFactory = (...args) => {
 };
 
 describe('Service', () => {
-  let service;
+  let service: any;
   const Service = proxyquire('../src/service', {
     './util': util,
   }).Service;
@@ -74,7 +75,7 @@ describe('Service', () => {
     it('should create an authenticated request factory', () => {
       const authenticatedRequest = {};
 
-      makeAuthenticatedRequestFactoryOverride = config => {
+      makeAuthenticatedRequestFactoryOverride = (config: any) => {
         const expectedConfig = extend({}, CONFIG, {
           credentials: OPTIONS.credentials,
           keyFile: OPTIONS.keyFilename,
@@ -129,11 +130,9 @@ describe('Service', () => {
     });
 
     it('should preserve the original global interceptors', () => {
-      const globalInterceptors = [];
-
+      const globalInterceptors: Array<{}> = [];
       const options = extend({}, OPTIONS);
       options.interceptors_ = globalInterceptors;
-
       const service = new Service(fakeCfg, options);
       assert.strictEqual(service.globalInterceptors, globalInterceptors);
     });
@@ -202,12 +201,12 @@ describe('Service', () => {
       const error = new Error('Error.');
 
       service.authClient = {
-        getProjectId(callback) {
+        getProjectId(callback: (err: Error|null) => void) {
           callback(error);
         },
       };
 
-      service.getProjectId(err => {
+      service.getProjectId((err: Error) => {
         assert.strictEqual(err, error);
         done();
       });
@@ -218,12 +217,12 @@ describe('Service', () => {
       const projectId = 'detected-project-id';
 
       service.authClient = {
-        getProjectId(callback) {
+        getProjectId(callback: (err: Error|null, projectId?: string) => void) {
           callback(null, projectId);
         },
       };
 
-      service.getProjectId(function(err, projectId_) {
+      service.getProjectId(function(err: Error, projectId_: string) {
         assert.ifError(err);
         assert.strictEqual(service.projectId, projectId);
         assert.strictEqual(projectId_, projectId);
@@ -233,7 +232,7 @@ describe('Service', () => {
   });
 
   describe('request_', () => {
-    let reqOpts;
+    let reqOpts: ExtendedRequestOptions;
 
     beforeEach(() => {
       reqOpts = {
@@ -244,7 +243,7 @@ describe('Service', () => {
     it('should compose the correct request', (done) => {
       const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
-      service.makeAuthenticatedRequest = function(reqOpts_, callback) {
+      service.makeAuthenticatedRequest = function(reqOpts_: ExtendedRequestOptions, callback: () => void) {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.strictEqual(reqOpts.interceptors_, undefined);
@@ -257,7 +256,7 @@ describe('Service', () => {
     it('should support absolute uris', (done) => {
       const expectedUri = 'http://www.google.com';
 
-      service.makeAuthenticatedRequest = function(reqOpts) {
+      service.makeAuthenticatedRequest = function(reqOpts: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
@@ -272,7 +271,7 @@ describe('Service', () => {
 
       const expectedUri = [service.baseUrl, '1/2'].join('/');
 
-      service.makeAuthenticatedRequest = function(reqOpts_) {
+      service.makeAuthenticatedRequest = function(reqOpts_: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -287,7 +286,7 @@ describe('Service', () => {
 
       const expectedUri = service.baseUrl + reqOpts.uri;
 
-      service.makeAuthenticatedRequest = function(reqOpts_) {
+      service.makeAuthenticatedRequest = function(reqOpts_: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -305,8 +304,8 @@ describe('Service', () => {
         return userAgent;
       };
 
-      service.makeAuthenticatedRequest = function(reqOpts) {
-        assert.strictEqual(reqOpts.headers['User-Agent'], userAgent);
+      service.makeAuthenticatedRequest = function(reqOpts: ExtendedRequestOptions) {
+        assert.strictEqual(reqOpts.headers!['User-Agent'], userAgent);
         done();
       };
 
@@ -314,10 +313,10 @@ describe('Service', () => {
     });
 
     it('should add the api-client header', (done) => {
-      service.makeAuthenticatedRequest = function(reqOpts) {
+      service.makeAuthenticatedRequest = function(reqOpts: ExtendedRequestOptions) {
         const pkg = service.packageJson;
         assert.strictEqual(
-          reqOpts.headers['x-goog-api-client'],
+          reqOpts.headers!['x-goog-api-client'],
           `gl-node/${process.versions.node} gccl/${pkg.version}`
         );
         done();
@@ -334,7 +333,7 @@ describe('Service', () => {
 
           const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
-          service.makeAuthenticatedRequest = function(reqOpts_) {
+          service.makeAuthenticatedRequest = function(reqOpts_: ExtendedRequestOptions) {
             assert.strictEqual(reqOpts_.uri, expectedUri);
 
             done();
@@ -356,7 +355,7 @@ describe('Service', () => {
             reqOpts.uri,
           ].join('/');
 
-          service.makeAuthenticatedRequest = function(reqOpts_) {
+          service.makeAuthenticatedRequest = function(reqOpts_: ExtendedRequestOptions) {
             assert.strictEqual(reqOpts_.uri, expectedUri);
 
             done();
@@ -373,10 +372,11 @@ describe('Service', () => {
           uri: '',
           interceptors_: [],
         };
+        type FakeRequestOptions = ExtendedRequestOptions & { order: string};
 
         // Called first.
         service.globalInterceptors.push({
-          request(reqOpts) {
+          request(reqOpts: FakeRequestOptions) {
             reqOpts.order = '1';
             return reqOpts;
           },
@@ -384,7 +384,7 @@ describe('Service', () => {
 
         // Called third.
         service.interceptors.push({
-          request(reqOpts) {
+          request(reqOpts: FakeRequestOptions) {
             reqOpts.order += '3';
             return reqOpts;
           },
@@ -392,7 +392,7 @@ describe('Service', () => {
 
         // Called second.
         service.globalInterceptors.push({
-          request(reqOpts) {
+          request(reqOpts: FakeRequestOptions) {
             reqOpts.order += '2';
             return reqOpts;
           },
@@ -400,7 +400,7 @@ describe('Service', () => {
 
         // Called fifth.
         (reqOpts.interceptors_ as any).push({
-          request(reqOpts) {
+          request(reqOpts: FakeRequestOptions) {
             reqOpts.order += '5';
             return reqOpts;
           },
@@ -408,7 +408,7 @@ describe('Service', () => {
 
         // Called fourth.
         service.interceptors.push({
-          request(reqOpts) {
+          request(reqOpts: FakeRequestOptions) {
             reqOpts.order += '4';
             return reqOpts;
           },
@@ -416,13 +416,13 @@ describe('Service', () => {
 
         // Called sixth.
         (reqOpts.interceptors_ as any).push({
-          request(reqOpts) {
+          request(reqOpts: FakeRequestOptions) {
             reqOpts.order += '6';
             return reqOpts;
           },
         });
 
-        service.makeAuthenticatedRequest = function(reqOpts) {
+        service.makeAuthenticatedRequest = function(reqOpts: FakeRequestOptions) {
           assert.strictEqual(reqOpts.order, '123456');
           done();
         };
@@ -431,7 +431,7 @@ describe('Service', () => {
       });
 
       it('should not affect original interceptor arrays', (done) => {
-        function request(reqOpts) {
+        function request(reqOpts: ExtendedRequestOptions) {
           return reqOpts;
         }
 
@@ -478,7 +478,7 @@ describe('Service', () => {
   });
 
   describe('request', () => {
-    let request_;
+    let request_: Request;
 
     before(() => {
       request_ = Service.prototype.request_;
@@ -491,7 +491,7 @@ describe('Service', () => {
     it('should call through to _request', (done) => {
       const fakeOpts = {};
 
-      Service.prototype.request_ = (reqOpts, callback) => {
+      Service.prototype.request_ = (reqOpts: ExtendedRequestOptions, callback: (err: Error|null) => void) => {
         assert.strictEqual(reqOpts, fakeOpts);
         callback!(null);
       };
@@ -501,7 +501,7 @@ describe('Service', () => {
   });
 
   describe('requestStream', () => {
-    let request_;
+    let request_: Request;
 
     before(() => {
       request_ = Service.prototype.request_;
@@ -515,7 +515,7 @@ describe('Service', () => {
       const fakeOpts = {};
       const fakeStream = {};
 
-      Service.prototype.request_ = function(reqOpts) {
+      Service.prototype.request_ = function(reqOpts: ExtendedRequestOptions) {
         assert.strictEqual(reqOpts, fakeOpts);
         return fakeStream;
       };

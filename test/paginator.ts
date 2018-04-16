@@ -100,7 +100,7 @@ describe('paginator', () => {
         return this.uuid;
       };
 
-      const cls = new FakeClass();
+      const cls = new (FakeClass as any)();
       cls.uuid = uuid.v1();
 
       stub('run_', (args, originalMethod) => {
@@ -330,7 +330,7 @@ describe('paginator', () => {
 
         const parsedArguments = {
           autoPaginate: true,
-          callback(err) {
+          callback(err: Error) {
             assert.strictEqual(err, error);
             done();
           },
@@ -348,11 +348,11 @@ describe('paginator', () => {
       });
 
       it('should return all results on end', (done) => {
-        const results = [{a: 1}, {b: 2}, {c: 3}];
+        const results = [{ a: 1 }, { b: 2 }, { c: 3 }];
 
         const parsedArguments = {
           autoPaginate: true,
-          callback(err, results_) {
+          callback(err: Error, results_: {}) {
             assert.deepStrictEqual(results_, results);
             done();
           },
@@ -382,7 +382,7 @@ describe('paginator', () => {
           callback: done,
         };
         stub('runAsStream_', util.noop);
-        paginator.run_(parsedArguments, (query, callback) => {
+        paginator.run_(parsedArguments, (query: {}, callback: () => void) => {
           assert.deepEqual(query, parsedArguments.query);
           callback();
         });
@@ -416,7 +416,7 @@ describe('paginator', () => {
     });
 
     it('should call original method when stream opens', (done) => {
-      function originalMethod(query) {
+      function originalMethod(query: {}) {
         assert.strictEqual(query, PARSED_ARGUMENTS.query);
         done();
       }
@@ -427,14 +427,14 @@ describe('paginator', () => {
     it('should emit an error if one occurs', (done) => {
       const error = new Error('Error.');
 
-      function originalMethod(query, callback) {
+      function originalMethod(query: {}, callback: (err: Error) => void) {
         setImmediate(() => {
           callback(error);
         });
       }
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
-      rs.on('error', (err) => {
+      rs.on('error', (err: Error) => {
         assert.deepEqual(err, error);
         done();
       });
@@ -442,17 +442,17 @@ describe('paginator', () => {
 
     it('should push results onto the stream', (done) => {
       const results = ['a', 'b', 'c'];
-      const resultsReceived = [];
+      const resultsReceived: Array<{}> = [];
 
-      function originalMethod(query, callback) {
+      function originalMethod(query: {}, callback: (err: Error|null, results: {}) => void) {
         setImmediate(() => {
           callback(null, results);
         });
       }
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
-      rs.on('data', (result) => {
-        (resultsReceived.push as any)(result);
+      rs.on('data', (result: {}) => {
+        resultsReceived.push(result);
       });
       rs.on('end', () => {
         assert.deepEqual(resultsReceived, ['a', 'b', 'c']);
@@ -506,7 +506,7 @@ describe('paginator', () => {
     describe('limits', () => {
       const limit = 1;
 
-      function originalMethod(query, callback) {
+      function originalMethod(query: {}, callback: (err: Error|null, results: number[]) => void) {
         setImmediate(() => {
           callback(null, [1, 2, 3]);
         });
@@ -531,7 +531,7 @@ describe('paginator', () => {
       const nextQuery = { a: 'b', c: 'd' };
       let nextQuerySent = false;
 
-      function originalMethod(query, callback) {
+      function originalMethod(query: {}, callback: (err: Error|null, res: Array<{}>, nextQuery: {}) => void) {
         if (nextQuerySent) {
           assert.deepEqual(query, nextQuery);
           done();
@@ -550,14 +550,14 @@ describe('paginator', () => {
     it('should not push more results if stream ends early', (done) => {
       const results = ['a', 'b', 'c'];
 
-      function originalMethod(query, callback) {
+      function originalMethod(query: {}, callback: (err: Error|null, results: string[]) => void) {
         setImmediate(() => {
           callback(null, results);
         });
       }
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
-      rs.on('data', function (result) {
+      rs.on('data', function (result: string) {
         if (result === 'b') {
           // Pre-maturely end the stream.
           this.end();
@@ -575,7 +575,7 @@ describe('paginator', () => {
 
       let originalMethodCalledCount = 0;
 
-      function originalMethod(query, callback) {
+      function originalMethod(query: {}, callback: (err: Error|null, results: string[], body: {}) => void) {
         originalMethodCalledCount++;
 
         setImmediate(() => {
@@ -584,7 +584,7 @@ describe('paginator', () => {
       }
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
-      rs.on('data', function (result) {
+      rs.on('data', function (result: string) {
         if (result === 'b') {
           // Pre-maturely end the stream.
           this.end();

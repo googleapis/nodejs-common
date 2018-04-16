@@ -15,17 +15,17 @@
  */
 
 import * as assert from 'assert';
-import {EventEmitter} from 'events';
 import * as sinon from 'sinon';
-import {ServiceObject} from '../src/service-object';
+import {ServiceObject, GetMetadataCallback, ServiceObjectConfig} from '../src/service-object';
 import {Operation} from '../src/operation';
 import { util } from '../src/util';
+import { Service } from '../src';
 
 describe('Operation', () => {
-  const FAKE_SERVICE = {};
+  const FAKE_SERVICE = {} as Service;
   const OPERATION_ID = '/a/b/c/d';
 
-  let operation;
+  let operation: any;
   let sandbox: sinon.SinonSandbox;
 
   beforeEach(() => {
@@ -66,7 +66,7 @@ describe('Operation', () => {
 
     it('should allow overriding baseUrl', () => {
       const baseUrl = 'baseUrl';
-      const operation = new Operation({baseUrl});
+      const operation = new Operation({baseUrl} as ServiceObjectConfig);
       assert.strictEqual(operation.baseUrl, baseUrl);
     });
 
@@ -77,10 +77,10 @@ describe('Operation', () => {
 
     it('should call listenForEvents_', () => {
       let called = false;
-      sandbox.stub(Operation.prototype as any, 'listenForEvents_').callsFake(() => {
+      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(() => {
         called = true;
       });
-      new Operation({} as any);
+      new Operation({} as ServiceObjectConfig);
       assert.strictEqual(called, true);
     });
   });
@@ -107,7 +107,7 @@ describe('Operation', () => {
       return operation.promise()
         .then(() => {
           throw new Error('Promise should have been rejected.');
-        }, (err) => {
+        }, (err: Error) => {
           assert.strictEqual(err, error);
         });
     });
@@ -119,7 +119,7 @@ describe('Operation', () => {
         operation.emit('complete', metadata);
       });
 
-      return operation.promise().then(data => {
+      return operation.promise().then((data: {}) => {
         assert.deepEqual(data, [metadata]);
       });
     });
@@ -186,11 +186,11 @@ describe('Operation', () => {
       it('should callback with an error', (done) => {
         const error = new Error('Error.');
 
-        operation.getMetadata = (callback) => {
+        operation.getMetadata = (callback: (err: Error) => void) => {
           callback(error);
         };
 
-        operation.poll_((err) => {
+        operation.poll_((err: Error) => {
           assert.strictEqual(err, error);
           done();
         });
@@ -201,11 +201,11 @@ describe('Operation', () => {
           error: {},
         };
 
-        operation.getMetadata = (callback) => {
-          callback(null, apiResponse, apiResponse);
+        operation.getMetadata = (callback: GetMetadataCallback) => {
+          callback(null, apiResponse);
         };
 
-        operation.poll_((err) => {
+        operation.poll_((err: Error) => {
           assert.strictEqual(err, apiResponse.error);
           done();
         });
@@ -216,13 +216,13 @@ describe('Operation', () => {
       const apiResponse = {done: false};
 
       beforeEach(() => {
-        operation.getMetadata = (callback) => {
+        operation.getMetadata = (callback: GetMetadataCallback) => {
           callback(null, apiResponse);
         };
       });
 
       it('should callback with no arguments', (done) => {
-        operation.poll_((err, resp) => {
+        operation.poll_((err: Error, resp: {}) => {
           assert.strictEqual(err, undefined);
           assert.strictEqual(resp, undefined);
           done();
@@ -234,13 +234,13 @@ describe('Operation', () => {
       const apiResponse = {done: true};
 
       beforeEach(() => {
-        operation.getMetadata = (callback) => {
+        operation.getMetadata = (callback: GetMetadataCallback) => {
           callback(null, apiResponse);
         };
       });
 
       it('should emit complete with metadata', (done) => {
-        operation.poll_((err, resp) => {
+        operation.poll_((err: Error, resp: {}) => {
           assert.ifError(err);
           assert.strictEqual(resp, apiResponse);
           done();
@@ -252,7 +252,7 @@ describe('Operation', () => {
   describe('startPolling_', () => {
 
     beforeEach(() => {
-      sandbox.stub(Operation.prototype as any, 'listenForEvents_').callsFake(util.noop);
+      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(util.noop);
       operation.hasActiveListeners = true;
     });
 
@@ -275,13 +275,13 @@ describe('Operation', () => {
       const error = new Error('Error.');
 
       beforeEach(() => {
-        operation.getMetadata = (callback) => {
+        operation.getMetadata = (callback: GetMetadataCallback) => {
           callback(error);
         };
       });
 
       it('should emit the error', (done) => {
-        operation.on('error', (err) => {
+        operation.on('error', (err: Error) => {
           assert.strictEqual(err, error);
           done();
         });
@@ -292,26 +292,21 @@ describe('Operation', () => {
 
     describe('operation pending', () => {
       const apiResponse = {done: false};
-      const setTimeoutCached = global.setTimeout;
 
       beforeEach(() => {
-        operation.getMetadata = (callback) => {
-          callback(null, apiResponse, apiResponse);
+        operation.getMetadata = (callback: GetMetadataCallback) => {
+          callback(null, apiResponse);
         };
-      });
-
-      after(() => {
-        global.setTimeout = setTimeoutCached;
       });
 
       it('should call startPolling_ after 500 ms', (done) => {
         const startPolling_ = operation.startPolling_;
         let startPollingCalled = false;
 
-        (global as any).setTimeout = (fn, timeoutMs) => {
+        sandbox.stub(global, 'setTimeout').callsFake((fn, timeoutMs) => {
           fn(); // should call startPolling_
           assert.strictEqual(timeoutMs, 500);
-        };
+        });
 
         operation.startPolling_ = function() {
           if (!startPollingCalled) {
@@ -334,13 +329,13 @@ describe('Operation', () => {
       const apiResponse = {done: true};
 
       beforeEach(() => {
-        operation.getMetadata = (callback) => {
-          callback(null, apiResponse, apiResponse);
+        operation.getMetadata = (callback: GetMetadataCallback) => {
+          callback(null, apiResponse);
         };
       });
 
       it('should emit complete with metadata', (done) => {
-        operation.on('complete', (metadata) => {
+        operation.on('complete', (metadata: {}) => {
           assert.strictEqual(metadata, apiResponse);
           done();
         });

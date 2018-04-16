@@ -41,7 +41,7 @@ describe('Logger', () => {
 
   before(() => {
     shimmer.wrap(console, 'log', () => {
-      return (arg) => lines.push(`${arg}`);
+      return (arg: string) => lines.push(`${arg}`);
     });
   });
 
