@@ -18,16 +18,18 @@
  * @module common/service
  */
 
-import * as extend from 'extend';
-import * as r from 'request';
 import * as arrify from 'arrify';
+import {Duplexify} from 'duplexify';
+import * as extend from 'extend';
 import * as pify from 'pify';
-import { util, PackageJson } from './util';
+import * as r from 'request';
+
+import {MakeAuthenticatedRequest, PackageJson, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 
-export type ExtendedRequestOptions = r.Options & {
-  interceptors_?: any;
+export type ExtendedRequestOptions = r.Options&{
+  interceptors_?: {};
   uri: string;
 };
 
@@ -47,35 +49,37 @@ export interface ServiceConfig {
 }
 
 export interface ServiceOptions {
-  interceptors_?: any;
+  interceptors_?: {};
   projectId?: string;
-  promise?: any;
-  credentials?: any;
+  promise?: PromiseConstructor;
+  credentials?: {};
   keyFilename?: string;
   email?: string;
   token?: string;
 }
 
 export class Service {
-
   private baseUrl: string;
-  private globalInterceptors: any;
-  private interceptors: Array<{ request(opts: r.Options): r.Options}>;
+  private globalInterceptors: {};
+  private interceptors: Array<{request(opts: r.Options): r.Options}>;
   private packageJson: PackageJson;
   private projectId: string;
   private projectIdRequired: boolean;
-  Promise: Promise<{}>;
+  // tslint:disable-next-line:variable-name
+  Promise: PromiseConstructor;
   // TODO: make this private
-  makeAuthenticatedRequest: any;
+  makeAuthenticatedRequest: MakeAuthenticatedRequest;
   // TODO: make this private
+  // tslint:disable-next-line:no-any
   authClient: any;
-  private getCredentials: any;
+  private getCredentials: {};
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like
    * BigQuery or Storage.
    *
-   * This handles making authenticated requests by exposing a `makeReq_` function.
+   * This handles making authenticated requests by exposing a `makeReq_`
+   * function.
    *
    * @constructor
    * @alias module:common/service
@@ -105,7 +109,8 @@ export class Service {
       token: options.token,
     });
 
-    this.makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(reqCfg);
+    this.makeAuthenticatedRequest =
+        util.makeAuthenticatedRequestFactory(reqCfg);
     this.authClient = this.makeAuthenticatedRequest.authClient;
     this.getCredentials = this.makeAuthenticatedRequest.getCredentials;
 
@@ -128,7 +133,8 @@ export class Service {
    */
   getProjectId(): Promise<string>;
   getProjectId(callback: (err: Error|null, projectId?: string) => void): void;
-  getProjectId(callback?: (err: Error|null, projectId?: string) => void): Promise<string>|void {
+  getProjectId(callback?: (err: Error|null, projectId?: string) => void):
+      Promise<string>|void {
     if (!callback) {
       return this.getProjectIdAsync();
     }
@@ -154,7 +160,9 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: r.Options & ExtendedRequestOptions, callback?: r.RequestCallback) {
+  request_(
+      reqOpts: r.Options&ExtendedRequestOptions,
+      callback?: r.RequestCallback): void {
     // TODO: fix the tests so this can be private
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -172,25 +180,25 @@ export class Service {
     }
 
     reqOpts.uri = uriComponents
-      .map((uriComponent) => {
-        const trimSlashesRegex = /^\/*|\/*$/g;
-        return uriComponent.replace(trimSlashesRegex, '');
-      })
-      .join('/')
-      // Some URIs have colon separators.
-      // Bad: https://.../projects/:list
-      // Good: https://.../projects:list
-      .replace(/\/:/g, ':');
+                      .map((uriComponent) => {
+                        const trimSlashesRegex = /^\/*|\/*$/g;
+                        return uriComponent.replace(trimSlashesRegex, '');
+                      })
+                      .join('/')
+                      // Some URIs have colon separators.
+                      // Bad: https://.../projects/:list
+                      // Good: https://.../projects:list
+                      .replace(/\/:/g, ':');
 
     // Interceptors should be called in the order they were assigned.
-    const combinedInterceptors = [].slice
-      .call(this.globalInterceptors)
-      .concat(this.interceptors)
-      .concat(arrify(reqOpts.interceptors_));
+    const combinedInterceptors = [].slice.call(this.globalInterceptors)
+                                     .concat(this.interceptors)
+                                     .concat(arrify(reqOpts.interceptors_));
 
     let interceptor;
-
-    while ((interceptor = combinedInterceptors.shift()) && interceptor.request) {
+    // tslint:disable-next-line:no-conditional-assignment
+    while ((interceptor = combinedInterceptors.shift()) &&
+           interceptor.request) {
       reqOpts = interceptor.request(reqOpts);
     }
 
@@ -199,10 +207,11 @@ export class Service {
     const pkg = this.packageJson;
     reqOpts.headers = extend({}, reqOpts.headers, {
       'User-Agent': util.getUserAgentFromPackageJson(pkg),
-      'x-goog-api-client': `gl-node/${process.versions.node} gccl/${pkg.version}`,
+      'x-goog-api-client':
+          `gl-node/${process.versions.node} gccl/${pkg.version}`,
     });
-
-    return this.makeAuthenticatedRequest(reqOpts, callback);
+    // tslint:disable-next-line:no-any
+    this.makeAuthenticatedRequest(reqOpts, callback as any);
   }
 
   /**
@@ -214,7 +223,7 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: ExtendedRequestOptions, callback: r.RequestCallback) {
+  request(reqOpts: ExtendedRequestOptions, callback: r.RequestCallback): void {
     this.request_(reqOpts, callback);
   }
 
@@ -229,5 +238,4 @@ export class Service {
   requestStream(reqOpts: ExtendedRequestOptions) {
     return this.request_(reqOpts);
   }
-
 }

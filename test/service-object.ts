@@ -210,9 +210,9 @@ describe('ServiceObject', () => {
       }
 
       const serviceObject = new ServiceObject(config);
-      serviceObject.create(options, function(err, instance_) {
+      serviceObject.create(options, (err, instance_) => {
         assert.ifError(err);
-        assert.strictEqual(instance_.metadata, instance.metadata);
+        assert.strictEqual(instance_!.metadata, instance.metadata);
         done();
       });
     });
@@ -367,9 +367,9 @@ describe('ServiceObject', () => {
 
     it('should execute callback with error & metadata', (done) => {
       const error = new Error('Error.');
-      const metadata = {};
+      const metadata = {} as SO.Metadata;
 
-      serviceObject.getMetadata = function(callback) {
+      serviceObject.getMetadata = (callback) => {
         callback(error, metadata);
       };
 
@@ -383,7 +383,7 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with instance & metadata', (done) => {
-      const metadata = {};
+      const metadata = {} as SO.Metadata;
 
       serviceObject.getMetadata = function(callback) {
         callback(null, metadata);
@@ -403,7 +403,7 @@ describe('ServiceObject', () => {
       let AUTO_CREATE_CONFIG: {};
 
       const ERROR = {code: 404} as any;
-      const METADATA = {};
+      const METADATA = {} as SO.Metadata;
 
       beforeEach(() => {
         AUTO_CREATE_CONFIG = {
@@ -753,11 +753,11 @@ describe('ServiceObject', () => {
       });
 
       (parent as any).parent.request = function(reqOpts: ExtendedRequestOptions) {
-        assert.deepEqual(reqOpts.interceptors_[0].request({}), {
+        assert.deepEqual(reqOpts.interceptors_![0].request({}), {
           child: true,
         });
 
-        assert.deepEqual(reqOpts.interceptors_[1].request({}), {
+        assert.deepEqual(reqOpts.interceptors_![1].request({}), {
           parent: true,
         });
 
