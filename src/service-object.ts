@@ -19,23 +19,34 @@
  */
 
 import * as arrify from 'arrify';
+import {EventEmitter} from 'events';
 import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
-import {EventEmitter} from 'events';
-import { util, ApiError } from './util';
-import { Service } from '.';
 
-export type ExtendedRequestOptions = r.Options & {
-  interceptors_?: any;
+import {Service} from '.';
+import {ApiError, util} from './util';
+
+export interface Interceptor {
+  // tslint:disable-next-line:no-any
+  [index: string]: any;
+}
+
+export interface Metadata {
+  error?: Error;
+  done?: boolean;
+}
+
+export type ExtendedRequestOptions = r.Options&{
+  interceptors_?: Interceptor[];
   uri: string;
 };
 
-export type GetMetadataCallback = (err: Error|null, metadata?: any, apiResponse?: r.Response) => void;
+export type GetMetadataCallback =
+    (err: Error|null, metadata?: Metadata|null, apiResponse?: r.Response) =>
+        void;
 
-export interface ExistsCallback {
-  (err: Error|null, exists?: boolean): void;
-}
+export interface ExistsCallback { (err: Error|null, exists?: boolean): void; }
 
 export interface ServiceObjectConfig {
   /**
@@ -49,7 +60,8 @@ export interface ServiceObjectConfig {
   createMethod?: Function;
 
   /**
-   * The identifier of the object. For example, the name of a Storage bucket or Pub/Sub topic.
+   * The identifier of the object. For example, the name of a Storage bucket or
+   * Pub/Sub topic.
    */
   id?: string;
 
@@ -59,21 +71,19 @@ export interface ServiceObjectConfig {
   methods?: Methods;
 
   /**
-   * The parent service instance. For example, an instance of Storage if the object is Bucket.
+   * The parent service instance. For example, an instance of Storage if the
+   * object is Bucket.
    */
   parent: Service;
 }
 
-export interface Methods {
-  [methodName: string]: any;
-}
+export interface Methods { [methodName: string]: {reqOpts: r.OptionsWithUri}; }
 
-export interface CreateOptions {
-
-}
+export interface CreateOptions {}
 
 export interface InstanceResponseCallback {
-  (err: ApiError|null, instance?: any, apiResponse?: r.Response): void;
+  (err: ApiError|null, instance?: ServiceObject|null,
+   apiResponse?: r.Response): void;
 }
 
 export interface DeleteCallback {
@@ -99,41 +109,41 @@ export interface GetConfig {
  * object requires specific behavior.
  */
 class ServiceObject extends EventEmitter {
-
-  private metadata: any;
+  metadata: {};
   baseUrl?: string;
   private parent: Service;
   private id?: string;
   private createMethod?: Function;
   private methods: Methods;
-  private interceptors: any;
-  protected Promise: any;
-  [index: string]: any;
+  private interceptors: Interceptor[];
+  // tslint:disable-next-line:variable-name
+  protected Promise?: PromiseConstructor;
+  [index: string]: {}|undefined;
 
   /*
-  * @constructor
-  * @alias module:common/service-object
-  *
-  * @private
-  *
-  * @param {object} config - Configuration object.
-  * @param {string} config.baseUrl - The base URL to make API requests to.
-  * @param {string} config.createMethod - The method which creates this object.
-  * @param {string=} config.id - The identifier of the object. For example, the
-  *     name of a Storage bucket or Pub/Sub topic.
-  * @param {object=} config.methods - A map of each method name that should be inherited.
-  * @param {object} config.methods[].reqOpts - Default request options for this
-  *     particular method. A common use case is when `setMetadata` requires a
-  *     `PUT` method to override the default `PATCH`.
-  * @param {object} config.parent - The parent service instance. For example, an
-  *     instance of Storage if the object is Bucket.
-  */
+   * @constructor
+   * @alias module:common/service-object
+   *
+   * @private
+   *
+   * @param {object} config - Configuration object.
+   * @param {string} config.baseUrl - The base URL to make API requests to.
+   * @param {string} config.createMethod - The method which creates this object.
+   * @param {string=} config.id - The identifier of the object. For example, the
+   *     name of a Storage bucket or Pub/Sub topic.
+   * @param {object=} config.methods - A map of each method name that should be inherited.
+   * @param {object} config.methods[].reqOpts - Default request options for this
+   *     particular method. A common use case is when `setMetadata` requires a
+   *     `PUT` method to override the default `PATCH`.
+   * @param {object} config.parent - The parent service instance. For example, an
+   *     instance of Storage if the object is Bucket.
+   */
   constructor(config: ServiceObjectConfig) {
     super();
     this.metadata = {};
     this.baseUrl = config.baseUrl;
-    this.parent = config.parent; // Parent class.
-    this.id = config.id; // Name or ID (e.g. dataset ID, bucket name, etc).
+    this.parent = config.parent;  // Parent class.
+    this.id = config.id;  // Name or ID (e.g. dataset ID, bucket name, etc).
     this.createMethod = config.createMethod;
     this.methods = config.methods || {};
     this.interceptors = [];
@@ -142,19 +152,18 @@ class ServiceObject extends EventEmitter {
     if (config.methods) {
       const allMethodNames = Object.keys(ServiceObject.prototype);
       allMethodNames
-        .filter((methodName) => {
-          return (
-            // All ServiceObjects need `request`.
-            !/^request/.test(methodName) &&
-            // The ServiceObject didn't redefine the method.
-            this[methodName] === ServiceObject.prototype[methodName] &&
-            // This method isn't wanted.
-            !config.methods![methodName]
-          );
-        })
-        .forEach((methodName) => {
-          this[methodName] = undefined;
-        });
+          .filter((methodName) => {
+            return (
+                // All ServiceObjects need `request`.
+                ! / ^request /.test(methodName) &&
+                // The ServiceObject didn't redefine the method.
+                this[methodName] === ServiceObject.prototype[methodName] &&
+                // This method isn't wanted.
+                !config.methods![methodName]);
+          })
+          .forEach((methodName) => {
+            this[methodName] = undefined;
+          });
     }
   }
 
@@ -169,9 +178,11 @@ class ServiceObject extends EventEmitter {
    */
   create(options: CreateOptions, callback?: InstanceResponseCallback): void;
   create(callback?: InstanceResponseCallback): void;
-  create(optionsOrCallback?: CreateOptions|InstanceResponseCallback, callback?: InstanceResponseCallback): void {
+  create(
+      optionsOrCallback?: CreateOptions|InstanceResponseCallback,
+      callback?: InstanceResponseCallback): void {
     const self = this;
-    const args: any[] = [this.id];
+    const args = [this.id] as Array<{}>;
 
     if (typeof optionsOrCallback === 'function') {
       callback = optionsOrCallback;
@@ -181,13 +192,13 @@ class ServiceObject extends EventEmitter {
       args.push(optionsOrCallback);
     }
 
-    // Wrap the callback to return *this* instance of the object, not the newly-
-    // created one.
-    function onCreate(err: Error, instance: any) {
+    // Wrap the callback to return *this* instance of the object, not the
+    // newly-created one.
+    function onCreate(err: Error, instance: ServiceObject) {
       const args = [].slice.call(arguments);
       if (!err) {
         self.metadata = instance.metadata;
-        args[1] = self; // replace the created `instance` with this one.
+        args[1] = self;  // replace the created `instance` with this one.
       }
       callback!.apply(null, args);
     }
@@ -207,15 +218,14 @@ class ServiceObject extends EventEmitter {
     callback = callback || util.noop;
 
     const reqOpts = extend(
-      {
-        method: 'DELETE',
-        uri: '',
-      },
-      methodConfig.reqOpts
-    );
+        {
+          method: 'DELETE',
+          uri: '',
+        },
+        methodConfig.reqOpts);
 
-    // The `request` method may have been overridden to hold any special behavior.
-    // Ensure we call the original `request` method.
+    // The `request` method may have been overridden to hold any special
+    // behavior. Ensure we call the original `request` method.
     this.request(reqOpts, (err: Error|null, resp: r.Response) => {
       callback!(err, resp);
     });
@@ -243,8 +253,8 @@ class ServiceObject extends EventEmitter {
   }
 
   /**
-   * Get the object if it exists. Optionally have the object created if an options
-   * object is provided with `autoCreate: true`.
+   * Get the object if it exists. Optionally have the object created if an
+   * options object is provided with `autoCreate: true`.
    *
    * @param {object=} config - The configuration object that will be used to
    *     create the object if necessary.
@@ -256,7 +266,8 @@ class ServiceObject extends EventEmitter {
    */
   get(config: GetConfig, callback?: InstanceResponseCallback): void;
   get(callback: InstanceResponseCallback): void;
-  get(configOrCallback: GetConfig|InstanceResponseCallback, callback?: InstanceResponseCallback): void {
+  get(configOrCallback: GetConfig|InstanceResponseCallback,
+      callback?: InstanceResponseCallback): void {
     const self = this;
 
     let config: GetConfig = {};
@@ -271,7 +282,8 @@ class ServiceObject extends EventEmitter {
     const autoCreate = config.autoCreate && is.fn(this.create);
     delete config.autoCreate;
 
-    function onCreate(err: ApiError|null, instance: any, apiResponse: r.Response) {
+    function onCreate(
+        err: ApiError|null, instance: ServiceObject, apiResponse: r.Response) {
       if (err) {
         if (err.code === 409) {
           self.get(config, callback);
@@ -284,27 +296,22 @@ class ServiceObject extends EventEmitter {
       callback!(null, instance, apiResponse);
     }
 
-    this.getMetadata((e: Error|null, metadata: any) => {
+    this.getMetadata((e, metadata) => {
       const err = e as ApiError;
       if (err) {
         if (err.code === 404 && autoCreate) {
-          const args: any[] = [];
-
+          const args: Array<Function|GetConfig> = [];
           if (!is.empty(config)) {
             args.push(config);
           }
-
           args.push(onCreate);
-
           self.create.apply(self, args);
           return;
         }
-
-        callback!(err, null, metadata);
+        callback!(err, null, metadata as r.Response);
         return;
       }
-
-      callback!(null, self, metadata);
+      callback!(null, self, metadata as r.Response);
     });
   }
 
@@ -318,25 +325,22 @@ class ServiceObject extends EventEmitter {
    */
   getMetadata(callback: GetMetadataCallback) {
     const self = this;
-
     const methodConfig = this.methods.getMetadata || {};
-
     const reqOpts = extend(
-      {
-        uri: '',
-      },
-      methodConfig.reqOpts
-    );
+        {
+          uri: '',
+        },
+        methodConfig.reqOpts);
 
-    // The `request` method may have been overridden to hold any special behavior.
-    // Ensure we call the original `request` method.
+    // The `request` method may have been overridden to hold any special
+    // behavior. Ensure we call the original `request` method.
     this.request(reqOpts, (err: ApiError|null, resp?: r.Response) => {
       if (err) {
         callback(err, null, resp);
         return;
       }
 
-      self.metadata = resp;
+      self.metadata = resp as Metadata;
 
       callback(null, self.metadata, resp);
     });
@@ -351,33 +355,28 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(metadata: any, callback?: (err: Error|null, resp?: r.Response) => void) {
+  setMetadata(
+      metadata: {}, callback?: (err: Error|null, resp?: r.Response) => void) {
     const self = this;
-
     callback = callback || util.noop;
-
     const methodConfig = this.methods.setMetadata || {};
 
     const reqOpts = extend(
-      true,
-      {
-        method: 'PATCH',
-        uri: '',
-        json: metadata,
-      },
-      methodConfig.reqOpts
-    );
+        true, {
+          method: 'PATCH',
+          uri: '',
+          json: metadata,
+        },
+        methodConfig.reqOpts);
 
-    // The `request` method may have been overridden to hold any special behavior.
-    // Ensure we call the original `request` method.
-    this.request(reqOpts, function(err: Error|null, resp?: r.Response) {
+    // The `request` method may have been overridden to hold any special
+    // behavior. Ensure we call the original `request` method.
+    this.request(reqOpts, (err, resp) => {
       if (err) {
         callback!(err, resp);
         return;
       }
-
-      self.metadata = resp;
-
+      self.metadata = resp as {};
       callback!(null, resp);
     });
   }
@@ -403,12 +402,12 @@ class ServiceObject extends EventEmitter {
     }
 
     reqOpts.uri = uriComponents
-      .filter(x => x!.trim()) // Limit to non-empty strings.
-      .map((uriComponent: any) => {
-        const trimSlashesRegex = /^\/*|\/*$/g;
-        return uriComponent.replace(trimSlashesRegex, '');
-      })
-      .join('/');
+                      .filter(x => x!.trim())  // Limit to non-empty strings.
+                      .map(uriComponent => {
+                        const trimSlashesRegex = /^\/*|\/*$/g;
+                        return uriComponent!.replace(trimSlashesRegex, '');
+                      })
+                      .join('/');
 
     const childInterceptors = arrify(reqOpts.interceptors_);
     const localInterceptors = [].slice.call(this.interceptors);
@@ -451,4 +450,3 @@ class ServiceObject extends EventEmitter {
 util.promisifyAll(ServiceObject);
 
 export {ServiceObject};
-

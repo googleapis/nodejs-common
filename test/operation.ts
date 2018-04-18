@@ -16,7 +16,7 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import {ServiceObject, GetMetadataCallback, ServiceObjectConfig} from '../src/service-object';
+import {ServiceObject, GetMetadataCallback, ServiceObjectConfig, Metadata} from '../src/service-object';
 import {Operation} from '../src/operation';
 import { util } from '../src/util';
 import { Service } from '../src';
@@ -199,7 +199,7 @@ describe('Operation', () => {
       it('should callback with the operation error', (done) => {
         const apiResponse = {
           error: {},
-        };
+        } as Metadata;
 
         operation.getMetadata = (callback: GetMetadataCallback) => {
           callback(null, apiResponse);

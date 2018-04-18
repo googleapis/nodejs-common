@@ -19,7 +19,8 @@
  */
 
 import * as extend from 'extend';
-import {ServiceObject, ServiceObjectConfig} from './service-object';
+
+import {Metadata, ServiceObject, ServiceObjectConfig} from './service-object';
 
 export class Operation extends ServiceObject {
   completeListeners: number;
@@ -63,7 +64,8 @@ export class Operation extends ServiceObject {
         },
         config);
 
-    config.methods = config.methods || methods;
+    // tslint:disable-next-line:no-any
+    config.methods = (config.methods || methods) as any;
     super(config);
     this.completeListeners = 0;
     this.hasActiveListeners = false;
@@ -76,8 +78,8 @@ export class Operation extends ServiceObject {
    * @return {promise}
    */
   promise() {
-    return new this.Promise(
-        (resolve: Function, reject: (err: Error) => void) => {
+    return new this.Promise!
+        ((resolve: Function, reject: (err: Error) => void) => {
           this.on('error', reject).on('complete', (metadata: {}) => {
             resolve([metadata]);
           });
@@ -123,13 +125,15 @@ export class Operation extends ServiceObject {
    *
    * @param {function} callback
    */
-  protected poll_(callback: (err?: Error|null, resp?: {}) => void) {
+  protected poll_(callback: (err?: Error|null, resp?: Metadata|null) => void) {
     this.getMetadata((err, resp) => {
-      if (err || resp.error) {
-        callback(err || resp.error);
-        return;
+      if (err) {
+        return callback(err);
       }
-      if (!resp.done) {
+      if (resp && resp.error) {
+        return callback(resp.error);
+      }
+      if (!resp!.done) {
         callback();
         return;
       }

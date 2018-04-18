@@ -25,7 +25,7 @@ import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import { Duplex, Transform, Stream } from 'stream';
-const streamEvents = require('stream-events');
+import * as streamEvents from 'stream-events';
 const googleAuth = require('google-auto-auth');
 
 const request = r.defaults({
