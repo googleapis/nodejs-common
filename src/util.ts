@@ -19,13 +19,14 @@
  */
 
 import * as duplexify from 'duplexify';
-import * as ent  from 'ent';
+import * as ent from 'ent';
 import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
-import { Duplex, Transform, Stream } from 'stream';
+import {Duplex, Stream, Transform, TransformOptions} from 'stream';
 import * as streamEvents from 'stream-events';
+
 const googleAuth = require('google-auto-auth');
 
 const request = r.defaults({
@@ -37,14 +38,28 @@ const request = r.defaults({
   },
 });
 
-export interface MakeAuthenticatedRequest {
-  (reqOpts: DecorateRequestOptions, optionsOrCallback?: MakeAuthenticatedRequestOptions|OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify;
-  getCredentials: Function;
-  authClient: any;
+// tslint:disable-next-line:no-any
+export type ResponseBody = any;
+
+export interface ParsedHttpRespMessage {
+  resp: r.Response;
+  err?: ApiError;
 }
 
-export type Abortable = { abort(): void };
-export type AbortableDuplex = duplexify.Duplexify & Abortable;
+export interface AutoAuthClient {}
+
+export interface MakeAuthenticatedRequest {
+  (reqOpts: DecorateRequestOptions,
+   optionsOrCallback?: MakeAuthenticatedRequestOptions|
+   OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify;
+  getCredentials: Function;
+  authClient: AutoAuthClient;
+}
+
+export type Abortable = {
+  abort(): void
+};
+export type AbortableDuplex = duplexify.Duplexify&Abortable;
 
 export interface PromisifyAllOptions extends PromisifyOptions {
   /**
@@ -58,9 +73,7 @@ export interface PackageJson {
   version: string;
 }
 
-export interface PromiseMethod extends Function {
-  promisified_?: boolean;
-}
+export interface PromiseMethod extends Function { promisified_?: boolean; }
 
 export interface PromisifyOptions {
   /**
@@ -78,14 +91,14 @@ export interface CreateLimiterOptions {
   /**
    * Options to pass to the Stream constructor.
    */
+  // tslint:disable-next-line:no-any
   streamOptions?: any;
 }
 
-export interface GlobalContext {
-  config_: {};
-}
+export interface GlobalContext { config_: {}; }
 
 export interface GlobalConfig {
+  projectId?: string;
   credentials?: {};
   keyFilename?: string;
   interceptors_?: {};
@@ -93,16 +106,16 @@ export interface GlobalConfig {
 
 export interface MakeAuthenticatedRequestFactoryConfig {
   /**
-   * Automatically retry requests if the response is related to rate limits or certain
-   * intermittent server errors. We will exponentially backoff subsequent requests by
-   * default. (default: true)
+   * Automatically retry requests if the response is related to rate limits or
+   * certain intermittent server errors. We will exponentially backoff
+   * subsequent requests by default. (default: true)
    */
   autoRetry?: boolean;
 
   /**
    * Credentials object.
    */
-  credentials?: any;
+  credentials?: {};
 
   /**
    * If true, just return the provided request options. Default: false.
@@ -115,7 +128,8 @@ export interface MakeAuthenticatedRequestFactoryConfig {
   email?: string;
 
   /**
-   * Maximum number of automatic retries attempted before returning the error. (default: 3)
+   * Maximum number of automatic retries attempted before returning the error.
+   * (default: 3)
    */
   maxRetries?: number;
 
@@ -156,33 +170,36 @@ export interface GoogleInnerError {
 
 export interface MakeWritableStreamOptions {
   /**
-   * A connection instance used to get a token with and send the request through.
+   * A connection instance used to get a token with and send the request
+   * through.
    */
-  connection?: any;
+  connection?: {};
 
   /**
    * Metadata to send at the head of the request.
    */
-  metadata?: { contentType?: string };
+  metadata?: {contentType?: string};
 
   /**
    * Request object, in the format of a standard Node.js http.request() object.
    */
   request?: r.Options;
 
-  makeAuthenticatedRequest(reqOpts: r.OptionsWithUri, fnobj: { onAuthenticated(err: Error|null, authenticatedReqOpts?: r.Options): void}): void;
+  makeAuthenticatedRequest(reqOpts: r.OptionsWithUri, fnobj: {
+    onAuthenticated(err: Error|null, authenticatedReqOpts?: r.Options): void
+  }): void;
 }
 
 export interface DecorateRequestOptions extends r.OptionsWithUri {
-  autoPaginate?: any;
-  autoPaginateVal?: any;
-  objectMode?: any;
+  autoPaginate?: boolean;
+  autoPaginateVal?: boolean;
+  objectMode?: boolean;
   uri: string;
 }
 
 
 export interface ParsedHttpResponseBody {
-  body: any;
+  body: ResponseBody;
   err?: Error;
 }
 
@@ -263,18 +280,20 @@ export class PartialFailureError extends Error {
 }
 
 export interface BodyResponseCallback {
-  (err: Error|null, body: any, res: r.Response): void;
+  (err: Error|null, body: ResponseBody, res: r.Response): void;
 }
 
 export interface MakeRequestConfig {
   /**
-   * Automatically retry requests if the response is related to rate limits or certain intermittent server errors.
-   * We will exponentially backoff subsequent requests by default. (default: true)
+   * Automatically retry requests if the response is related to rate limits or
+   * certain intermittent server errors. We will exponentially backoff
+   * subsequent requests by default. (default: true)
    */
   autoRetry?: boolean;
 
   /**
-   * Maximum number of automatic retries attempted before returning the error. (default: 3)
+   * Maximum number of automatic retries attempted before returning the error.
+   * (default: 3)
    */
   maxRetries?: number;
 
@@ -282,14 +301,12 @@ export interface MakeRequestConfig {
 
   stream?: duplexify.Duplexify;
 
-  request?: any;
+  request?: {};
 
   shouldRetryFn?: (response?: r.Response) => boolean;
-
 }
 
 export class Util {
-
   MissingProjectIdError = MissingProjectIdError;
   ApiError = ApiError;
   PartialFailureError = PartialFailureError;
@@ -312,15 +329,14 @@ export class Util {
    * @param {*} body - Body value.
    * @param {function} callback - The callback function.
    */
-  handleResp(err: Error|null, resp?: r.Response|null, body?: any, callback?: BodyResponseCallback) {
+  handleResp(
+      err: Error|null, resp?: r.Response|null, body?: ResponseBody,
+      callback?: BodyResponseCallback) {
     callback = callback || util.noop;
 
     const parsedResp = extend(
-      true,
-      {err: err || null},
-      resp && util.parseHttpRespMessage(resp),
-      body && util.parseHttpRespBody(body)
-    );
+        true, {err: err || null}, resp && util.parseHttpRespMessage(resp),
+        body && util.parseHttpRespBody(body));
 
     callback(parsedResp.err, parsedResp.body, parsedResp.resp);
   }
@@ -334,9 +350,9 @@ export class Util {
    * @param {object} parsedHttpRespMessage.resp - The original response object.
    */
   parseHttpRespMessage(httpRespMessage: r.Response) {
-    const parsedHttpRespMessage: any = {
+    const parsedHttpRespMessage = {
       resp: httpRespMessage,
-    };
+    } as ParsedHttpRespMessage;
 
     if (httpRespMessage.statusCode < 200 || httpRespMessage.statusCode > 299) {
       // Unknown error. Format according to ApiError standard.
@@ -358,10 +374,10 @@ export class Util {
    * @return {object} parsedHttpRespMessage - The parsed response.
    * @param {?error} parsedHttpRespMessage.err - An error detected.
    * @param {object} parsedHttpRespMessage.body - The original body value provided
-   *     will try to be JSON.parse'd. If it's successful, the parsed value will be
-   *     returned here, otherwise the original value.
+   *     will try to be JSON.parse'd. If it's successful, the parsed value will
+   * be returned here, otherwise the original value.
    */
-  parseHttpRespBody(body: any) {
+  parseHttpRespBody(body: ResponseBody) {
     const parsedHttpRespBody: ParsedHttpResponseBody = {
       body,
     };
@@ -383,8 +399,8 @@ export class Util {
   }
 
   /**
-   * Take a Duplexify stream, fetch an authenticated connection header, and create
-   * an outgoing writable stream.
+   * Take a Duplexify stream, fetch an authenticated connection header, and
+   * create an outgoing writable stream.
    *
    * @param {Duplexify} dup - Duplexify stream.
    * @param {object} options - Configuration object.
@@ -396,7 +412,9 @@ export class Util {
    * @param {string=} options.streamContentType - Default: "application/octet-stream".
    * @param {function} onComplete - Callback, executed after the writable Request stream has completed.
    */
-  makeWritableStream(dup: duplexify.Duplexify, options: MakeWritableStreamOptions, onComplete?: Function) {
+  makeWritableStream(
+      dup: duplexify.Duplexify, options: MakeWritableStreamOptions,
+      onComplete?: Function) {
     onComplete = onComplete || util.noop;
 
     const writeStream = new Transform();
@@ -412,17 +430,18 @@ export class Util {
     const metadata = options.metadata || {};
 
     const reqOpts = extend(true, defaultReqOpts, options.request, {
-      multipart: [
-        {
-          'Content-Type': 'application/json',
-          body: JSON.stringify(metadata),
-        },
-        {
-          'Content-Type': metadata.contentType || 'application/octet-stream',
-          body: writeStream,
-        },
-      ],
-    }) as r.OptionsWithUri;
+                      multipart: [
+                        {
+                          'Content-Type': 'application/json',
+                          body: JSON.stringify(metadata),
+                        },
+                        {
+                          'Content-Type': metadata.contentType ||
+                              'application/octet-stream',
+                          body: writeStream,
+                        },
+                      ],
+                    }) as r.OptionsWithUri;
 
     options.makeAuthenticatedRequest(reqOpts, {
       onAuthenticated(err, authenticatedReqOpts) {
@@ -432,7 +451,7 @@ export class Util {
         }
 
         request(authenticatedReqOpts!, (err, resp, body) => {
-          util.handleResp(err, resp, body, (err: Error|null, data: any) => {
+          util.handleResp(err, resp, body, (err, data) => {
             if (err) {
               dup.destroy(err);
               return;
@@ -460,8 +479,8 @@ export class Util {
       }
 
       if (err.errors) {
-        for (const i in err.errors) {
-          const reason = err.errors[i].reason;
+        for (const e of err.errors) {
+          const reason = e.reason;
           if (reason === 'rateLimitExceeded') {
             return true;
           }
@@ -483,9 +502,9 @@ export class Util {
    *
    * @param {object} config - Configuration object.
    * @param {boolean=} config.autoRetry - Automatically retry requests if the
-   *     response is related to rate limits or certain intermittent server errors.
-   *     We will exponentially backoff subsequent requests by default. (default:
-   *     true)
+   *     response is related to rate limits or certain intermittent server
+   * errors. We will exponentially backoff subsequent requests by default.
+   * (default: true)
    * @param {object=} config.credentials - Credentials object.
    * @param {boolean=} config.customEndpoint - If true, just return the provided request options. Default: false.
    * @param {string=} config.email - Account email address, required for PEM/P12 usage.
@@ -493,7 +512,9 @@ export class Util {
    * @param {string=} config.keyFile - Path to a .json, .pem, or .p12 keyfile.
    * @param {array} config.scopes - Array of scopes required for the API.
    */
-  makeAuthenticatedRequestFactory(config: MakeAuthenticatedRequestFactoryConfig = {}): MakeAuthenticatedRequest {
+  makeAuthenticatedRequestFactory(
+      config: MakeAuthenticatedRequestFactoryConfig = {}):
+      MakeAuthenticatedRequest {
     const googleAutoAuthConfig = extend({}, config);
 
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
@@ -508,85 +529,93 @@ export class Util {
      * @param {type} reqOpts - Request options in the format `request` expects.
      * @param {object|function} options - Configuration object or callback function.
      * @param {function=} options.onAuthenticated - If provided, a request will
-     *     not be made. Instead, this function is passed the error & authenticated
-     *     request options.
+     *     not be made. Instead, this function is passed the error &
+     * authenticated request options.
      */
-    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions): duplexify.Duplexify;
-    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions, options?: MakeAuthenticatedRequestOptions|OnAuthenticatedCallback): void|Abortable;
-    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions, callback?: OnAuthenticatedCallback): void|Abortable;
-    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions, optionsOrCallback?: MakeAuthenticatedRequestOptions|OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify {
+    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions):
+        duplexify.Duplexify;
+    function makeAuthenticatedRequest(
+        reqOpts: DecorateRequestOptions,
+        options?: MakeAuthenticatedRequestOptions|
+        OnAuthenticatedCallback): void|Abortable;
+    function makeAuthenticatedRequest(
+        reqOpts: DecorateRequestOptions,
+        callback?: OnAuthenticatedCallback): void|Abortable;
+    function makeAuthenticatedRequest(
+        reqOpts: DecorateRequestOptions,
+        optionsOrCallback?: MakeAuthenticatedRequestOptions|
+        OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify {
       let stream: duplexify.Duplexify;
       const reqConfig = extend({}, config);
-      let activeRequest_: any;
+      let activeRequest_: void|Abortable|null;
 
       if (!optionsOrCallback) {
         stream = duplexify();
         reqConfig.stream = stream;
       }
 
-      const onAuthenticated = (err: Error|null, authenticatedReqOpts: DecorateRequestOptions) => {
-        const autoAuthFailed =
-          err &&
-          err.message.indexOf('Could not load the default credentials') > -1;
+      const onAuthenticated =
+          (err: Error|null, authenticatedReqOpts: DecorateRequestOptions) => {
+            const autoAuthFailed = err &&
+                err.message.indexOf('Could not load the default credentials') >
+                    -1;
 
-        if (autoAuthFailed) {
-          // Even though authentication failed, the API might not actually care.
-          authenticatedReqOpts = reqOpts;
-        }
+            if (autoAuthFailed) {
+              // Even though authentication failed, the API might not actually
+              // care.
+              authenticatedReqOpts = reqOpts;
+            }
 
-        if (!err || autoAuthFailed) {
-          let projectId = authClient.projectId;
+            if (!err || autoAuthFailed) {
+              let projectId = authClient.projectId;
 
-          if (config.projectId && config.projectId !== '{{projectId}}') {
-            projectId = config.projectId;
-          }
+              if (config.projectId && config.projectId !== '{{projectId}}') {
+                projectId = config.projectId;
+              }
 
-          try {
-            authenticatedReqOpts = util.decorateRequest(
-              authenticatedReqOpts,
-              projectId
-            );
-            err = null;
-          } catch (e) {
-            // A projectId was required, but we don't have one.
-            // Re-use the "Could not load the default credentials error" if auto
-            // auth failed.
-            err = err || e;
-          }
-        }
+              try {
+                authenticatedReqOpts =
+                    util.decorateRequest(authenticatedReqOpts, projectId);
+                err = null;
+              } catch (e) {
+                // A projectId was required, but we don't have one.
+                // Re-use the "Could not load the default credentials error" if
+                // auto auth failed.
+                err = err || e;
+              }
+            }
 
-        let options!: MakeAuthenticatedRequestOptions;
-        let callback!: OnAuthenticatedCallback;
-        switch (typeof optionsOrCallback) {
-          case 'object':
-            options = optionsOrCallback as MakeAuthenticatedRequestOptions;
-            callback = options.onAuthenticated;
-            break;
-          case 'function':
-            callback = optionsOrCallback as OnAuthenticatedCallback;
-            break;
-        }
+            let options!: MakeAuthenticatedRequestOptions;
+            let callback!: OnAuthenticatedCallback;
+            switch (typeof optionsOrCallback) {
+              case 'object':
+                options = optionsOrCallback as MakeAuthenticatedRequestOptions;
+                callback = options.onAuthenticated;
+                break;
+              case 'function':
+                callback = optionsOrCallback as OnAuthenticatedCallback;
+                break;
+              default:
+                break;
+            }
 
-        if (err) {
-          if (stream) {
-            stream.destroy(err);
-          } else {
-            callback(err);
-          }
+            if (err) {
+              if (stream) {
+                stream.destroy(err);
+              } else {
+                callback(err);
+              }
 
-          return;
-        }
+              return;
+            }
 
-        if (options && options.onAuthenticated) {
-          callback(null, authenticatedReqOpts);
-        } else {
-          activeRequest_ = util.makeRequest(
-            authenticatedReqOpts,
-            reqConfig,
-            callback
-          );
-        }
-      };
+            if (options && options.onAuthenticated) {
+              callback(null, authenticatedReqOpts);
+            } else {
+              activeRequest_ =
+                  util.makeRequest(authenticatedReqOpts, reqConfig, callback);
+            }
+          };
 
       if (reqConfig.customEndpoint) {
         // Using a custom API override. Do not use `google-auto-auth` for
@@ -616,22 +645,27 @@ export class Util {
   }
 
   /**
-   * Make a request through the `retryRequest` module with built-in error handling
-   * and exponential back off.
+   * Make a request through the `retryRequest` module with built-in error
+   * handling and exponential back off.
    *
    * @param {object} reqOpts - Request options in the format `request` expects.
    * @param {object=} config - Configuration object.
    * @param {boolean=} config.autoRetry - Automatically retry requests if the
-   *     response is related to rate limits or certain intermittent server errors.
-   *     We will exponentially backoff subsequent requests by default. (default:
-   *     true)
+   *     response is related to rate limits or certain intermittent server
+   * errors. We will exponentially backoff subsequent requests by default.
+   * (default: true)
    * @param {number=} config.maxRetries - Maximum number of automatic retries
    *     attempted before returning the error. (default: 3)
    * @param {function} callback - The callback function.
    */
   makeRequest(reqOpts: r.Options, callback: BodyResponseCallback): Abortable;
-  makeRequest(reqOpts: r.Options, config: MakeRequestConfig, callback: BodyResponseCallback): void|Abortable;
-  makeRequest(reqOpts: r.Options, configOrCallback: MakeRequestConfig|BodyResponseCallback, callback?: BodyResponseCallback): void|Abortable {
+  makeRequest(
+      reqOpts: r.Options, config: MakeRequestConfig,
+      callback: BodyResponseCallback): void|Abortable;
+  makeRequest(
+      reqOpts: r.Options,
+      configOrCallback: MakeRequestConfig|BodyResponseCallback,
+      callback?: BodyResponseCallback): void|Abortable {
     let config: MakeRequestConfig = {};
     if (is.fn(configOrCallback)) {
       callback = configOrCallback as BodyResponseCallback;
@@ -647,7 +681,7 @@ export class Util {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
         return err && util.shouldRetryRequest(err);
       },
-    };
+    } as retryRequest.Options;
 
     if (!config.stream) {
       return retryRequest(reqOpts, options, (err, response, body) => {
@@ -655,6 +689,7 @@ export class Util {
       });
     }
     const dup = config.stream as AbortableDuplex;
+    // tslint:disable-next-line:no-any
     let requestStream: any;
     const isGetRequest = (reqOpts.method || 'GET').toUpperCase() === 'GET';
 
@@ -668,10 +703,9 @@ export class Util {
     }
 
     // Replay the Request events back to the stream.
-    requestStream
-      .on('error', dup.destroy.bind(dup))
-      .on('response', dup.emit.bind(dup, 'response'))
-      .on('complete', dup.emit.bind(dup, 'complete'));
+    requestStream.on('error', dup.destroy.bind(dup))
+        .on('response', dup.emit.bind(dup, 'response'))
+        .on('complete', dup.emit.bind(dup, 'complete'));
 
     dup.abort = requestStream.abort;
   }
@@ -714,20 +748,24 @@ export class Util {
    * @param {string} projectId - A projectId. If not provided
    * @return {*} - The original argument with all placeholders populated.
    */
-  replaceProjectIdToken(value: any, projectId: string) {
+  // tslint:disable-next-line:no-any
+  replaceProjectIdToken(value: string|string[]|{}, projectId: string): any {
     if (is.array(value)) {
-      value = (value as string[]).map(v => util.replaceProjectIdToken(v, projectId));
+      value = (value as string[])
+                  .map(v => util.replaceProjectIdToken(v, projectId));
     }
 
-    if (is.object(value) && is.fn(value.hasOwnProperty)) {
+    if (typeof value === 'object' && is.fn(value.hasOwnProperty)) {
       for (const opt in value) {
         if (value.hasOwnProperty(opt)) {
-          value[opt] = util.replaceProjectIdToken(value[opt], projectId);
+          // tslint:disable-next-line:no-any
+          const v = value as any;
+          v[opt] = util.replaceProjectIdToken(v[opt], projectId);
         }
       }
     }
 
-    if (is.string(value) && value.indexOf('{{projectId}}') > -1) {
+    if (typeof value === 'string' && value.indexOf('{{projectId}}') > -1) {
       if (!projectId || projectId === '{{projectId}}') {
         throw new MissingProjectIdError();
       }
@@ -742,8 +780,8 @@ export class Util {
    * of sub-module instantiation.
    *
    * Connection details currently come in two ways: `credentials` or
-   * `keyFilename`. Because of this, we have a special exception when overriding a
-   * global configuration object. If a user provides either to the global
+   * `keyFilename`. Because of this, we have a special exception when overriding
+   * a global configuration object. If a user provides either to the global
    * configuration, then provides another at submodule instantiation-time, the
    * latter is preferred.
    *
@@ -755,7 +793,7 @@ export class Util {
     globalConfig = globalConfig || {};
     overrides = overrides || {};
 
-    const defaultConfig: any = {};
+    const defaultConfig: GlobalConfig = {};
 
     if (process.env.GCLOUD_PROJECT) {
       defaultConfig.projectId = process.env.GCLOUD_PROJECT;
@@ -764,7 +802,8 @@ export class Util {
     const options = extend({}, globalConfig);
 
     const hasGlobalConnection = options.credentials || options.keyFilename;
-    const isOverridingConnection = overrides.credentials || overrides.keyFilename;
+    const isOverridingConnection =
+        overrides.credentials || overrides.keyFilename;
 
     if (hasGlobalConnection && isOverridingConnection) {
       delete options.credentials;
@@ -815,6 +854,7 @@ export class Util {
     }
 
     return {
+      // tslint:disable-next-line:no-any
       makeRequest(...args: any[]) {
         requestsMade++;
         if (requestsToMake >= 0 && requestsMade > requestsToMake) {
@@ -828,6 +868,7 @@ export class Util {
     };
   }
 
+  // tslint:disable-next-line:no-any
   isCustomType(unknown: any, module: string) {
     function getConstructorName(obj: Function) {
       return obj.constructor && obj.constructor.name.toLowerCase();
@@ -836,21 +877,24 @@ export class Util {
     const moduleNameParts = module.split('/');
 
     const parentModuleName =
-      moduleNameParts[0] && moduleNameParts[0].toLowerCase();
-    const subModuleName = moduleNameParts[1] && moduleNameParts[1].toLowerCase();
+        moduleNameParts[0] && moduleNameParts[0].toLowerCase();
+    const subModuleName =
+        moduleNameParts[1] && moduleNameParts[1].toLowerCase();
 
     if (subModuleName && getConstructorName(unknown) !== subModuleName) {
       return false;
     }
 
     let walkingModule = unknown;
-    do {
+    while (true) {
       if (getConstructorName(walkingModule) === parentModuleName) {
         return true;
       }
-    } while ((walkingModule = walkingModule.parent));
-
-    return false;
+      walkingModule = walkingModule.parent;
+      if (!walkingModule) {
+        return false;
+      }
+    }
   }
 
   /**
@@ -860,9 +904,10 @@ export class Util {
    * @return {string} userAgent - The formatted User-Agent string.
    */
   getUserAgentFromPackageJson(packageJson: PackageJson) {
-    const hyphenatedPackageName = packageJson.name
-      .replace('@google-cloud', 'gcloud-node') // For legacy purposes.
-      .replace('/', '-'); // For UA spec-compliance purposes.
+    const hyphenatedPackageName =
+        packageJson.name
+            .replace('@google-cloud', 'gcloud-node')  // For legacy purposes.
+            .replace('/', '-');  // For UA spec-compliance purposes.
 
     return hyphenatedPackageName + '/' + packageJson.version;
   }
@@ -884,6 +929,7 @@ export class Util {
 
     const slice = Array.prototype.slice;
 
+    // tslint:disable-next-line:no-any
     const wrapper: any = function() {
       const context = this;
       let last;
@@ -892,11 +938,11 @@ export class Util {
         const arg = arguments[last];
 
         if (is.undefined(arg)) {
-          continue; // skip trailing undefined.
+          continue;  // skip trailing undefined.
         }
 
         if (!is.fn(arg)) {
-          break; // non-callback last argument found.
+          break;  // non-callback last argument found.
         }
 
         return originalMethod.apply(context, arguments);
@@ -905,6 +951,7 @@ export class Util {
       // peel trailing undefined.
       const args = slice.call(arguments, 0, last + 1);
 
+      // tslint:disable-next-line:variable-name
       let PromiseCtor = Promise;
 
       // Because dedupe will likely create a single install of
@@ -914,9 +961,10 @@ export class Util {
         PromiseCtor = context.Promise;
       }
 
-      return new PromiseCtor(function(resolve, reject) {
-        args.push(function() {
-          const callbackArgs = slice.call(arguments);
+      return new PromiseCtor((resolve, reject) => {
+        // tslint:disable-next-line:no-any
+        args.push((...args: any[]) => {
+          const callbackArgs = slice.call(args);
           const err = callbackArgs.shift();
 
           if (err) {
@@ -945,15 +993,18 @@ export class Util {
    * @param {module:common/service} Class - Service class.
    * @param {object=} options - Configuration object.
    */
+  // tslint:disable-next-line:variable-name
   promisifyAll(Class: Function, options?: PromisifyAllOptions) {
     const exclude = (options && options.exclude) || [];
 
     const methods = Object.keys(Class.prototype).filter((methodName) => {
+      // clang-format off
       return (
         is.fn(Class.prototype[methodName]) && // is it a function?
         !/(^_|(Stream|_)|promise$)/.test(methodName) && // is it promisable?
         exclude.indexOf(methodName) === -1
       ); // is it blacklisted?
+      // clang-format on
     });
 
     methods.forEach((methodName) => {
@@ -971,10 +1022,10 @@ export class Util {
    * @param {string} propName - Property name.
    * @param {*} value - Value.
    */
-  privatize(object: {}, propName: string, value: any) {
+  privatize(object: {}, propName: string, value: {}) {
     Object.defineProperty(object, propName, {value, writable: true});
   }
 }
 
 const util = new Util();
-export { util };
+export {util};
