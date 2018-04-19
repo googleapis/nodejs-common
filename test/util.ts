@@ -422,7 +422,7 @@ describe('common/util', () => {
   describe('parseHttpRespMessage', () => {
     it('should build ApiError with non-200 status and message', () => {
       const res = util.parseHttpRespMessage(fakeBadResp);
-      const error_ = res.err;
+      const error_ = res.err!;
         assert.strictEqual(error_.code, fakeBadResp.statusCode);
         assert.strictEqual(error_.message, fakeBadResp.statusMessage);
         assert.strictEqual(error_.response, fakeBadResp);
