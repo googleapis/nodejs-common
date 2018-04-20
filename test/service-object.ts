@@ -21,8 +21,8 @@ import * as sinon from 'sinon';
 
 import {Service} from '../src';
 import * as SO from '../src/service-object';
-import {ExtendedRequestOptions, ServiceObject} from '../src/service-object';
-import {ApiError, util} from '../src/util';
+import {ServiceObject} from '../src/service-object';
+import {ApiError, DecorateRequestOptions, util} from '../src/util';
 
 describe('ServiceObject', () => {
   let serviceObject: ServiceObject;
@@ -690,7 +690,7 @@ describe('ServiceObject', () => {
   });
 
   describe('request_', () => {
-    let reqOpts: ExtendedRequestOptions;
+    let reqOpts: DecorateRequestOptions;
 
     beforeEach(() => {
       reqOpts = {
@@ -706,7 +706,7 @@ describe('ServiceObject', () => {
       ].join('/');
 
       pSvc().parent.request =
-          (reqOpts_: ExtendedRequestOptions, callback: () => void) => {
+          (reqOpts_: DecorateRequestOptions, callback: () => void) => {
             assert.notStrictEqual(reqOpts_, reqOpts);
             assert.strictEqual(reqOpts_.uri, expectedUri);
             assert.deepEqual(reqOpts_.interceptors_, []);
@@ -719,7 +719,7 @@ describe('ServiceObject', () => {
     it('should not require a service object ID', (done) => {
       const expectedUri = [serviceObject.baseUrl, reqOpts.uri].join('/');
 
-      pSvc().parent.request = (reqOpts: ExtendedRequestOptions) => {
+      pSvc().parent.request = (reqOpts: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
@@ -732,7 +732,7 @@ describe('ServiceObject', () => {
     it('should support absolute uris', (done) => {
       const expectedUri = 'http://www.google.com';
 
-      pSvc().parent.request = (reqOpts: ExtendedRequestOptions) => {
+      pSvc().parent.request = (reqOpts: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts.uri, expectedUri);
         done();
       };
@@ -750,7 +750,7 @@ describe('ServiceObject', () => {
         // reqOpts.uri (reqOpts.uri is an empty string, so it should be removed)
       ].join('/');
 
-      pSvc().parent.request = (reqOpts_: ExtendedRequestOptions) => {
+      pSvc().parent.request = (reqOpts_: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -765,7 +765,7 @@ describe('ServiceObject', () => {
 
       const expectedUri = [serviceObject.baseUrl, pSvc().id, '1/2'].join('/');
 
-      pSvc().parent.request = (reqOpts_: ExtendedRequestOptions) => {
+      pSvc().parent.request = (reqOpts_: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
@@ -776,7 +776,7 @@ describe('ServiceObject', () => {
     it('should extend interceptors from child ServiceObjects', (done) => {
       const parent = new ServiceObject(CONFIG) as FakeServiceObject;
       parent.interceptors.push({
-        request(reqOpts: ExtendedRequestOptions) {
+        request(reqOpts: DecorateRequestOptions) {
           // tslint:disable-next-line:no-any
           (reqOpts as any).parent = true;
           return reqOpts;
@@ -786,7 +786,7 @@ describe('ServiceObject', () => {
       const child =
           new ServiceObject(extend({}, CONFIG, {parent})) as FakeServiceObject;
       child.interceptors.push({
-        request(reqOpts: ExtendedRequestOptions) {
+        request(reqOpts: DecorateRequestOptions) {
           // tslint:disable-next-line:no-any
           (reqOpts as any).child = true;
           return reqOpts;
@@ -794,7 +794,7 @@ describe('ServiceObject', () => {
       });
 
       // tslint:disable-next-line:no-any
-      (parent as any).parent.request = (reqOpts: ExtendedRequestOptions) => {
+      (parent as any).parent.request = (reqOpts: DecorateRequestOptions) => {
         assert.deepEqual(reqOpts.interceptors_![0].request({}), {
           child: true,
         });
@@ -811,14 +811,14 @@ describe('ServiceObject', () => {
 
     it('should pass a clone of the interceptors', (done) => {
       pSvc().interceptors.push({
-        request(reqOpts: ExtendedRequestOptions) {
+        request(reqOpts: DecorateRequestOptions) {
           // tslint:disable-next-line:no-any
           (reqOpts as any).one = true;
           return reqOpts;
         },
       });
 
-      pSvc().parent.request = (reqOpts: ExtendedRequestOptions) => {
+      pSvc().parent.request = (reqOpts: DecorateRequestOptions) => {
         const serviceObjectInterceptors = pSvc().interceptors;
         assert.deepEqual(reqOpts.interceptors_, serviceObjectInterceptors);
         assert.notStrictEqual(reqOpts.interceptors_, serviceObjectInterceptors);
@@ -837,7 +837,7 @@ describe('ServiceObject', () => {
         reqOpts.uri,
       ].join('/');
 
-      pSvc().parent.requestStream = (reqOpts_: ExtendedRequestOptions) => {
+      pSvc().parent.requestStream = (reqOpts_: DecorateRequestOptions) => {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.deepEqual(reqOpts_.interceptors_, []);
@@ -851,7 +851,7 @@ describe('ServiceObject', () => {
 
   describe('request', () => {
     it('should call through to request_', (done) => {
-      const fakeOptions = {} as ExtendedRequestOptions;
+      const fakeOptions = {} as DecorateRequestOptions;
       serviceObject.request_ = (reqOpts, callback) => {
         assert.strictEqual(reqOpts, fakeOptions);
         done();
@@ -862,7 +862,7 @@ describe('ServiceObject', () => {
 
   describe('requestStream', () => {
     it('should call through to request_', (done) => {
-      const fakeOptions = {} as ExtendedRequestOptions;
+      const fakeOptions = {} as DecorateRequestOptions;
       const serviceObject = new ServiceObject(CONFIG);
       serviceObject.request_ = (reqOpts) => {
         assert.strictEqual(reqOpts, fakeOptions);

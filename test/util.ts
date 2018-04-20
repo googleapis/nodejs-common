@@ -23,48 +23,58 @@ import * as retryRequest from 'retry-request';
 import * as stream from 'stream';
 const streamEvents = require('stream-events');
 import * as sinon from 'sinon';
-import { Util, ApiError, GlobalConfig, DecorateRequestOptions, MakeRequestConfig, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, Abortable, PromisifyAllOptions, MakeWritableStreamOptions } from '../src/util';
+import {Util, ApiError, GlobalConfig, DecorateRequestOptions, MakeRequestConfig, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, Abortable, PromisifyAllOptions, MakeWritableStreamOptions, MakeAuthenticatedRequestOptions, AutoAuthClient} from '../src/util';
 import * as duplexify from 'duplexify';
-import { ExtendedRequestOptions } from '../src/service';
+import {EventEmitter} from 'events';
 
 const googleAuth = require('google-auto-auth');
 
 const fakeResponse = {
   statusCode: 200,
-  body: { star: 'trek'}
+  body: {star: 'trek'}
 } as request.Response;
 
-const fakeBadResp = { statusCode: 400, statusMessage: 'Not Good' } as request.Response;
+const fakeBadResp = {
+  statusCode: 400,
+  statusMessage: 'Not Good'
+} as request.Response;
 
-const fakeReqOpts: ExtendedRequestOptions = {
+const fakeReqOpts: DecorateRequestOptions = {
   uri: 'http://so-fake',
   method: 'GET'
 };
 
 const fakeError = new Error('this error is like so fake');
 
+// tslint:disable-next-line:no-any
 let googleAutoAuthOverride: any;
 function fakeGoogleAutoAuth() {
   return (googleAutoAuthOverride || googleAuth).apply(null, arguments);
 }
 
-let REQUEST_DEFAULT_CONF: any;
+let REQUEST_DEFAULT_CONF: request.CoreOptions;
+
+// tslint:disable-next-line:no-any
 let requestOverride: any;
 function fakeRequest() {
   return (requestOverride || request).apply(null, arguments);
 }
-(fakeRequest as any).defaults = function(defaultConfiguration: any) {
+
+// tslint:disable-next-line:no-any
+(fakeRequest as any).defaults = (defaultConfiguration: any) => {
   // Ignore the default values, so we don't have to test for them in every API
   // call.
   REQUEST_DEFAULT_CONF = defaultConfiguration;
   return fakeRequest;
 };
 
+// tslint:disable-next-line:no-any
 let retryRequestOverride: any;
 function fakeRetryRequest() {
   return (retryRequestOverride || retryRequest).apply(null, arguments);
 }
 
+// tslint:disable-next-line:no-any
 let streamEventsOverride: any;
 function fakeStreamEvents() {
   return (streamEventsOverride || streamEvents).apply(null, arguments);
@@ -72,33 +82,37 @@ function fakeStreamEvents() {
 
 describe('common/util', () => {
   let util: Util;
-  let utilOverrides: any = {};
+  // tslint:disable-next-line:no-any
+  let utilOverrides = {} as any;
 
+  // tslint:disable-next-line:no-any
   function stub(method: keyof Util, meth: (...args: any[]) => void) {
     return sandbox.stub(util, method).callsFake(meth);
   }
 
-  before(function() {
+  before(() => {
     util = proxyquire('../src/util', {
-      'google-auto-auth': fakeGoogleAutoAuth,
-      request: fakeRequest,
-      'retry-request': fakeRetryRequest,
-      'stream-events': fakeStreamEvents,
-    }).util;
+             'google-auto-auth': fakeGoogleAutoAuth,
+             request: fakeRequest,
+             'retry-request': fakeRetryRequest,
+             'stream-events': fakeStreamEvents,
+           }).util;
     const utilCached = extend(true, {}, util);
 
     // Override all util methods, allowing them to be mocked. Overrides are
     // removed before each test.
-    Object.keys(util).forEach(function(utilMethod) {
+    Object.keys(util).forEach((utilMethod) => {
+      // tslint:disable-next-line:no-any
       if (typeof (util as any)[utilMethod] !== 'function') {
         return;
       }
-
+      // tslint:disable-next-line:no-any
       (util as any)[utilMethod] = function() {
-        return (utilOverrides[utilMethod] || (utilCached as any)[utilMethod]).apply(
-          this,
-          arguments
-        );
+        // tslint:disable-next-line:no-any
+        return ((utilOverrides as any)[utilMethod] ||
+                // tslint:disable-next-line:no-any
+                (utilCached as any)[utilMethod])
+            .apply(this, arguments);
       };
     });
   });
@@ -128,7 +142,8 @@ describe('common/util', () => {
   });
 
   it('should export an error for module instantiation errors', () => {
-    const errorMessage = `Sorry, we cannot connect to Cloud Services without a project
+    const errorMessage =
+        `Sorry, we cannot connect to Cloud Services without a project
     ID. You may specify one with an environment variable named
     "GOOGLE_CLOUD_PROJECT".`.replace(/ +/g, ' ');
 
@@ -138,9 +153,7 @@ describe('common/util', () => {
 
   describe('ApiError', () => {
     it('should build correct ApiError', () => {
-      const fakeResponse = {
-        statusCode: 200
-      } as request.Response;
+      const fakeResponse = {statusCode: 200} as request.Response;
       const error = {
         errors: [new Error(), new Error()],
         code: 100,
@@ -188,9 +201,8 @@ describe('common/util', () => {
     it('should append the custom error message', () => {
       const errorMessage = 'API error message';
       const customErrorMessage = 'Custom error message';
-      const expectedErrorMessage = [customErrorMessage, errorMessage].join(
-        ' - '
-      );
+      const expectedErrorMessage =
+          [customErrorMessage, errorMessage].join(' - ');
 
       const error = {
         errors: [new Error(errorMessage)],
@@ -224,9 +236,7 @@ describe('common/util', () => {
     });
 
     it('should use default message if there are no errors', () => {
-      const fakeResponse = {
-        statusCode: 200
-      } as request.Response;
+      const fakeResponse = {statusCode: 200} as request.Response;
       const expectedErrorMessage = 'Error during request.';
       const error = {
         code: 100,
@@ -237,9 +247,7 @@ describe('common/util', () => {
     });
 
     it('should use default message if too many errors', () => {
-      const fakeResponse = {
-        statusCode: 200
-      } as request.Response;
+      const fakeResponse = {statusCode: 200} as request.Response;
       const expectedErrorMessage = 'Error during request.';
       const error = {
         errors: [new Error(), new Error()],
@@ -348,7 +356,7 @@ describe('common/util', () => {
     it('should handle errors', (done) => {
       const error = new Error('Error.');
 
-      util.handleResp(error, fakeResponse, null, function(err) {
+      util.handleResp(error, fakeResponse, null, (err) => {
         assert.strictEqual(err, error);
         done();
       });
@@ -359,7 +367,6 @@ describe('common/util', () => {
     });
 
     it('should parse response', (done) => {
-
       stub('parseHttpRespMessage', resp_ => {
         assert.deepStrictEqual(resp_, fakeResponse);
         return {
@@ -374,12 +381,13 @@ describe('common/util', () => {
         };
       });
 
-      util.handleResp(fakeError, fakeResponse, fakeResponse.body, (err, body, resp) => {
-        assert.deepEqual(err, fakeError);
-        assert.deepEqual(body, fakeResponse.body);
-        assert.deepStrictEqual(resp, fakeResponse);
-        done();
-      });
+      util.handleResp(
+          fakeError, fakeResponse, fakeResponse.body, (err, body, resp) => {
+            assert.deepEqual(err, fakeError);
+            assert.deepEqual(body, fakeResponse.body);
+            assert.deepStrictEqual(resp, fakeResponse);
+            done();
+          });
     });
 
     it('should parse response for error', (done) => {
@@ -389,7 +397,7 @@ describe('common/util', () => {
         return {err: error};
       });
 
-      util.handleResp(null, fakeResponse, {}, function(err) {
+      util.handleResp(null, fakeResponse, {}, (err) => {
         assert.deepEqual(err, error);
         done();
       });
@@ -409,12 +417,12 @@ describe('common/util', () => {
     });
 
     it('should not parse undefined response', (done) => {
-      stub('parseHttpRespMessage', () => done()); // Will throw.
+      stub('parseHttpRespMessage', () => done());  // Will throw.
       util.handleResp(null, null, null, done);
     });
 
     it('should not parse undefined body', (done) => {
-      stub('parseHttpRespBody', () => done()); // Will throw.
+      stub('parseHttpRespBody', () => done());  // Will throw.
       util.handleResp(null, null, null, done);
     });
   });
@@ -423,9 +431,9 @@ describe('common/util', () => {
     it('should build ApiError with non-200 status and message', () => {
       const res = util.parseHttpRespMessage(fakeBadResp);
       const error_ = res.err!;
-        assert.strictEqual(error_.code, fakeBadResp.statusCode);
-        assert.strictEqual(error_.message, fakeBadResp.statusMessage);
-        assert.strictEqual(error_.response, fakeBadResp);
+      assert.strictEqual(error_.code, fakeBadResp.statusCode);
+      assert.strictEqual(error_.message, fakeBadResp.statusMessage);
+      assert.strictEqual(error_.response, fakeBadResp);
     });
 
     it('should return the original response message', () => {
@@ -464,7 +472,6 @@ describe('common/util', () => {
     it('should return the original body', () => {
       const httpRespBody = {};
       const parsedHttpRespBody = util.parseHttpRespBody(httpRespBody);
-
       assert.strictEqual(parsedHttpRespBody.body, httpRespBody);
     });
   });
@@ -472,6 +479,7 @@ describe('common/util', () => {
   describe('makeWritableStream', () => {
     it('should use defaults', (done) => {
       const dup = duplexify();
+      // tslint:disable-next-line:no-any
       const metadata = {a: 'b', c: 'd'} as any;
       util.makeWritableStream(dup, {
         metadata,
@@ -481,12 +489,16 @@ describe('common/util', () => {
 
           assert.strictEqual(Array.isArray(request.multipart), true);
 
-          const mp = request.multipart as any;
+          const mp = request.multipart as request.RequestPart[];
 
-          assert.strictEqual(mp[0]['Content-Type'], 'application/json');
+          assert.strictEqual(
+              // tslint:disable-next-line:no-any
+              (mp[0] as any)['Content-Type'], 'application/json');
           assert.strictEqual(mp[0].body, JSON.stringify(metadata));
 
-          assert.strictEqual(mp[1]['Content-Type'], 'application/octet-stream');
+          assert.strictEqual(
+              // tslint:disable-next-line:no-any
+              (mp[1] as any)['Content-Type'], 'application/octet-stream');
           // (is a writable stream:)
           assert.strictEqual(typeof mp[1].body._writableState, 'object');
 
@@ -504,7 +516,7 @@ describe('common/util', () => {
         qs: {
           uploadType: 'media',
         },
-      } as ExtendedRequestOptions;
+      } as DecorateRequestOptions;
 
       util.makeWritableStream(dup, {
         metadata: {
@@ -515,6 +527,7 @@ describe('common/util', () => {
           assert.deepEqual(request.qs, req.qs);
           assert.equal(request.uri, req.uri);
 
+          // tslint:disable-next-line:no-any
           const mp = request.multipart as any[];
           assert.strictEqual(mp[1]['Content-Type'], 'application/json');
 
@@ -529,7 +542,7 @@ describe('common/util', () => {
       const error = new Error('Error.');
 
       const ws = duplexify();
-      ws.on('error', function(err) {
+      ws.on('error', (err) => {
         assert.equal(err, error);
         done();
       });
@@ -555,21 +568,24 @@ describe('common/util', () => {
 
     it('should emit an error if the request fails', (done) => {
       const dup = duplexify();
-      const fakeStream: any = new stream.Writable();
+      const fakeStream = new stream.Writable();
       const error = new Error('Error.');
 
-      fakeStream.write = () => {};
+      fakeStream.write =
+          // tslint:disable-next-line:no-any
+          (chunk: any, encoding?: string|Function, cb?: Function) => false;
       dup.end = () => {};
 
       stub('handleResp', (err, res, body, callback) => {
         callback(error);
       });
 
-      requestOverride = function(reqOpts: ExtendedRequestOptions, callback: (err: Error) => void) {
-        callback(error);
-      };
+      requestOverride =
+          (reqOpts: DecorateRequestOptions, callback: (err: Error) => void) => {
+            callback(error);
+          };
 
-      dup.on('error', function(err) {
+      dup.on('error', (err) => {
         assert.strictEqual(err, error);
         done();
       });
@@ -587,6 +603,7 @@ describe('common/util', () => {
 
     it('should emit the response', (done) => {
       const dup = duplexify();
+      // tslint:disable-next-line:no-any
       const fakeStream: any = new stream.Writable();
 
       fakeStream.write = () => {};
@@ -595,17 +612,20 @@ describe('common/util', () => {
         callback();
       });
 
-      requestOverride = function(reqOpts: ExtendedRequestOptions, callback: (err: Error|null, res: request.Response) => void) {
-        callback(null, fakeResponse);
-      };
+      requestOverride =
+          (reqOpts: DecorateRequestOptions,
+           callback: (err: Error|null, res: request.Response) => void) => {
+            callback(null, fakeResponse);
+          };
 
       const options = {
-        makeAuthenticatedRequest(request: ExtendedRequestOptions, opts: any) {
+        // tslint:disable-next-line:no-any
+        makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
           opts.onAuthenticated();
         },
       };
 
-      dup.on('response', function(resp) {
+      dup.on('response', (resp) => {
         assert.strictEqual(resp, fakeResponse);
         done();
       });
@@ -615,6 +635,7 @@ describe('common/util', () => {
 
     it('should pass back the response data to the callback', (done) => {
       const dup = duplexify();
+      // tslint:disable-next-line:no-any
       const fakeStream: any = new stream.Writable();
       const fakeResponse = {};
 
@@ -624,17 +645,19 @@ describe('common/util', () => {
         callback(null, fakeResponse);
       });
 
-      requestOverride = function(reqOpts: ExtendedRequestOptions, callback: () => void) {
-        callback();
-      };
+      requestOverride =
+          (reqOpts: DecorateRequestOptions, callback: () => void) => {
+            callback();
+          };
 
       const options = {
-        makeAuthenticatedRequest(request: ExtendedRequestOptions, opts: any) {
+        // tslint:disable-next-line:no-any
+        makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
           opts.onAuthenticated();
         },
       };
 
-      util.makeWritableStream(dup, options, function(data: {}) {
+      util.makeWritableStream(dup, options, (data: {}) => {
         assert.strictEqual(data, fakeResponse);
         done();
       });
@@ -646,10 +669,10 @@ describe('common/util', () => {
   });
 
   describe('makeAuthenticatedRequestFactory', () => {
-    const authClient: any = {
+    const authClient = {
       getCredentials() {},
       projectId: 'project-id',
-    };
+    } as AutoAuthClient;
 
     beforeEach(() => {
       googleAutoAuthOverride = () => {
@@ -662,11 +685,12 @@ describe('common/util', () => {
         test: true,
       } as MakeAuthenticatedRequestFactoryConfig;
 
-      googleAutoAuthOverride = function(config_: MakeAuthenticatedRequestFactoryConfig) {
-        assert.deepStrictEqual(config_, config);
-        setImmediate(done);
-        return authClient;
-      };
+      googleAutoAuthOverride =
+          (config_: MakeAuthenticatedRequestFactoryConfig) => {
+            assert.deepStrictEqual(config_, config);
+            setImmediate(done);
+            return authClient;
+          };
 
       util.makeAuthenticatedRequestFactory(config);
     });
@@ -676,11 +700,12 @@ describe('common/util', () => {
         projectId: '{{projectId}}',
       };
 
-      googleAutoAuthOverride = function(config_: MakeAuthenticatedRequestFactoryConfig) {
-        assert.strictEqual(config_.projectId, undefined);
-        setImmediate(done);
-        return authClient;
-      };
+      googleAutoAuthOverride =
+          (config_: MakeAuthenticatedRequestFactoryConfig) => {
+            assert.strictEqual(config_.projectId, undefined);
+            setImmediate(done);
+            return authClient;
+          };
 
       util.makeAuthenticatedRequestFactory(config);
     });
@@ -728,6 +753,7 @@ describe('common/util', () => {
     });
 
     describe('customEndpoint (no authentication attempted)', () => {
+      // tslint:disable-next-line:no-any
       let makeAuthenticatedRequest: any;
       const config = {
         customEndpoint: true,
@@ -748,7 +774,8 @@ describe('common/util', () => {
         });
 
         makeAuthenticatedRequest(fakeReqOpts, {
-          onAuthenticated(err: Error, authenticatedReqOpts: ExtendedRequestOptions) {
+          onAuthenticated(
+              err: Error, authenticatedReqOpts: DecorateRequestOptions) {
             assert.ifError(err);
             assert.strictEqual(authenticatedReqOpts, decoratedRequest);
             done();
@@ -758,7 +785,9 @@ describe('common/util', () => {
 
       it('should return an error while decorating', (done) => {
         const error = new Error('Error.');
-        stub('decorateRequest', () => { throw error; });
+        stub('decorateRequest', () => {
+          throw error;
+        });
         makeAuthenticatedRequest(fakeReqOpts, {
           onAuthenticated(err: Error) {
             assert.strictEqual(err, error);
@@ -770,7 +799,8 @@ describe('common/util', () => {
       it('should pass options back to callback', (done) => {
         const reqOpts = {a: 'b', c: 'd'};
         makeAuthenticatedRequest(reqOpts, {
-          onAuthenticated(err: Error, authenticatedReqOpts: ExtendedRequestOptions) {
+          onAuthenticated(
+              err: Error, authenticatedReqOpts: DecorateRequestOptions) {
             assert.ifError(err);
             assert.deepEqual(reqOpts, authenticatedReqOpts);
             done();
@@ -792,23 +822,29 @@ describe('common/util', () => {
 
     describe('needs authentication', () => {
       it('should pass correct args to authorizeRequest', (done) => {
-        authClient.authorizeRequest = function(rOpts: ExtendedRequestOptions) {
+        authClient.authorizeRequest = (rOpts: DecorateRequestOptions) => {
           assert.deepEqual(rOpts, fakeReqOpts);
           done();
         };
 
         const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-        makeAuthenticatedRequest(fakeReqOpts, {} as any);
+        makeAuthenticatedRequest(
+            fakeReqOpts, {} as MakeAuthenticatedRequestOptions);
       });
 
       it('should return a stream if callback is missing', () => {
         authClient.authorizeRequest = () => {};
 
-        const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({});
-        assert(makeAuthenticatedRequest({} as any) instanceof stream.Stream);
+        const makeAuthenticatedRequest =
+            util.makeAuthenticatedRequestFactory({});
+        assert(
+            makeAuthenticatedRequest({} as DecorateRequestOptions) instanceof
+            stream.Stream);
       });
 
       describe('projectId', () => {
+        const reqOpts = {} as DecorateRequestOptions;
+
         it('should default to authClient projectId', (done) => {
           authClient.projectId = 'authclient-project-id';
 
@@ -817,16 +853,14 @@ describe('common/util', () => {
             setImmediate(done);
           });
 
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory({
-            customEndpoint: true,
-          });
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory({
+                customEndpoint: true,
+              });
 
-          makeAuthenticatedRequest(
-            {} as any,
-            {
-              onAuthenticated: assert.ifError,
-            }
-          );
+          makeAuthenticatedRequest(reqOpts, {
+            onAuthenticated: assert.ifError,
+          });
         });
 
         it('should use user-provided projectId', (done) => {
@@ -842,16 +876,12 @@ describe('common/util', () => {
             setImmediate(done);
           });
 
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-            config
-          );
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory(config);
 
-          makeAuthenticatedRequest(
-            {} as any,
-            {
-              onAuthenticated: assert.ifError,
-            }
-          );
+          makeAuthenticatedRequest(reqOpts, {
+            onAuthenticated: assert.ifError,
+          });
         });
       });
 
@@ -859,26 +889,33 @@ describe('common/util', () => {
         const error = new Error('Error.');
 
         beforeEach(() => {
-          authClient.authorizeRequest = function(rOpts: ExtendedRequestOptions, callback: (err: Error) => void) {
-            setImmediate(() => {
-              callback(error);
-            });
-          };
+          authClient.authorizeRequest =
+              (rOpts: DecorateRequestOptions,
+               callback: (err: Error) => void) => {
+                setImmediate(() => {
+                  callback(error);
+                });
+              };
         });
 
         it('should attempt request anyway', (done) => {
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory();
 
-          const correctReqOpts = {};
-          const incorrectReqOpts = {};
+          const correctReqOpts = {} as DecorateRequestOptions;
+          const incorrectReqOpts = {} as DecorateRequestOptions;
 
-          authClient.authorizeRequest = function(rOpts: ExtendedRequestOptions, callback: (err: Error|null, opts: {}) => void) {
-            const error = new Error('Could not load the default credentials');
-            callback(error, incorrectReqOpts);
-          };
+          authClient.authorizeRequest =
+              (rOpts: DecorateRequestOptions,
+               callback: (err: Error|null, opts?: DecorateRequestOptions) =>
+                   void) => {
+                const error =
+                    new Error('Could not load the default credentials');
+                callback(error, incorrectReqOpts);
+              };
 
-          makeAuthenticatedRequest(correctReqOpts as any, {
-            onAuthenticated(err: Error, reqOpts: ExtendedRequestOptions) {
+          makeAuthenticatedRequest(correctReqOpts as DecorateRequestOptions, {
+            onAuthenticated(err: Error, reqOpts: DecorateRequestOptions) {
               assert.ifError(err);
 
               assert.strictEqual(reqOpts, correctReqOpts);
@@ -886,6 +923,7 @@ describe('common/util', () => {
 
               done();
             },
+            // tslint:disable-next-line:no-any
           } as any);
         });
 
@@ -895,59 +933,65 @@ describe('common/util', () => {
             throw decorateRequestError;
           });
 
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          makeAuthenticatedRequest(
-            {} as any,
-            {
-              onAuthenticated(err: Error) {
-                assert.notStrictEqual(err, decorateRequestError);
-                assert.strictEqual(err, error);
-                done();
-              },
-            } as any
-          );
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory();
+          makeAuthenticatedRequest({} as DecorateRequestOptions, {
+            onAuthenticated(err: Error) {
+              assert.notStrictEqual(err, decorateRequestError);
+              assert.strictEqual(err, error);
+              done();
+            },
+            // tslint:disable-next-line:no-any
+          } as any);
         });
 
         it('should invoke the callback with error', (done) => {
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          makeAuthenticatedRequest({} as any, function(err: Error|null) {
-            assert.strictEqual(err, error);
-            done();
-          });
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory();
+          makeAuthenticatedRequest(
+              {} as DecorateRequestOptions, (err: Error|null) => {
+                assert.strictEqual(err, error);
+                done();
+              });
         });
 
         it('should exec onAuthenticated callback with error', (done) => {
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          makeAuthenticatedRequest(
-            {} as any,
-            {
-              onAuthenticated(err: Error) {
-                assert.strictEqual(err, error);
-                done();
-              },
-            } as any
-          );
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory();
+          makeAuthenticatedRequest({} as DecorateRequestOptions, {
+            onAuthenticated(err: Error) {
+              assert.strictEqual(err, error);
+              done();
+            },
+            // tslint:disable-next-line:no-any
+          } as any);
         });
 
         it('should emit an error and end the stream', (done) => {
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          (makeAuthenticatedRequest({} as any) as any).on('error', function(err: Error) {
-            assert.strictEqual(err, error);
-            const stream = this;
-            setImmediate(() => {
-              assert.strictEqual(stream.destroyed, true);
-              done();
-            });
-          });
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory();
+          (makeAuthenticatedRequest({} as DecorateRequestOptions) as
+           EventEmitter)
+              .on('error', function(err: Error) {
+                assert.strictEqual(err, error);
+                const stream = this;
+                setImmediate(() => {
+                  assert.strictEqual(stream.destroyed, true);
+                  done();
+                });
+              });
         });
       });
 
       describe('authentication success', () => {
         const reqOpts = fakeReqOpts;
         beforeEach(() => {
-          authClient.authorizeRequest = function(rOpts: ExtendedRequestOptions, callback: (err: Error|null, opts: ExtendedRequestOptions) => void) {
-            callback(null, rOpts);
-          };
+          authClient.authorizeRequest =
+              (rOpts: DecorateRequestOptions,
+               callback: (err: Error|null, opts?: DecorateRequestOptions) =>
+                   void) => {
+                callback(null, rOpts);
+              };
         });
 
         it('should return authenticated request to callback', (done) => {
@@ -956,7 +1000,8 @@ describe('common/util', () => {
             return reqOpts;
           });
 
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory();
           makeAuthenticatedRequest(reqOpts, {
             onAuthenticated(err, authenticatedReqOpts) {
               assert.strictEqual(authenticatedReqOpts, reqOpts);
@@ -966,22 +1011,22 @@ describe('common/util', () => {
         });
 
         it('should make request with correct options', (done) => {
-          const config = {a: 'b', c: 'd'} as MakeAuthenticatedRequestFactoryConfig;
+          const config = {a: 'b', c: 'd'} as
+              MakeAuthenticatedRequestFactoryConfig;
 
-          stub('decorateRequest',reqOpts_ => {
+          stub('decorateRequest', reqOpts_ => {
             assert.strictEqual(reqOpts_, reqOpts);
             return reqOpts;
           });
 
-          stub('makeRequest', (authenticatedReqOpts, cfg, cb) =>{
+          stub('makeRequest', (authenticatedReqOpts, cfg, cb) => {
             assert.strictEqual(authenticatedReqOpts, reqOpts);
             assert.deepEqual(cfg, config);
             cb();
           });
 
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-            config
-          );
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory(config);
           makeAuthenticatedRequest(reqOpts, done);
         });
 
@@ -989,33 +1034,35 @@ describe('common/util', () => {
           const retryRequest = {
             abort: done,
           };
-
-          stub('makeRequest',() => {
+          stub('makeRequest', () => {
             return retryRequest;
           });
-
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          (makeAuthenticatedRequest(reqOpts, assert.ifError) as Abortable).abort();
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory();
+          (makeAuthenticatedRequest(reqOpts, assert.ifError) as Abortable)
+              .abort();
         });
 
         it('should only abort() once', (done) => {
           const retryRequest = {
-            abort: done, // Will throw if called more than once.
+            abort: done,  // Will throw if called more than once.
           };
 
-          stub('makeRequest',() => {
+          stub('makeRequest', () => {
             return retryRequest;
           });
 
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-          const request = makeAuthenticatedRequest(reqOpts, assert.ifError) as Abortable;
+          const makeAuthenticatedRequest =
+              util.makeAuthenticatedRequestFactory();
+          const request =
+              makeAuthenticatedRequest(reqOpts, assert.ifError) as Abortable;
 
-          request.abort(); // done()
-          request.abort(); // done()
+          request.abort();  // done()
+          request.abort();  // done()
         });
 
         it('should provide stream to makeRequest', (done) => {
-          stub('makeRequest',(authenticatedReqOpts, cfg) => {
+          stub('makeRequest', (authenticatedReqOpts, cfg) => {
             setImmediate(() => {
               assert.strictEqual(cfg.stream, stream);
               done();
@@ -1078,19 +1125,19 @@ describe('common/util', () => {
   describe('makeRequest', () => {
     const reqOpts = {
       method: 'GET',
-    } as ExtendedRequestOptions;
+    } as DecorateRequestOptions;
 
     function testDefaultRetryRequestConfig(done: () => void) {
-      return function(reqOpts_: ExtendedRequestOptions, config: MakeRequestConfig) {
+      return (reqOpts_: DecorateRequestOptions, config: MakeRequestConfig) => {
         assert.strictEqual(reqOpts_, reqOpts);
         assert.equal(config.retries, 3);
         assert.strictEqual(config.request, fakeRequest);
 
         const error = new Error('Error.');
-        stub('parseHttpRespMessage',() => {
+        stub('parseHttpRespMessage', () => {
           return {err: error};
         });
-        stub('shouldRetryRequest',err => {
+        stub('shouldRetryRequest', err => {
           assert.strictEqual(err, error);
           done();
         });
@@ -1101,7 +1148,7 @@ describe('common/util', () => {
 
     const noRetryRequestConfig = {autoRetry: false};
     function testNoRetryRequestConfig(done: () => void) {
-      return function(reqOpts: ExtendedRequestOptions, config: MakeRequestConfig) {
+      return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
         assert.strictEqual(config.retries, 0);
         done();
       };
@@ -1109,7 +1156,7 @@ describe('common/util', () => {
 
     const customRetryRequestConfig = {maxRetries: 10};
     function testCustomRetryRequestConfig(done: () => void) {
-      return function(reqOpts: ExtendedRequestOptions, config: MakeRequestConfig) {
+      return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
         assert.strictEqual(config.retries, customRetryRequestConfig.maxRetries);
         done();
       };
@@ -1151,18 +1198,20 @@ describe('common/util', () => {
         const complete = {};
 
         userStream
-          .on('error', function(error_) {
-            assert.strictEqual(error_, error);
-            requestStream.emit('response', response);
-          })
-          .on('response', function(response_) {
-            assert.strictEqual(response_, response);
-            requestStream.emit('complete', complete);
-          })
-          .on('complete', function(complete_) {
-            assert.strictEqual(complete_, complete);
-            done();
-          });
+            .on('error',
+                (error_) => {
+                  assert.strictEqual(error_, error);
+                  requestStream.emit('response', response);
+                })
+            .on('response',
+                (response_) => {
+                  assert.strictEqual(response_, response);
+                  requestStream.emit('complete', complete);
+                })
+            .on('complete', (complete_) => {
+              assert.strictEqual(complete_, complete);
+              done();
+            });
 
         retryRequestOverride = () => {
           setImmediate(() => {
@@ -1178,7 +1227,7 @@ describe('common/util', () => {
       describe('GET requests', () => {
         it('should use retryRequest', (done) => {
           const userStream = duplexify();
-          retryRequestOverride = function(reqOpts_: ExtendedRequestOptions) {
+          retryRequestOverride = (reqOpts_: DecorateRequestOptions) => {
             assert.strictEqual(reqOpts_, reqOpts);
             setImmediate(done);
             return new stream.Stream();
@@ -1192,7 +1241,7 @@ describe('common/util', () => {
           retryRequestOverride = () => {
             return retryRequestStream;
           };
-          userStream.setReadable = function(stream) {
+          userStream.setReadable = (stream) => {
             assert.strictEqual(stream, retryRequestStream);
             done();
           };
@@ -1200,9 +1249,10 @@ describe('common/util', () => {
         });
 
         it('should expose the abort method from retryRequest', (done) => {
-          const userStream = duplexify() as duplexify.Duplexify&Abortable;
+          const userStream = duplexify() as duplexify.Duplexify & Abortable;
 
           retryRequestOverride = () => {
+            // tslint:disable-next-line:no-any
             const requestStream: any = new stream.Stream();
             requestStream.abort = done;
             return requestStream;
@@ -1218,10 +1268,10 @@ describe('common/util', () => {
           const userStream = duplexify();
           const reqOpts = {
             method: 'POST',
-          } as ExtendedRequestOptions;
+          } as DecorateRequestOptions;
 
-          retryRequestOverride = done; // will throw.
-          requestOverride = function(reqOpts_: ExtendedRequestOptions) {
+          retryRequestOverride = done;  // will throw.
+          requestOverride = (reqOpts_: DecorateRequestOptions) => {
             assert.strictEqual(reqOpts_, reqOpts);
             setImmediate(done);
             return userStream;
@@ -1238,19 +1288,22 @@ describe('common/util', () => {
             return requestStream;
           };
 
-          userStream.setWritable = function(stream) {
+          userStream.setWritable = (stream) => {
             assert.strictEqual(stream, requestStream);
             done();
           };
 
-          util.makeRequest({method: 'POST'} as ExtendedRequestOptions, {stream: userStream}, util.noop);
+          util.makeRequest(
+              {method: 'POST'} as DecorateRequestOptions, {stream: userStream},
+              util.noop);
         });
 
         it('should expose the abort method from request', (done) => {
-          const userStream = duplexify() as duplexify.Duplexify&Abortable;
+          const userStream = duplexify() as duplexify.Duplexify & Abortable;
 
           requestOverride = () => {
-            const requestStream = duplexify() as duplexify.Duplexify&Abortable;
+            const requestStream =
+                duplexify() as duplexify.Duplexify & Abortable;
             requestStream.abort = done;
             return requestStream;
           };
@@ -1286,11 +1339,13 @@ describe('common/util', () => {
         const error = new Error('Error.');
         const body = fakeResponse.body;
 
-        retryRequestOverride = function(rOpts: ExtendedRequestOptions, opts: MakeRequestConfig, callback: request.RequestCallback) {
-          callback(error, fakeResponse, body);
-        };
+        retryRequestOverride =
+            (rOpts: DecorateRequestOptions, opts: MakeRequestConfig,
+             callback: request.RequestCallback) => {
+              callback(error, fakeResponse, body);
+            };
 
-        stub('handleResp',(err, resp, body_) =>{
+        stub('handleResp', (err, resp, body_) => {
           assert.strictEqual(err, error);
           assert.strictEqual(resp, fakeResponse);
           assert.strictEqual(body_, body);
@@ -1305,65 +1360,79 @@ describe('common/util', () => {
   describe('decorateRequest', () => {
     const projectId = 'not-a-project-id';
     it('should delete qs.autoPaginate', () => {
-      const decoratedReqOpts = util.decorateRequest({
-        autoPaginate: true,
-      } as DecorateRequestOptions, projectId);
+      const decoratedReqOpts = util.decorateRequest(
+          {
+            autoPaginate: true,
+          } as DecorateRequestOptions,
+          projectId);
 
       assert.strictEqual(decoratedReqOpts.autoPaginate, undefined);
     });
 
     it('should delete qs.autoPaginateVal', () => {
-      const decoratedReqOpts = util.decorateRequest({
-        autoPaginateVal: true,
-      } as DecorateRequestOptions, projectId);
+      const decoratedReqOpts = util.decorateRequest(
+          {
+            autoPaginateVal: true,
+          } as DecorateRequestOptions,
+          projectId);
 
       assert.strictEqual(decoratedReqOpts.autoPaginateVal, undefined);
     });
 
     it('should delete objectMode', () => {
-      const decoratedReqOpts = util.decorateRequest({
-        objectMode: true,
-      } as DecorateRequestOptions, projectId);
+      const decoratedReqOpts = util.decorateRequest(
+          {
+            objectMode: true,
+          } as DecorateRequestOptions,
+          projectId);
 
       assert.strictEqual(decoratedReqOpts.objectMode, undefined);
     });
 
     it('should delete qs.autoPaginate', () => {
-      const decoratedReqOpts = util.decorateRequest({
-        qs: {
-          autoPaginate: true,
-        },
-      } as DecorateRequestOptions, projectId);
+      const decoratedReqOpts = util.decorateRequest(
+          {
+            qs: {
+              autoPaginate: true,
+            },
+          } as DecorateRequestOptions,
+          projectId);
 
       assert.strictEqual(decoratedReqOpts.qs.autoPaginate, undefined);
     });
 
     it('should delete qs.autoPaginateVal', () => {
-      const decoratedReqOpts = util.decorateRequest({
-        qs: {
-          autoPaginateVal: true,
-        },
-      } as DecorateRequestOptions, projectId);
+      const decoratedReqOpts = util.decorateRequest(
+          {
+            qs: {
+              autoPaginateVal: true,
+            },
+          } as DecorateRequestOptions,
+          projectId);
 
       assert.strictEqual(decoratedReqOpts.qs.autoPaginateVal, undefined);
     });
 
     it('should delete json.autoPaginate', () => {
-      const decoratedReqOpts = util.decorateRequest({
-        json: {
-          autoPaginate: true,
-        },
-      } as DecorateRequestOptions, projectId);
+      const decoratedReqOpts = util.decorateRequest(
+          {
+            json: {
+              autoPaginate: true,
+            },
+          } as DecorateRequestOptions,
+          projectId);
 
       assert.strictEqual(decoratedReqOpts.json.autoPaginate, undefined);
     });
 
     it('should delete json.autoPaginateVal', () => {
-      const decoratedReqOpts = util.decorateRequest({
-        json: {
-          autoPaginateVal: true,
-        },
-      } as DecorateRequestOptions, projectId);
+      const decoratedReqOpts = util.decorateRequest(
+          {
+            json: {
+              autoPaginateVal: true,
+            },
+          } as DecorateRequestOptions,
+          projectId);
 
       assert.strictEqual(decoratedReqOpts.json.autoPaginateVal, undefined);
     });
@@ -1376,12 +1445,12 @@ describe('common/util', () => {
       };
       const decoratedQs = {};
 
-      utilOverrides.replaceProjectIdToken = function(qs: {}, projectId_: string) {
+      utilOverrides.replaceProjectIdToken = (qs: {}, projectId_: string) => {
         utilOverrides = {};
         assert.deepStrictEqual(qs, reqOpts.qs);
         assert.strictEqual(projectId_, projectId);
         return decoratedQs;
-      } ;
+      };
 
       const decoratedRequest = util.decorateRequest(reqOpts, projectId);
       assert.deepStrictEqual(decoratedRequest.qs, decoratedQs);
@@ -1395,7 +1464,7 @@ describe('common/util', () => {
       };
       const decoratedJson = {};
 
-      utilOverrides.replaceProjectIdToken = function(json: {}, projectId_: string) {
+      utilOverrides.replaceProjectIdToken = (json: {}, projectId_: string) => {
         utilOverrides = {};
         assert.strictEqual(reqOpts.json, json);
         assert.strictEqual(projectId_, projectId);
@@ -1413,7 +1482,7 @@ describe('common/util', () => {
       };
       const decoratedUri = 'http://decorated';
 
-      stub('replaceProjectIdToken',(uri, projectId_) => {
+      stub('replaceProjectIdToken', (uri, projectId_) => {
         assert.strictEqual(uri, reqOpts.uri);
         assert.strictEqual(projectId_, projectId);
         return decoratedUri;
@@ -1430,78 +1499,75 @@ describe('common/util', () => {
 
     it('should replace any {{projectId}} it finds', () => {
       assert.deepEqual(
-        util.replaceProjectIdToken(
-          {
-            here: 'A {{projectId}} Z',
-            nested: {
-              here: 'A {{projectId}} Z',
-              nested: {
-                here: 'A {{projectId}} Z',
-              },
-            },
-            array: [
+          util.replaceProjectIdToken(
               {
                 here: 'A {{projectId}} Z',
                 nested: {
                   here: 'A {{projectId}} Z',
+                  nested: {
+                    here: 'A {{projectId}} Z',
+                  },
                 },
-                nestedArray: [
+                array: [
                   {
                     here: 'A {{projectId}} Z',
                     nested: {
                       here: 'A {{projectId}} Z',
                     },
+                    nestedArray: [
+                      {
+                        here: 'A {{projectId}} Z',
+                        nested: {
+                          here: 'A {{projectId}} Z',
+                        },
+                      },
+                    ],
                   },
                 ],
               },
-            ],
-          },
-          PROJECT_ID
-        ),
-        {
-          here: 'A ' + PROJECT_ID + ' Z',
-          nested: {
+              PROJECT_ID),
+          {
             here: 'A ' + PROJECT_ID + ' Z',
             nested: {
-              here: 'A ' + PROJECT_ID + ' Z',
-            },
-          },
-          array: [
-            {
               here: 'A ' + PROJECT_ID + ' Z',
               nested: {
                 here: 'A ' + PROJECT_ID + ' Z',
               },
-              nestedArray: [
-                {
-                  here: 'A ' + PROJECT_ID + ' Z',
-                  nested: {
-                    here: 'A ' + PROJECT_ID + ' Z',
-                  },
-                },
-              ],
             },
-          ],
-        }
-      );
+            array: [
+              {
+                here: 'A ' + PROJECT_ID + ' Z',
+                nested: {
+                  here: 'A ' + PROJECT_ID + ' Z',
+                },
+                nestedArray: [
+                  {
+                    here: 'A ' + PROJECT_ID + ' Z',
+                    nested: {
+                      here: 'A ' + PROJECT_ID + ' Z',
+                    },
+                  },
+                ],
+              },
+            ],
+          });
     });
 
     it('should replace more than one {{projectId}}', () => {
       assert.deepEqual(
-        util.replaceProjectIdToken(
+          util.replaceProjectIdToken(
+              {
+                here: 'A {{projectId}} M {{projectId}} Z',
+              },
+              PROJECT_ID),
           {
-            here: 'A {{projectId}} M {{projectId}} Z',
-          },
-          PROJECT_ID
-        ),
-        {
-          here: 'A ' + PROJECT_ID + ' M ' + PROJECT_ID + ' Z',
-        }
-      );
+            here: 'A ' + PROJECT_ID + ' M ' + PROJECT_ID + ' Z',
+          });
     });
 
     it('should throw if it needs a projectId and cannot find it', () => {
       assert.throws(() => {
+        // tslint:disable-next-line:no-any
         (util as any).replaceProjectIdToken({
           here: '{{projectId}}',
         });
@@ -1520,7 +1586,7 @@ describe('common/util', () => {
       const local = {a: 'b'} as GlobalConfig;
       let config;
 
-      stub('extendGlobalConfig',(globalConfig, localConfig) =>{
+      stub('extendGlobalConfig', (globalConfig, localConfig) => {
         assert.strictEqual(globalConfig, fakeContext.config_);
         assert.strictEqual(localConfig, local);
         return fakeContext.config_;
@@ -1540,7 +1606,8 @@ describe('common/util', () => {
     };
 
     it('should create an object stream with stream-events', (done) => {
-      streamEventsOverride = function(stream: stream.Readable) {
+      streamEventsOverride = (stream: stream.Readable) => {
+        // tslint:disable-next-line:no-any
         assert.strictEqual((stream as any)._readableState.objectMode, true);
         setImmediate(done);
         return stream;
@@ -1569,16 +1636,16 @@ describe('common/util', () => {
       const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
 
       assert.strictEqual(
-        (limiter.stream as any)._readableState.highWaterMark,
-        OPTIONS.streamOptions.highWaterMark
-      );
+          // tslint:disable-next-line:no-any
+          (limiter.stream as any)._readableState.highWaterMark,
+          OPTIONS.streamOptions.highWaterMark);
     });
 
     describe('makeRequest', () => {
       it('should pass arguments to request method', (done) => {
         const args = [{}, {}];
 
-        const limiter = util.createLimiter(function(obj1: {}, obj2: {}) {
+        const limiter = util.createLimiter((obj1: {}, obj2: {}) => {
           assert.strictEqual(obj1, args[0]);
           assert.strictEqual(obj2, args[1]);
           done();
@@ -1591,15 +1658,12 @@ describe('common/util', () => {
         let callsMade = 0;
         const maxApiCalls = 10;
 
-        const limiter = util.createLimiter(
-          () => {
-            callsMade++;
-            limiter.makeRequest();
-          },
-          {
-            maxApiCalls,
-          }
-        );
+        const limiter = util.createLimiter(() => {
+          callsMade++;
+          limiter.makeRequest();
+        }, {
+          maxApiCalls,
+        });
 
         limiter.makeRequest();
 
@@ -1673,20 +1737,21 @@ describe('common/util', () => {
     const fakeArgs = [null, 1, 2, 3];
     const fakeError = new Error('err.');
 
+    // tslint:disable-next-line
     let FakeClass: any;
 
     beforeEach(() => {
       FakeClass = () => {};
 
-      FakeClass.prototype.methodName = function(callback: Function) {
+      FakeClass.prototype.methodName = (callback: Function) => {
         callback.apply(null, fakeArgs);
       };
 
-      FakeClass.prototype.methodSingle = function(callback: Function) {
+      FakeClass.prototype.methodSingle = (callback: Function) => {
         callback(null, fakeArgs[1]);
       };
 
-      FakeClass.prototype.methodError = function(callback: Function) {
+      FakeClass.prototype.methodError = (callback: Function) => {
         callback(fakeError);
       };
 
@@ -1696,7 +1761,7 @@ describe('common/util', () => {
       FakeClass.prototype.promise = util.noop;
 
       util.promisifyAll(FakeClass);
-      new FakeClass();
+      const fc = new FakeClass();
     });
 
     it('should promisify the correct method', () => {
@@ -1730,7 +1795,7 @@ describe('common/util', () => {
         a: 'a',
       } as PromisifyAllOptions;
 
-      util.promisify = function(method, options) {
+      util.promisify = (method, options) => {
         assert.strictEqual(method, FakeClass2.prototype.method);
         assert.strictEqual(options, fakeOptions);
         util.promisify = promisify;
@@ -1755,6 +1820,7 @@ describe('common/util', () => {
   describe('promisify', () => {
     const fakeContext = {};
     let func: Function;
+    // tslint:disable-next-line:no-any
     let fakeArgs: any[];
 
     beforeEach(() => {
@@ -1767,9 +1833,7 @@ describe('common/util', () => {
 
     it('should not re-promisify the function', () => {
       const original = func;
-
       func = util.promisify(func);
-
       assert.strictEqual(original, func);
     });
 
@@ -1785,70 +1849,64 @@ describe('common/util', () => {
     });
 
     it('should return a promise when the callback is omitted', () => {
-      return func().then(function(args: any[]) {
+      return func().then((args: Array<{}>) => {
         assert.deepEqual(args, fakeArgs.slice(1));
       });
     });
 
     it('should reject the promise on a failed request', () => {
       const error = new Error('err');
-
       fakeArgs = [error];
-
       return func().then(
-        () => {
-          throw new Error('Should have gone to failure block');
-        },
-        function(err: Error) {
-          assert.strictEqual(err, error);
-        }
-      );
+          () => {
+            throw new Error('Should have gone to failure block');
+          },
+          (err: Error) => {
+            assert.strictEqual(err, error);
+          });
     });
 
     it('should allow the Promise object to be overridden', () => {
+      // tslint:disable-next-line:variable-name
       const FakePromise = () => {};
       const promise = func.call({Promise: FakePromise});
-
       assert(promise instanceof FakePromise);
     });
 
     it('should resolve singular arguments', () => {
       const fakeArg = 'hi';
 
-      func = util.promisify(
-        function(callback: () => void) {
-          callback.apply(this, [null, fakeArg]);
-        },
-        {
-          singular: true,
-        }
-      );
+      func = util.promisify((callback: () => void) => {
+        callback.apply(func, [null, fakeArg]);
+      }, {
+        singular: true,
+      });
 
-      return func().then(function(arg: {}) {
+      return func().then((arg: {}) => {
         assert.strictEqual(arg, fakeArg);
       });
     });
 
     it('should ignore singular when multiple args are present', () => {
-      const fakeArgs = ['a', 'b'];
+      // tslint:disable-next-line:no-any
+      const fakeArgs: any[] = ['a', 'b'];
 
-      func = util.promisify(
-        function(callback: Function) {
-          callback.apply(this, [null].concat(fakeArgs as any));
-        },
-        {
-          singular: true,
-        }
-      );
+      func = util.promisify((callback: Function) => {
+        callback.apply(func, [null].concat(fakeArgs));
+      }, {
+        singular: true,
+      });
 
-      return func().then(function(args: any[]) {
+      // tslint:disable-next-line:no-any
+      return func().then((args: any[]) => {
         assert.deepEqual(args, fakeArgs);
       });
     });
 
     describe('trailing undefined arguments', () => {
       it('should not return a promise in callback mode', (done) => {
-        const func = util.promisify(function(optional: any) {
+        // tslint:disable-next-line:no-any
+        const func = util.promisify((optional: any) => {
           assert(is.fn(optional));
           optional(null);
         });
@@ -1860,8 +1918,9 @@ describe('common/util', () => {
       });
 
       it('should return a promise when callback omitted', (done) => {
-        const func = util.promisify(function(optional: any) {
-          assert.strictEqual(arguments.length, 1);
+        // tslint:disable-next-line:no-any
+        const func = util.promisify((optional: any, ...args: any[]) => {
+          assert.strictEqual(args.length, 0);
           assert(is.fn(optional));
           optional(null);
         });
@@ -1872,11 +1931,13 @@ describe('common/util', () => {
       });
 
       it('should not mistake non-function args for callbacks', (done) => {
-        const func = util.promisify(function(foo: any, optional: any) {
-          assert.strictEqual(arguments.length, 2);
-          assert(is.fn(optional));
-          optional(null);
-        });
+        const func =
+            // tslint:disable-next-line:no-any
+            util.promisify((foo: any, optional: any, ...args: any[]) => {
+              assert.strictEqual(args.length, 0);
+              assert(is.fn(optional));
+              optional(null);
+            });
 
         func('foo').then(() => {
           done();
@@ -1887,12 +1948,14 @@ describe('common/util', () => {
 
   describe('privatize', () => {
     it('should set value', () => {
+      // tslint:disable-next-line:no-any
       const obj: any = {};
       util.privatize(obj, 'value', true);
       assert.strictEqual(obj.value, true);
     });
 
     it('should allow values to be overwritten', () => {
+      // tslint:disable-next-line:no-any
       const obj: any = {};
       util.privatize(obj, 'value', true);
       obj.value = false;

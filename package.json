@@ -43,12 +43,13 @@
     "samples-test": "cd samples/ && npm link ../ && npm test && cd ../",
     "test-no-cover": "repo-tools test run --cmd mocha -- build/test/*.js --no-timeouts",
     "test": "repo-tools test run --cmd npm -- run cover",
-    "posttest": "npm run license-check",
+    "posttest": "npm run check && npm run license-check",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "license-check": "jsgl --local .",
     "compile": "tsc -p .",
-    "fix": "gts fix"
+    "fix": "gts fix",
+    "check": "gts check"
   },
   "dependencies": {
     "arrify": "^1.0.1",

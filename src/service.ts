@@ -24,14 +24,9 @@ import * as extend from 'extend';
 import * as pify from 'pify';
 import * as r from 'request';
 
-import {MakeAuthenticatedRequest, PackageJson, util} from './util';
+import {DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
-
-export type ExtendedRequestOptions = r.Options&{
-  interceptors_?: {};
-  uri: string;
-};
 
 export interface ServiceConfig {
   /**
@@ -160,9 +155,8 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(
-      reqOpts: r.Options&ExtendedRequestOptions,
-      callback?: r.RequestCallback): void {
+  request_(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback):
+      void {
     // TODO: fix the tests so this can be private
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -223,7 +217,7 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: ExtendedRequestOptions, callback: r.RequestCallback): void {
+  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void {
     this.request_(reqOpts, callback);
   }
 
@@ -235,7 +229,7 @@ export class Service {
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
-  requestStream(reqOpts: ExtendedRequestOptions) {
+  requestStream(reqOpts: DecorateRequestOptions) {
     return this.request_(reqOpts);
   }
 }

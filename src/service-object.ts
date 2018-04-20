@@ -25,7 +25,7 @@ import * as is from 'is';
 import * as r from 'request';
 
 import {Service} from '.';
-import {ApiError, util} from './util';
+import {ApiError, DecorateRequestOptions, util} from './util';
 
 export interface Interceptor {
   // tslint:disable-next-line:no-any
@@ -36,11 +36,6 @@ export interface Metadata {
   error?: Error;
   done?: boolean;
 }
-
-export type ExtendedRequestOptions = r.Options&{
-  interceptors_?: Interceptor[];
-  uri: string;
-};
 
 export type GetMetadataCallback =
     (err: Error|null, metadata?: Metadata|null, apiResponse?: r.Response) =>
@@ -390,7 +385,7 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: ExtendedRequestOptions, callback?: r.RequestCallback) {
+  request_(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback) {
     reqOpts = extend(true, {}, reqOpts);
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -430,7 +425,7 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: ExtendedRequestOptions, callback: r.RequestCallback) {
+  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback) {
     this.request_(reqOpts, callback);
   }
 
@@ -442,7 +437,7 @@ class ServiceObject extends EventEmitter {
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
-  requestStream(reqOpts: ExtendedRequestOptions) {
+  requestStream(reqOpts: DecorateRequestOptions) {
     return this.request_(reqOpts);
   }
 }
