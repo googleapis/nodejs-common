@@ -16,24 +16,23 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import {ServiceObject, GetMetadataCallback, ServiceObjectConfig, Metadata} from '../src/service-object';
+
+import {Service} from '../src';
 import {Operation} from '../src/operation';
-import { util } from '../src/util';
-import { Service } from '../src';
+import {GetMetadataCallback, Metadata, ServiceObject, ServiceObjectConfig} from '../src/service-object';
+import {util} from '../src/util';
 
 describe('Operation', () => {
   const FAKE_SERVICE = {} as Service;
   const OPERATION_ID = '/a/b/c/d';
 
+  // tslint:disable-next-line:no-any
   let operation: any;
   let sandbox: sinon.SinonSandbox;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    operation = new Operation({
-      parent: FAKE_SERVICE,
-      id: OPERATION_ID
-    });
+    operation = new Operation({parent: FAKE_SERVICE, id: OPERATION_ID});
     operation.Promise = Promise;
   });
 
@@ -80,7 +79,7 @@ describe('Operation', () => {
       sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(() => {
         called = true;
       });
-      new Operation({} as ServiceObjectConfig);
+      const op = new Operation({} as ServiceObjectConfig);
       assert.strictEqual(called, true);
     });
   });
@@ -91,6 +90,7 @@ describe('Operation', () => {
     });
 
     it('should return an instance of the localized Promise', () => {
+      // tslint:disable-next-line:variable-name
       const FakePromise = (operation.Promise = () => {});
       const promise = operation.promise();
 
@@ -104,12 +104,13 @@ describe('Operation', () => {
         operation.emit('error', error);
       });
 
-      return operation.promise()
-        .then(() => {
-          throw new Error('Promise should have been rejected.');
-        }, (err: Error) => {
-          assert.strictEqual(err, error);
-        });
+      return operation.promise().then(
+          () => {
+            throw new Error('Promise should have been rejected.');
+          },
+          (err: Error) => {
+            assert.strictEqual(err, error);
+          });
     });
 
     it('should resolve the promise on complete', () => {
@@ -250,15 +251,15 @@ describe('Operation', () => {
   });
 
   describe('startPolling_', () => {
-
     beforeEach(() => {
-      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(util.noop);
+      sandbox.stub(Operation.prototype, 'listenForEvents_')
+          .callsFake(util.noop);
       operation.hasActiveListeners = true;
     });
 
     it('should not call getMetadata if no listeners', (done) => {
       operation.hasActiveListeners = false;
-      operation.getMetadata = done; // if called, test will fail.
+      operation.getMetadata = done;  // if called, test will fail.
       operation.startPolling_();
       done();
     });
@@ -304,7 +305,7 @@ describe('Operation', () => {
         let startPollingCalled = false;
 
         sandbox.stub(global, 'setTimeout').callsFake((fn, timeoutMs) => {
-          fn(); // should call startPolling_
+          fn();  // should call startPolling_
           assert.strictEqual(timeoutMs, 500);
         });
 
