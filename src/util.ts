@@ -26,6 +26,8 @@ import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import {Duplex, Stream, Transform, TransformOptions} from 'stream';
 import * as streamEvents from 'stream-events';
+
+import {Service} from '.';
 import {Interceptor} from './service-object';
 
 const googleAuth = require('google-auto-auth');
@@ -939,7 +941,7 @@ export class Util {
     const slice = Array.prototype.slice;
 
     // tslint:disable-next-line:no-any
-    const wrapper: any = function() {
+    const wrapper: any = function(this: Service) {
       const context = this;
       let last;
 

@@ -20,24 +20,23 @@ import * as proxyquire from 'proxyquire';
 import {Request} from 'request';
 
 import {Service, ServiceConfig, ServiceOptions} from '../src/service';
-import {DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util} from '../src/util';
+import {DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
 
 proxyquire.noPreserveCache();
 
 const fakeCfg = {} as ServiceConfig;
 
-const makeAuthenticatedRequestFactoryCache =
-    util.makeAuthenticatedRequestFactory;
+const makeAuthRequestFactoryCache = util.makeAuthenticatedRequestFactory;
 let makeAuthenticatedRequestFactoryOverride: null|
     ((config: MakeAuthenticatedRequestFactoryConfig) =>
          MakeAuthenticatedRequest);
-// tslint:disable-next-line:no-any
-util.makeAuthenticatedRequestFactory = (...args: any[]) => {
-  if (makeAuthenticatedRequestFactoryOverride) {
-    return makeAuthenticatedRequestFactoryOverride.apply(this, args);
-  }
 
-  return makeAuthenticatedRequestFactoryCache.apply(this, args);
+util.makeAuthenticatedRequestFactory = function(
+    this: Util, config: MakeAuthenticatedRequestFactoryConfig) {
+  if (makeAuthenticatedRequestFactoryOverride) {
+    return makeAuthenticatedRequestFactoryOverride.call(this, config);
+  }
+  return makeAuthRequestFactoryCache.call(this, config);
 };
 
 describe('Service', () => {

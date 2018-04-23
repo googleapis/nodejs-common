@@ -565,10 +565,10 @@ describe('paginator', () => {
       }
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
-      rs.on('data', function(result: string) {
+      rs.on('data', (result: string) => {
         if (result === 'b') {
           // Pre-maturely end the stream.
-          this.end();
+          rs.end();
         }
 
         assert.notEqual(result, 'c');
@@ -594,10 +594,10 @@ describe('paginator', () => {
       }
 
       const rs = paginator.runAsStream_(PARSED_ARGUMENTS, originalMethod);
-      rs.on('data', function(result: string) {
+      rs.on('data', (result: string) => {
         if (result === 'b') {
           // Pre-maturely end the stream.
-          this.end();
+          rs.end();
         }
       });
       rs.on('end', () => {
