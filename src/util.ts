@@ -26,6 +26,7 @@ import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import {Duplex, Stream, Transform, TransformOptions} from 'stream';
 import * as streamEvents from 'stream-events';
+import {Interceptor} from './service-object';
 
 const googleAuth = require('google-auto-auth');
 
@@ -46,7 +47,14 @@ export interface ParsedHttpRespMessage {
   err?: ApiError;
 }
 
-export interface AutoAuthClient {}
+export interface AutoAuthClient {
+  projectId?: string;
+  authorizeRequest:
+      (rOpts: DecorateRequestOptions,
+       callback:
+           (err: Error|null, opts?: DecorateRequestOptions) => void) => void;
+  getCredentials: () => {};
+}
 
 export interface MakeAuthenticatedRequest {
   (reqOpts: DecorateRequestOptions,
@@ -195,6 +203,7 @@ export interface DecorateRequestOptions extends r.OptionsWithUri {
   autoPaginateVal?: boolean;
   objectMode?: boolean;
   uri: string;
+  interceptors_?: Interceptor[];
 }
 
 
