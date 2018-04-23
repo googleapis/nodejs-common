@@ -19,7 +19,7 @@
  */
 
 import * as extend from 'extend';
-
+import * as pify from 'pify';
 import {Metadata, ServiceObject, ServiceObjectConfig} from './service-object';
 
 export class Operation extends ServiceObject {
@@ -122,22 +122,16 @@ export class Operation extends ServiceObject {
    *   - callback(null, metadata): Operation complete
    *
    * @private
-   *
-   * @param {function} callback
    */
-  protected poll_(callback: (err?: Error|null, resp?: Metadata|null) => void) {
-    this.getMetadata((err, resp) => {
-      if (err) {
-        return callback(err);
-      }
+  private poll_(): Promise<Metadata|null> {
+    return pify(this.getMetadata)().then(resp => {
       if (resp && resp.error) {
-        return callback(resp.error);
+        throw resp.error;
       }
-      if (!resp!.done) {
-        callback();
-        return;
+      if (!resp.done) {
+        return null;
       }
-      callback(null, resp);
+      return resp;
     });
   }
 
@@ -154,18 +148,16 @@ export class Operation extends ServiceObject {
     if (!this.hasActiveListeners) {
       return;
     }
-    this.poll_((err, metadata) => {
-      if (err) {
-        this.emit('error', err);
-        return;
-      }
-
-      if (!metadata) {
-        setTimeout(this.startPolling_.bind(this), 500);
-        return;
-      }
-
-      this.emit('complete', metadata);
-    });
+    this.poll_().then(
+        metadata => {
+          if (!metadata) {
+            setTimeout(this.startPolling_.bind(this), 500);
+            return;
+          }
+          this.emit('complete', metadata);
+        },
+        err => {
+          this.emit('error', err);
+        });
   }
 }

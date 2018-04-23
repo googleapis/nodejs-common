@@ -1007,7 +1007,6 @@ export class Util {
   // tslint:disable-next-line:variable-name
   promisifyAll(Class: Function, options?: PromisifyAllOptions) {
     const exclude = (options && options.exclude) || [];
-
     const methods = Object.keys(Class.prototype).filter((methodName) => {
       // clang-format off
       return (
