@@ -970,16 +970,16 @@ describe('common/util', () => {
         it('should emit an error and end the stream', (done) => {
           const makeAuthenticatedRequest =
               util.makeAuthenticatedRequestFactory();
-          (makeAuthenticatedRequest({} as DecorateRequestOptions) as
-           EventEmitter)
-              .on('error', function(err: Error) {
-                assert.strictEqual(err, error);
-                const stream = this;
-                setImmediate(() => {
-                  assert.strictEqual(stream.destroyed, true);
-                  done();
-                });
-              });
+          const opts = {} as DecorateRequestOptions;
+          // tslint:disable-next-line:no-any
+          const stream = makeAuthenticatedRequest(opts) as any;
+          stream.on('error', (err: Error) => {
+            assert.strictEqual(err, error);
+            setImmediate(() => {
+              assert.strictEqual(stream.destroyed, true);
+              done();
+            });
+          });
         });
       });
 
@@ -1826,7 +1826,7 @@ describe('common/util', () => {
     beforeEach(() => {
       fakeArgs = [null, 1, 2, 3];
 
-      func = util.promisify(function(callback: () => void) {
+      func = util.promisify(function(this: {}, callback: () => void) {
         callback.apply(this, fakeArgs);
       });
     });
@@ -1838,9 +1838,8 @@ describe('common/util', () => {
     });
 
     it('should not return a promise in callback mode', (done) => {
-      const returnVal = func.call(fakeContext, function() {
+      const returnVal = func.call(fakeContext, function(this: {}) {
         const args = [].slice.call(arguments);
-
         assert.deepEqual(args, fakeArgs);
         assert.strictEqual(this, fakeContext);
         assert(!returnVal);

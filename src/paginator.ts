@@ -116,7 +116,7 @@ export class Paginator {
    */
   streamify(methodName: string) {
     // tslint:disable-next-line:no-any
-    return function(...args: any[]) {
+    return function(this: {[index: string]: Function}, ...args: any[]) {
       const parsedArguments = paginator.parseArguments_(args);
       const originalMethod = this[methodName + '_'] || this[methodName];
       return paginator.runAsStream_(parsedArguments, originalMethod.bind(this));
