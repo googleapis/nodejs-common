@@ -144,20 +144,19 @@ export class Operation extends ServiceObject {
    *
    * @private
    */
-  protected startPolling_() {
+  protected async startPolling_() {
     if (!this.hasActiveListeners) {
       return;
     }
-    this.poll_().then(
-        metadata => {
-          if (!metadata) {
-            setTimeout(this.startPolling_.bind(this), 500);
-            return;
-          }
-          this.emit('complete', metadata);
-        },
-        err => {
-          this.emit('error', err);
-        });
+    try {
+      const metadata = await this.poll_();
+      if (!metadata) {
+        setTimeout(this.startPolling_.bind(this), 500);
+        return;
+      }
+      this.emit('complete', metadata);
+    } catch (err) {
+      this.emit('error', err);
+    }
   }
 }
