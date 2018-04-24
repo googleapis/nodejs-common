@@ -17,7 +17,7 @@
 import * as assert from 'assert';
 import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
-import {Request} from 'request';
+import {Request, RequestResponse} from 'request';
 
 import {Service, ServiceConfig, ServiceOptions} from '../src/service';
 import {DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
@@ -248,7 +248,7 @@ describe('Service', () => {
       };
     });
 
-    it('should compose the correct request', (done) => {
+    it('should compose the correct request', async () => {
       const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
       service.makeAuthenticatedRequest =
@@ -259,7 +259,7 @@ describe('Service', () => {
             callback();  // done()
           };
 
-      service.request_(reqOpts, done);
+      await service.request_(reqOpts);
     });
 
     it('should support absolute uris', (done) => {
@@ -497,17 +497,13 @@ describe('Service', () => {
       Service.prototype.request_ = request_;
     });
 
-    it('should call through to _request', (done) => {
+    it('should call through to _request', async () => {
       const fakeOpts = {};
-
-      Service.prototype.request_ =
-          (reqOpts: DecorateRequestOptions,
-           callback: (err: Error|null) => void) => {
-            assert.strictEqual(reqOpts, fakeOpts);
-            callback!(null);
-          };
-
-      service.request(fakeOpts, done);
+      Service.prototype.request_ = async (reqOpts: DecorateRequestOptions) => {
+        assert.strictEqual(reqOpts, fakeOpts);
+        return Promise.resolve({} as RequestResponse);
+      };
+      await service.request(fakeOpts);
     });
   });
 
@@ -522,16 +518,16 @@ describe('Service', () => {
       Service.prototype.request_ = request_;
     });
 
-    it('should return whatever _request returns', () => {
+    it('should return whatever _request returns', async () => {
       const fakeOpts = {};
       const fakeStream = {};
 
-      Service.prototype.request_ = (reqOpts: DecorateRequestOptions) => {
+      Service.prototype.request_ = async (reqOpts: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts, fakeOpts);
         return fakeStream;
       };
 
-      const stream = service.requestStream(fakeOpts);
+      const stream = await service.requestStream(fakeOpts);
       assert.strictEqual(stream, fakeStream);
     });
   });

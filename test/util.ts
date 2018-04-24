@@ -101,7 +101,7 @@ describe('common/util', () => {
 
     // Override all util methods, allowing them to be mocked. Overrides are
     // removed before each test.
-    Object.keys(util).forEach((utilMethod) => {
+    Object.getOwnPropertyNames(util).forEach((utilMethod) => {
       // tslint:disable-next-line:no-any
       if (typeof (util as any)[utilMethod] !== 'function') {
         return;
@@ -1838,7 +1838,8 @@ describe('common/util', () => {
     });
 
     it('should not return a promise in callback mode', (done) => {
-      const returnVal = func.call(fakeContext, function(this: {}) {
+      let returnVal: {};
+      returnVal = func.call(fakeContext, function(this: {}) {
         const args = [].slice.call(arguments);
         assert.deepEqual(args, fakeArgs);
         assert.strictEqual(this, fakeContext);
@@ -1903,17 +1904,15 @@ describe('common/util', () => {
     });
 
     describe('trailing undefined arguments', () => {
-      it('should not return a promise in callback mode', (done) => {
+      it('should not return a promise in callback mode', () => {
         // tslint:disable-next-line:no-any
         const func = util.promisify((optional: any) => {
-          assert(is.fn(optional));
+          assert(typeof optional === 'function');
           optional(null);
         });
 
-        const returnVal = func(() => {
-          assert(!returnVal);
-          done();
-        });
+        const returnVal = func(() => {});
+        assert.equal(returnVal, undefined);
       });
 
       it('should return a promise when callback omitted', (done) => {

@@ -206,6 +206,7 @@ export interface DecorateRequestOptions extends r.OptionsWithUri {
   objectMode?: boolean;
   uri: string;
   interceptors_?: Interceptor[];
+  shouldReturnStream?: boolean;
 }
 
 
@@ -1007,7 +1008,6 @@ export class Util {
   // tslint:disable-next-line:variable-name
   promisifyAll(Class: Function, options?: PromisifyAllOptions) {
     const exclude = (options && options.exclude) || [];
-
     const methods = Object.keys(Class.prototype).filter((methodName) => {
       // clang-format off
       return (

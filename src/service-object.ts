@@ -23,6 +23,7 @@ import {EventEmitter} from 'events';
 import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
+import {Duplex} from 'stream';
 
 import {Service} from '.';
 import {ApiError, DecorateRequestOptions, util} from './util';
@@ -145,12 +146,15 @@ class ServiceObject extends EventEmitter {
     this.Promise = this.parent ? this.parent.Promise : undefined;
 
     if (config.methods) {
-      const allMethodNames = Object.keys(ServiceObject.prototype);
+      const allMethodNames =
+          Object.getOwnPropertyNames(ServiceObject.prototype);
       allMethodNames
           .filter((methodName) => {
             return (
                 // All ServiceObjects need `request`.
-                ! / ^request /.test(methodName) &&
+                // clang-format off
+                !/^request/.test(methodName) &&
+                // clang-format on
                 // The ServiceObject didn't redefine the method.
                 this[methodName] === ServiceObject.prototype[methodName] &&
                 // This method isn't wanted.
@@ -221,9 +225,13 @@ class ServiceObject extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err: Error|null, resp: r.Response) => {
-      callback!(err, resp);
-    });
+    this.request(reqOpts).then(
+        res => {
+          callback!(null, res);
+        },
+        err => {
+          callback!(err);
+        });
   }
 
   /**
@@ -319,7 +327,6 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   getMetadata(callback: GetMetadataCallback) {
-    const self = this;
     const methodConfig = this.methods.getMetadata || {};
     const reqOpts = extend(
         {
@@ -329,16 +336,14 @@ class ServiceObject extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err: ApiError|null, resp?: r.Response) => {
-      if (err) {
-        callback(err, null, resp);
-        return;
-      }
-
-      self.metadata = resp as Metadata;
-
-      callback(null, self.metadata, resp);
-    });
+    this.request(reqOpts).then(
+        resp => {
+          this.metadata = resp;
+          callback(null, this.metadata, resp);
+        },
+        err => {
+          callback!(err);
+        });
   }
 
   /**
@@ -366,14 +371,14 @@ class ServiceObject extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err, resp) => {
-      if (err) {
-        callback!(err, resp);
-        return;
-      }
-      self.metadata = resp as {};
-      callback!(null, resp);
-    });
+    this.request(reqOpts).then(
+        resp => {
+          self.metadata = resp;
+          callback!(null, resp);
+        },
+        err => {
+          callback!(err);
+        });
   }
 
   /**
@@ -385,7 +390,7 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback) {
+  request_(reqOpts: DecorateRequestOptions): Promise<r.Response|r.Request> {
     reqOpts = extend(true, {}, reqOpts);
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -409,11 +414,11 @@ class ServiceObject extends EventEmitter {
 
     reqOpts.interceptors_ = childInterceptors.concat(localInterceptors);
 
-    if (!callback) {
+    if (reqOpts.shouldReturnStream) {
       return this.parent.requestStream(reqOpts);
     }
 
-    this.parent.request(reqOpts, callback);
+    return this.parent.request(reqOpts);
   }
 
   /**
@@ -425,8 +430,8 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback) {
-    this.request_(reqOpts, callback);
+  request(reqOpts: DecorateRequestOptions): Promise<r.Response> {
+    return this.request_(reqOpts) as Promise<r.Response>;
   }
 
   /**
@@ -437,11 +442,13 @@ class ServiceObject extends EventEmitter {
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
-  requestStream(reqOpts: DecorateRequestOptions) {
-    return this.request_(reqOpts);
+  requestStream(reqOpts: DecorateRequestOptions): Promise<r.Request> {
+    const opts = extend(true, reqOpts, {shouldReturnStream: true});
+    return this.request_(opts) as Promise<r.Request>;
   }
 }
 
-util.promisifyAll(ServiceObject);
+util.promisifyAll(
+    ServiceObject, {exclude: ['requestStream', 'request', 'request_']});
 
 export {ServiceObject};

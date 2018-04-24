@@ -93,7 +93,6 @@ describe('Operation', () => {
       // tslint:disable-next-line:variable-name
       const FakePromise = (operation.Promise = () => {});
       const promise = operation.promise();
-
       assert(promise instanceof FakePromise);
     });
 
@@ -184,20 +183,21 @@ describe('Operation', () => {
     });
 
     describe('could not get metadata', () => {
-      it('should callback with an error', (done) => {
+      it('should callback with an error', async () => {
         const error = new Error('Error.');
-
         operation.getMetadata = (callback: (err: Error) => void) => {
           callback(error);
         };
-
-        operation.poll_((err: Error) => {
+        try {
+          await operation.poll_();
+        } catch (err) {
           assert.strictEqual(err, error);
-          done();
-        });
+          return;
+        }
+        throw new Error('expected to throw');
       });
 
-      it('should callback with the operation error', (done) => {
+      it('should callback with the operation error', async () => {
         const apiResponse = {
           error: {},
         } as Metadata;
@@ -206,10 +206,13 @@ describe('Operation', () => {
           callback(null, apiResponse);
         };
 
-        operation.poll_((err: Error) => {
+        try {
+          await operation.poll_();
+        } catch (err) {
           assert.strictEqual(err, apiResponse.error);
-          done();
-        });
+          return;
+        }
+        throw new Error('expected to throw');
       });
     });
 
@@ -222,12 +225,9 @@ describe('Operation', () => {
         };
       });
 
-      it('should callback with no arguments', (done) => {
-        operation.poll_((err: Error, resp: {}) => {
-          assert.strictEqual(err, undefined);
-          assert.strictEqual(resp, undefined);
-          done();
-        });
+      it('should callback with no arguments', async () => {
+        const resp = await operation.poll_();
+        assert.strictEqual(resp, null);
       });
     });
 
@@ -240,12 +240,9 @@ describe('Operation', () => {
         };
       });
 
-      it('should emit complete with metadata', (done) => {
-        operation.poll_((err: Error, resp: {}) => {
-          assert.ifError(err);
-          assert.strictEqual(resp, apiResponse);
-          done();
-        });
+      it('should emit complete with metadata', async () => {
+        const resp = await operation.poll_();
+        assert.strictEqual(resp, apiResponse);
       });
     });
   });

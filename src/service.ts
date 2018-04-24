@@ -155,8 +155,7 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback):
-      void {
+  request_(reqOpts: DecorateRequestOptions): Promise<r.Response> {
     // TODO: fix the tests so this can be private
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -204,8 +203,8 @@ export class Service {
       'x-goog-api-client':
           `gl-node/${process.versions.node} gccl/${pkg.version}`,
     });
-    // tslint:disable-next-line:no-any
-    this.makeAuthenticatedRequest(reqOpts, callback as any);
+
+    return pify(this.makeAuthenticatedRequest)(reqOpts);
   }
 
   /**
@@ -217,8 +216,8 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void {
-    this.request_(reqOpts, callback);
+  async request(reqOpts: DecorateRequestOptions): Promise<r.Response> {
+    return this.request_(reqOpts);
   }
 
   /**
