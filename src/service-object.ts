@@ -390,8 +390,7 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: DecorateRequestOptions, returnStream = false):
-      Promise<r.Response|r.Request> {
+  request_(reqOpts: DecorateRequestOptions): Promise<r.Response|r.Request> {
     reqOpts = extend(true, {}, reqOpts);
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -415,7 +414,7 @@ class ServiceObject extends EventEmitter {
 
     reqOpts.interceptors_ = childInterceptors.concat(localInterceptors);
 
-    if (returnStream) {
+    if (reqOpts.shouldReturnStream) {
       return this.parent.requestStream(reqOpts);
     }
 
@@ -444,7 +443,8 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
   requestStream(reqOpts: DecorateRequestOptions): Promise<r.Request> {
-    return this.request_(reqOpts, true) as Promise<r.Request>;
+    const opts = extend(true, reqOpts, {shouldReturnStream: true});
+    return this.request_(opts) as Promise<r.Request>;
   }
 }
 

@@ -836,7 +836,8 @@ describe('ServiceObject', () => {
         return fakeObj;
       };
 
-      const returnVal = await serviceObject.request_(reqOpts, true);
+      const opts = extend(true, reqOpts, {shouldReturnStream: true});
+      const returnVal = await serviceObject.request_(opts);
       assert.strictEqual(returnVal, fakeObj);
     });
   });

@@ -206,6 +206,7 @@ export interface DecorateRequestOptions extends r.OptionsWithUri {
   objectMode?: boolean;
   uri: string;
   interceptors_?: Interceptor[];
+  shouldReturnStream?: boolean;
 }
 
 
