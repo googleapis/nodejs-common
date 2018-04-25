@@ -20,6 +20,7 @@
 
 import * as duplexify from 'duplexify';
 import * as ent from 'ent';
+import {EventEmitter} from 'events';
 import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
@@ -318,6 +319,12 @@ export interface MakeRequestConfig {
   shouldRetryFn?: (response?: r.Response) => boolean;
 }
 
+interface HandleRespResponse {
+  err: Error;
+  body: ResponseBody;
+  resp: r.Response;
+}
+
 export class Util {
   MissingProjectIdError = MissingProjectIdError;
   ApiError = ApiError;
@@ -535,122 +542,8 @@ export class Util {
 
     const authClient = googleAuth(googleAutoAuthConfig);
 
-    /**
-     * The returned function that will make an authenticated request.
-     *
-     * @param {type} reqOpts - Request options in the format `request` expects.
-     * @param {object|function} options - Configuration object or callback function.
-     * @param {function=} options.onAuthenticated - If provided, a request will
-     *     not be made. Instead, this function is passed the error &
-     * authenticated request options.
-     */
-    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions):
-        duplexify.Duplexify;
-    function makeAuthenticatedRequest(
-        reqOpts: DecorateRequestOptions,
-        options?: MakeAuthenticatedRequestOptions|
-        OnAuthenticatedCallback): void|Abortable;
-    function makeAuthenticatedRequest(
-        reqOpts: DecorateRequestOptions,
-        callback?: OnAuthenticatedCallback): void|Abortable;
-    function makeAuthenticatedRequest(
-        reqOpts: DecorateRequestOptions,
-        optionsOrCallback?: MakeAuthenticatedRequestOptions|
-        OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify {
-      let stream: duplexify.Duplexify;
-      const reqConfig = extend({}, config);
-      let activeRequest_: void|Abortable|null;
-
-      if (!optionsOrCallback) {
-        stream = duplexify();
-        reqConfig.stream = stream;
-      }
-
-      const onAuthenticated =
-          (err: Error|null, authenticatedReqOpts: DecorateRequestOptions) => {
-            const autoAuthFailed = err &&
-                err.message.indexOf('Could not load the default credentials') >
-                    -1;
-
-            if (autoAuthFailed) {
-              // Even though authentication failed, the API might not actually
-              // care.
-              authenticatedReqOpts = reqOpts;
-            }
-
-            if (!err || autoAuthFailed) {
-              let projectId = authClient.projectId;
-
-              if (config.projectId && config.projectId !== '{{projectId}}') {
-                projectId = config.projectId;
-              }
-
-              try {
-                authenticatedReqOpts =
-                    util.decorateRequest(authenticatedReqOpts, projectId);
-                err = null;
-              } catch (e) {
-                // A projectId was required, but we don't have one.
-                // Re-use the "Could not load the default credentials error" if
-                // auto auth failed.
-                err = err || e;
-              }
-            }
-
-            let options!: MakeAuthenticatedRequestOptions;
-            let callback!: OnAuthenticatedCallback;
-            switch (typeof optionsOrCallback) {
-              case 'object':
-                options = optionsOrCallback as MakeAuthenticatedRequestOptions;
-                callback = options.onAuthenticated;
-                break;
-              case 'function':
-                callback = optionsOrCallback as OnAuthenticatedCallback;
-                break;
-              default:
-                break;
-            }
-
-            if (err) {
-              if (stream) {
-                stream.destroy(err);
-              } else {
-                callback(err);
-              }
-
-              return;
-            }
-
-            if (options && options.onAuthenticated) {
-              callback(null, authenticatedReqOpts);
-            } else {
-              activeRequest_ =
-                  util.makeRequest(authenticatedReqOpts, reqConfig, callback);
-            }
-          };
-
-      if (reqConfig.customEndpoint) {
-        // Using a custom API override. Do not use `google-auto-auth` for
-        // authentication. (ex: connecting to a local Datastore server)
-        onAuthenticated(null, reqOpts);
-      } else {
-        authClient.authorizeRequest(reqOpts, onAuthenticated);
-      }
-
-      if (stream!) {
-        return stream!;
-      }
-
-      return {
-        abort() {
-          if (activeRequest_) {
-            activeRequest_.abort();
-            activeRequest_ = null;
-          }
-        },
-      };
-    }
-    const mar = makeAuthenticatedRequest as MakeAuthenticatedRequest;
+    const w = new MakeAuthenticatedRequestWrapper(config, authClient);
+    const mar = w.makeAuthenticatedRequest as MakeAuthenticatedRequest;
     mar.getCredentials = authClient.getCredentials.bind(authClient);
     mar.authClient = authClient;
     return mar;
@@ -1035,6 +928,163 @@ export class Util {
    */
   privatize(object: {}, propName: string, value: {}) {
     Object.defineProperty(object, propName, {value, writable: true});
+  }
+}
+
+class MakeAuthenticatedRequestWrapper {
+  config: MakeAuthenticatedRequestFactoryConfig;
+  authClient: AutoAuthClient;
+
+  constructor(
+      config: MakeAuthenticatedRequestFactoryConfig,
+      authClient: AutoAuthClient) {
+    this.config = config;
+    this.authClient = authClient;
+    this.makeAuthenticatedRequest = this.makeAuthenticatedRequest.bind(this);
+  }
+
+  /**
+   * The returned function that will make an authenticated request.
+   *
+   * @param {type} reqOpts - Request options in the format `request` expects.
+   * @param {object|function} options - Configuration object or callback function.
+   * @param {function=} options.onAuthenticated - If provided, a request will
+   *     not be made. Instead, this function is passed the error &
+   * authenticated request options.
+   */
+  makeAuthenticatedRequest(reqOpts: DecorateRequestOptions):
+      duplexify.Duplexify;
+  makeAuthenticatedRequest(
+      reqOpts: DecorateRequestOptions,
+      options?: MakeAuthenticatedRequestOptions|
+      OnAuthenticatedCallback): void|Abortable;
+  makeAuthenticatedRequest(
+      reqOpts: DecorateRequestOptions,
+      callback?: OnAuthenticatedCallback): void|Abortable;
+  makeAuthenticatedRequest(
+      reqOpts: DecorateRequestOptions,
+      optionsOrCallback?: MakeAuthenticatedRequestOptions|
+      OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify {
+    let stream: duplexify.Duplexify;
+    const reqConfig = extend({}, this.config);
+    let activeRequest_: void|Abortable|null;
+
+    if (!optionsOrCallback) {
+      stream = duplexify();
+      reqConfig.stream = stream;
+    }
+
+    let options!: MakeAuthenticatedRequestOptions;
+    let callback!: OnAuthenticatedCallback;
+    switch (typeof optionsOrCallback) {
+      case 'object':
+        options = optionsOrCallback as MakeAuthenticatedRequestOptions;
+        callback = options.onAuthenticated;
+        break;
+      case 'function':
+        callback = optionsOrCallback as OnAuthenticatedCallback;
+        break;
+      default:
+        break;
+    }
+
+    const w = new OnAuthenticatedWrapper(
+        reqOpts, options, this.authClient, reqConfig, stream!, callback);
+    w.on('newActiveRequest', (req: void|Abortable) => {
+      activeRequest_ = req;
+    });
+    if (reqConfig.customEndpoint) {
+      // Using a custom API override. Do not use `google-auto-auth` for
+      // authentication. (ex: connecting to a local Datastore server)
+      w.onAuthenticated(null, reqOpts);
+    } else {
+      this.authClient.authorizeRequest(reqOpts, w.onAuthenticated);
+    }
+
+    if (stream!) {
+      return stream!;
+    }
+
+    return {
+      abort() {
+        if (activeRequest_) {
+          activeRequest_.abort();
+          activeRequest_ = null;
+        }
+      },
+    };
+  }
+}
+
+class OnAuthenticatedWrapper extends EventEmitter {
+  reqOpts: DecorateRequestOptions;
+  options: MakeAuthenticatedRequestOptions;
+  authClient: AutoAuthClient;
+  config: MakeAuthenticatedRequestFactoryConfig;
+  stream?: duplexify.Duplexify;
+  callback: OnAuthenticatedCallback;
+  constructor(
+      reqOpts: DecorateRequestOptions, options: MakeAuthenticatedRequestOptions,
+      authClient: AutoAuthClient, config: MakeAuthenticatedRequestFactoryConfig,
+      stream: duplexify.Duplexify|undefined,
+      callback: OnAuthenticatedCallback) {
+    super();
+    this.reqOpts = reqOpts;
+    this.options = options;
+    this.authClient = authClient;
+    this.config = config;
+    this.stream = stream;
+    this.callback = callback;
+    this.onAuthenticated = this.onAuthenticated.bind(this);
+  }
+
+  onAuthenticated(
+      err: Error|null, authenticatedReqOpts?: DecorateRequestOptions) {
+    const autoAuthFailed = err &&
+        err.message.indexOf('Could not load the default credentials') > -1;
+
+    if (autoAuthFailed) {
+      // Even though authentication failed, the API might not actually
+      // care.
+      authenticatedReqOpts = this.reqOpts;
+    }
+
+    if (!err || autoAuthFailed) {
+      let projectId = this.authClient.projectId;
+
+      if (this.config.projectId && this.config.projectId !== '{{projectId}}') {
+        projectId = this.config.projectId;
+      }
+
+      try {
+        authenticatedReqOpts =
+            util.decorateRequest(authenticatedReqOpts!, projectId!);
+        err = null;
+      } catch (e) {
+        // A projectId was required, but we don't have one.
+        // Re-use the "Could not load the default credentials error" if
+        // auto auth failed.
+        err = err || e;
+      }
+    }
+
+    if (err) {
+      if (this.stream) {
+        this.stream.destroy(err);
+      } else {
+        this.callback(err);
+      }
+
+      return;
+    }
+
+    if (this.options && this.options.onAuthenticated) {
+      this.callback(null, authenticatedReqOpts);
+    } else {
+      this.emit(
+          'newActiveRequest',
+          util.makeRequest(authenticatedReqOpts!, this.config, this.callback));
+    }
   }
 }
 
