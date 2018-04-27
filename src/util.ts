@@ -31,8 +31,6 @@ import * as streamEvents from 'stream-events';
 import {Service} from '.';
 import {Interceptor} from './service-object';
 
-
-
 const request = r.defaults({
   timeout: 60000,
   gzip: true,
