@@ -800,7 +800,6 @@ describe('ServiceObject', () => {
       };
 
       const res = await child.request_({uri: ''});
-      console.log(res);
     });
 
     it('should pass a clone of the interceptors', async () => {

@@ -27,6 +27,9 @@ import {Util, ApiError, GlobalConfig, DecorateRequestOptions, MakeRequestConfig,
 import * as duplexify from 'duplexify';
 import {GoogleAuthOptions, GoogleAuth} from 'google-auth-library';
 import {AxiosRequestConfig} from 'axios';
+import * as nock from 'nock';
+
+nock.disableNetConnect();
 
 const fakeResponse = {
   statusCode: 200,
@@ -817,6 +820,9 @@ describe('common/util', () => {
             done();
           }
         });
+        retryRequestOverride = () => {
+          return new stream.PassThrough();
+        };
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(fake);
         const mar = util.makeAuthenticatedRequestFactory();
         mar(fakeReqOpts);
