@@ -268,11 +268,12 @@ describe('ServiceObject', () => {
         },
       };
 
-      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts_) => {
-        assert.strictEqual(reqOpts_.method, method.reqOpts.method);
-        assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
-        done();
-      });
+      sandbox.stub(ServiceObject.prototype, 'request')
+          .callsFake(async (reqOpts_) => {
+            assert.strictEqual(reqOpts_.method, method.reqOpts.method);
+            assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
+            done();
+          });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
       serviceObject.methods.delete = method;
@@ -541,11 +542,12 @@ describe('ServiceObject', () => {
         },
       };
 
-      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts_) => {
-        assert.strictEqual(reqOpts_.method, method.reqOpts.method);
-        assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
-        done();
-      });
+      sandbox.stub(ServiceObject.prototype, 'request')
+          .callsFake(async (reqOpts_) => {
+            assert.strictEqual(reqOpts_.method, method.reqOpts.method);
+            assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
+            done();
+          });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
       serviceObject.methods.getMetadata = method;
@@ -630,12 +632,13 @@ describe('ServiceObject', () => {
 
       const expectedJson = extend(true, {}, metadataDefault, metadata);
 
-      sandbox.stub(ServiceObject.prototype, 'request').callsFake((reqOpts_) => {
-        assert.deepStrictEqual(reqOpts_.method, method.reqOpts.method);
-        assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
-        assert.deepStrictEqual(reqOpts_.json, expectedJson);
-        done();
-      });
+      sandbox.stub(ServiceObject.prototype, 'request')
+          .callsFake(async (reqOpts_) => {
+            assert.deepStrictEqual(reqOpts_.method, method.reqOpts.method);
+            assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
+            assert.deepStrictEqual(reqOpts_.json, expectedJson);
+            done();
+          });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
       serviceObject.methods.setMetadata = method;
@@ -797,7 +800,6 @@ describe('ServiceObject', () => {
       };
 
       const res = await child.request_({uri: ''});
-      console.log(res);
     });
 
     it('should pass a clone of the interceptors', async () => {

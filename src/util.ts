@@ -21,6 +21,7 @@
 import * as duplexify from 'duplexify';
 import * as ent from 'ent';
 import * as extend from 'extend';
+import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
@@ -29,8 +30,6 @@ import * as streamEvents from 'stream-events';
 
 import {Service} from '.';
 import {Interceptor} from './service-object';
-
-const googleAuth = require('google-auto-auth');
 
 const request = r.defaults({
   timeout: 60000,
@@ -49,21 +48,12 @@ export interface ParsedHttpRespMessage {
   err?: ApiError;
 }
 
-export interface AutoAuthClient {
-  projectId?: string;
-  authorizeRequest:
-      (rOpts: DecorateRequestOptions,
-       callback:
-           (err: Error|null, opts?: DecorateRequestOptions) => void) => void;
-  getCredentials: () => {};
-}
-
 export interface MakeAuthenticatedRequest {
   (reqOpts: DecorateRequestOptions,
    optionsOrCallback?: MakeAuthenticatedRequestOptions|
    OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify;
   getCredentials: Function;
-  authClient: AutoAuthClient;
+  authClient: GoogleAuth;
 }
 
 export type Abortable = {
@@ -114,18 +104,14 @@ export interface GlobalConfig {
   interceptors_?: {};
 }
 
-export interface MakeAuthenticatedRequestFactoryConfig {
+export interface MakeAuthenticatedRequestFactoryConfig extends
+    GoogleAuthOptions {
   /**
    * Automatically retry requests if the response is related to rate limits or
    * certain intermittent server errors. We will exponentially backoff
    * subsequent requests by default. (default: true)
    */
   autoRetry?: boolean;
-
-  /**
-   * Credentials object.
-   */
-  credentials?: {};
 
   /**
    * If true, just return the provided request options. Default: false.
@@ -142,18 +128,6 @@ export interface MakeAuthenticatedRequestFactoryConfig {
    * (default: 3)
    */
   maxRetries?: number;
-
-  /**
-   * Path to a .json, .pem, or .p12 keyfile.
-   */
-  keyFile?: string;
-
-  /**
-   * Array of scopes required for the API.
-   */
-  scopes?: string[];
-
-  projectId?: string;
 
   stream?: duplexify.Duplexify;
 }
@@ -533,7 +507,7 @@ export class Util {
       delete googleAutoAuthConfig.projectId;
     }
 
-    const authClient = googleAuth(googleAutoAuthConfig);
+    const authClient = new GoogleAuth(googleAutoAuthConfig);
 
     /**
      * The returned function that will make an authenticated request.
@@ -567,7 +541,7 @@ export class Util {
       }
 
       const onAuthenticated =
-          (err: Error|null, authenticatedReqOpts: DecorateRequestOptions) => {
+          (err: Error|null, authenticatedReqOpts?: DecorateRequestOptions) => {
             const autoAuthFailed = err &&
                 err.message.indexOf('Could not load the default credentials') >
                     -1;
@@ -579,7 +553,8 @@ export class Util {
             }
 
             if (!err || autoAuthFailed) {
-              let projectId = authClient.projectId;
+              // tslint:disable-next-line:no-any
+              let projectId = (authClient as any)._cachedProjectId;
 
               if (config.projectId && config.projectId !== '{{projectId}}') {
                 projectId = config.projectId;
@@ -587,7 +562,7 @@ export class Util {
 
               try {
                 authenticatedReqOpts =
-                    util.decorateRequest(authenticatedReqOpts, projectId);
+                    util.decorateRequest(authenticatedReqOpts!, projectId);
                 err = null;
               } catch (e) {
                 // A projectId was required, but we don't have one.
@@ -625,16 +600,23 @@ export class Util {
               callback(null, authenticatedReqOpts);
             } else {
               activeRequest_ =
-                  util.makeRequest(authenticatedReqOpts, reqConfig, callback);
+                  util.makeRequest(authenticatedReqOpts!, reqConfig, callback);
             }
           };
 
       if (reqConfig.customEndpoint) {
-        // Using a custom API override. Do not use `google-auto-auth` for
+        // Using a custom API override. Do not use `google-auth-library` for
         // authentication. (ex: connecting to a local Datastore server)
         onAuthenticated(null, reqOpts);
       } else {
-        authClient.authorizeRequest(reqOpts, onAuthenticated);
+        authClient.authorizeRequest(reqOpts).then(
+            res => {
+              const opts = extend(true, {}, reqOpts, res);
+              onAuthenticated(null, opts);
+            },
+            err => {
+              onAuthenticated(err);
+            });
       }
 
       if (stream!) {
@@ -643,10 +625,12 @@ export class Util {
 
       return {
         abort() {
-          if (activeRequest_) {
-            activeRequest_.abort();
-            activeRequest_ = null;
-          }
+          setImmediate(() => {
+            if (activeRequest_) {
+              activeRequest_.abort();
+              activeRequest_ = null;
+            }
+          });
         },
       };
     }
