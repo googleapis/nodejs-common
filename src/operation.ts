@@ -115,11 +115,8 @@ export class Operation extends ServiceObject {
   }
 
   /**
-   * Poll for a status update. Execute the callback:
-   *
-   *   - callback(err): Operation failed
-   *   - callback(): Operation incomplete
-   *   - callback(null, metadata): Operation complete
+   * Poll for a status update. Returns null for an incomplete
+   * status, and metadata for a complete status.
    *
    * @private
    */
