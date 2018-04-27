@@ -689,7 +689,7 @@ describe('common/util', () => {
       util.makeAuthenticatedRequestFactory(config);
     });
 
-    it('should not pass projectId token to google-auto-auth', (done) => {
+    it('should not pass projectId token to google-auth-library', (done) => {
       const config = {
         projectId: '{{projectId}}',
       };
@@ -737,8 +737,8 @@ describe('common/util', () => {
     it('should return the authClient', () => {
       const authClient = {getCredentials() {}};
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-      const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-      assert.strictEqual(makeAuthenticatedRequest.authClient, authClient);
+      const mar = util.makeAuthenticatedRequestFactory();
+      assert.strictEqual(mar.authClient, authClient);
     });
 
     describe('customEndpoint (no authentication attempted)', () => {
@@ -818,17 +818,24 @@ describe('common/util', () => {
           }
         });
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(fake);
-        const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-        makeAuthenticatedRequest(
-            fakeReqOpts, {} as MakeAuthenticatedRequestOptions);
+        const mar = util.makeAuthenticatedRequestFactory();
+        mar(fakeReqOpts);
       });
 
       it('should return a stream if callback is missing', () => {
-        const makeAuthenticatedRequest =
-            util.makeAuthenticatedRequestFactory({});
-        assert(
-            makeAuthenticatedRequest({} as DecorateRequestOptions) instanceof
-            stream.Stream);
+        sandbox.stub(fakeGoogleAuth, 'GoogleAuth').callsFake(() => {
+          return extend(true, authClient, {
+            authorizeRequest: async (rOpts: AxiosRequestConfig) => {
+              return rOpts;
+            }
+          });
+        });
+        retryRequestOverride = () => {
+          return new stream.PassThrough();
+        };
+        const mar = util.makeAuthenticatedRequestFactory();
+        const s = mar(fakeReqOpts);
+        assert(s instanceof stream.Stream);
       });
 
       describe('projectId', () => {
