@@ -865,6 +865,21 @@ describe('ServiceObject', () => {
                 console.error(err);
               });
     });
+
+    it('should accept a callback', (done) => {
+      const response = {body: {abc: '123'}, statusCode: 200} as r.Response;
+
+      serviceObject.request_ = (reqOpts) => {
+        return Promise.resolve(response);
+      };
+
+      serviceObject.request({} as DecorateRequestOptions, (err, res, body) => {
+        assert.ifError(err);
+        assert.deepStrictEqual(res, response);
+        assert.deepStrictEqual(body, response.body);
+        done();
+      });
+    });
   });
 
   describe('requestStream', () => {

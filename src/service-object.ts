@@ -434,13 +434,12 @@ class ServiceObject extends EventEmitter {
   request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void;
   request(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback):
       void|Promise<r.Response> {
-    if (callback) {
-      this.request_(reqOpts).then(
-          r => callback(null, r as r.Response, r.body),
-          e => callback(e, null!, null));
-      return;
+    if (!callback) {
+      return this.request_(reqOpts) as Promise<r.Response>;
     }
-    return this.request_(reqOpts) as Promise<r.Response>;
+    this.request_(reqOpts).then(
+        res => callback(null, res as r.Response, res.body),
+        err => callback(err, null!, null));
   }
 
   /**
