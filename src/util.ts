@@ -785,7 +785,7 @@ export class Util {
    * @param  {object=} overrides - The instantiation-time configuration object.
    * @return {object}
    */
-  extendGlobalConfig(globalConfig: GlobalConfig, overrides: GlobalConfig) {
+  extendGlobalConfig(globalConfig: GlobalConfig|null, overrides: GlobalConfig) {
     globalConfig = globalConfig || {};
     overrides = overrides || {};
 
@@ -822,7 +822,8 @@ export class Util {
    * @param {object} localConfig - Service-level configurations.
    * @return {object} config - Merged and validated configuration.
    */
-  normalizeArguments(globalContext: GlobalContext, localConfig: GlobalConfig) {
+  normalizeArguments(
+      globalContext: GlobalContext|null, localConfig: GlobalConfig) {
     const globalConfig = globalContext && globalContext.config_ as GlobalConfig;
     return util.extendGlobalConfig(globalConfig, localConfig);
   }

@@ -430,7 +430,16 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: DecorateRequestOptions): Promise<r.Response> {
+  request(reqOpts: DecorateRequestOptions): Promise<r.Response>;
+  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void;
+  request(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback):
+      void|Promise<r.Response> {
+    if (callback) {
+      this.request_(reqOpts).then(
+          r => callback(null, r as r.Response, r.body),
+          e => callback(e, null!, null));
+      return;
+    }
     return this.request_(reqOpts) as Promise<r.Response>;
   }
 
