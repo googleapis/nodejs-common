@@ -22,6 +22,7 @@ export {Logger} from './logger';
 // of logger is currently a wrapper around Logger.
 // TODO: logger should eventually be deprecated.
 export {logger} from './logger-compat';
+
 /**
  * @type {module:common/operation}
  * @private
