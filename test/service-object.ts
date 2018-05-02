@@ -54,7 +54,8 @@ describe('ServiceObject', () => {
 
   describe('instantiation', () => {
     it('should promisify all the things', (done) => {
-      serviceObject.request = async (reqOpts) => {
+      // tslint:disable-next-line:no-any
+      serviceObject.request = async (reqOpts: any) => {
         return {statusCode: 123, body: 'sunny'} as r.Response;
       };
 
@@ -248,7 +249,8 @@ describe('ServiceObject', () => {
 
   describe('delete', () => {
     it('should make the correct request', (done) => {
-      serviceObject.request = async function(reqOpts) {
+      // tslint:disable-next-line:no-any
+      serviceObject.request = async function(reqOpts: any) {
         assert.strictEqual(this, serviceObject);
         assert.strictEqual(reqOpts.method, 'DELETE');
         assert.strictEqual(reqOpts.uri, '');
@@ -281,7 +283,8 @@ describe('ServiceObject', () => {
     });
 
     it('should not require a callback', () => {
-      serviceObject.request = async (reqOpts) => {
+      // tslint:disable-next-line:no-any
+      serviceObject.request = async (reqOpts: any) => {
         return {} as r.Response;
       };
       assert.doesNotThrow(() => {
@@ -523,7 +526,8 @@ describe('ServiceObject', () => {
 
   describe('getMetadata', () => {
     it('should make the correct request', (done) => {
-      serviceObject.request = async function(reqOpts) {
+      // tslint:disable-next-line:no-any
+      serviceObject.request = async function(reqOpts: any) {
         assert.strictEqual(this, serviceObject);
         assert.strictEqual(reqOpts.uri, '');
         done();
@@ -605,7 +609,8 @@ describe('ServiceObject', () => {
   describe('setMetadata', () => {
     it('should make the correct request', (done) => {
       const metadata = {};
-      serviceObject.request = async function(reqOpts) {
+      // tslint:disable-next-line:no-any
+      serviceObject.request = async function(reqOpts: any) {
         assert.strictEqual(this, serviceObject);
         assert.strictEqual(reqOpts.method, 'PATCH');
         assert.strictEqual(reqOpts.uri, '');
@@ -859,6 +864,21 @@ describe('ServiceObject', () => {
               err => {
                 console.error(err);
               });
+    });
+
+    it('should accept a callback', (done) => {
+      const response = {body: {abc: '123'}, statusCode: 200} as r.Response;
+
+      serviceObject.request_ = (reqOpts) => {
+        return Promise.resolve(response);
+      };
+
+      serviceObject.request({} as DecorateRequestOptions, (err, res, body) => {
+        assert.ifError(err);
+        assert.deepStrictEqual(res, response);
+        assert.deepStrictEqual(body, response.body);
+        done();
+      });
     });
   });
 

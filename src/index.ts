@@ -15,6 +15,7 @@
  */
 
 // Logger is new in 0.18.0.
+export {GoogleAuthOptions} from 'google-auth-library';
 export {Logger} from './logger';
 // logger is the interface exported prior to 0.18.0. The two logging-related
 // interfaces are not mutually compatible, though the implementation
@@ -27,25 +28,21 @@ export {logger} from './logger-compat';
  * @private
  */
 export {Operation} from './operation';
-
 /**
  * @type {module:common/paginator}
  * @private
  */
 export {paginator} from './paginator';
-
 /**
  * @type {module:common/service}
  * @private
  */
 export {Service} from './service';
-
 /**
  * @type {module:common/serviceObject}
  * @private
  */
 export {ServiceObject} from './service-object';
-
 /**
  * @type {module:common/util}
  * @private
