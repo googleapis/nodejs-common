@@ -505,6 +505,24 @@ describe('Service', () => {
       };
       await service.request(fakeOpts);
     });
+
+    it('should accept a callback', (done) => {
+      const fakeOpts = {};
+      const response = {body: {abc: '123'}, statusCode: 200} as RequestResponse;
+
+      Service.prototype.request_ = async (reqOpts: DecorateRequestOptions) => {
+        assert.strictEqual(reqOpts, fakeOpts);
+        return Promise.resolve(response);
+      };
+
+      service.request(
+          fakeOpts, (err: Error, res: RequestResponse, body: {}) => {
+            assert.ifError(err);
+            assert.deepStrictEqual(res, response);
+            assert.deepStrictEqual(body, response.body);
+            done();
+          });
+    });
   });
 
   describe('requestStream', () => {
