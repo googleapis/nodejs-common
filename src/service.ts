@@ -54,11 +54,11 @@ export interface ServiceOptions {
 }
 
 export class Service {
-  private baseUrl: string;
+  baseUrl: string;
   private globalInterceptors: {};
   private interceptors: Array<{request(opts: r.Options): r.Options}>;
   private packageJson: PackageJson;
-  private projectId: string;
+  projectId: string;
   private projectIdRequired: boolean;
   // tslint:disable-next-line:variable-name
   Promise: PromiseConstructor;
@@ -216,8 +216,16 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  async request(reqOpts: DecorateRequestOptions): Promise<r.Response> {
-    return this.request_(reqOpts);
+  request(reqOpts: DecorateRequestOptions): Promise<r.Response>;
+  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void;
+  request(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback):
+      void|Promise<r.Response> {
+    if (!callback) {
+      return this.request_(reqOpts) as Promise<r.Response>;
+    }
+    this.request_(reqOpts).then(
+        res => callback(null, res as r.Response, res.body),
+        err => callback(err, null!, null));
   }
 
   /**
