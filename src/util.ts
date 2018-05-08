@@ -704,6 +704,7 @@ export class Util {
         .on('complete', dup.emit.bind(dup, 'complete'));
 
     dup.abort = requestStream.abort;
+    return dup;
   }
 
   /**
@@ -751,7 +752,8 @@ export class Util {
                   .map(v => util.replaceProjectIdToken(v, projectId));
     }
 
-    if (typeof value === 'object' && is.fn(value.hasOwnProperty)) {
+    if (value !== null && typeof value === 'object' &&
+        is.fn(value.hasOwnProperty)) {
       for (const opt in value) {
         if (value.hasOwnProperty(opt)) {
           // tslint:disable-next-line:no-any
@@ -761,11 +763,12 @@ export class Util {
       }
     }
 
-    if (typeof value === 'string' && value.indexOf('{{projectId}}') > -1) {
+    if (typeof value === 'string' &&
+        (value as string).indexOf('{{projectId}}') > -1) {
       if (!projectId || projectId === '{{projectId}}') {
         throw new MissingProjectIdError();
       }
-      value = value.replace(/{{projectId}}/g, projectId);
+      value = (value as string).replace(/{{projectId}}/g, projectId);
     }
 
     return value;

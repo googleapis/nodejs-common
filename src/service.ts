@@ -24,6 +24,7 @@ import * as extend from 'extend';
 import * as pify from 'pify';
 import * as r from 'request';
 
+import {StreamRequestOptions} from './service-object';
 import {DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
@@ -155,7 +156,10 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: DecorateRequestOptions): Promise<r.Response> {
+  request_(reqOpts: StreamRequestOptions): r.Request;
+  request_(reqOpts: DecorateRequestOptions): Promise<r.Response>;
+  request_(reqOpts: DecorateRequestOptions|
+           StreamRequestOptions): Promise<r.Response>|r.Request {
     // TODO: fix the tests so this can be private
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -204,7 +208,11 @@ export class Service {
           `gl-node/${process.versions.node} gccl/${pkg.version}`,
     });
 
-    return pify(this.makeAuthenticatedRequest)(reqOpts);
+    if (reqOpts.shouldReturnStream) {
+      return this.makeAuthenticatedRequest(reqOpts) as r.Request;
+    } else {
+      return pify(this.makeAuthenticatedRequest)(reqOpts);
+    }
   }
 
   /**
@@ -236,7 +244,8 @@ export class Service {
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
-  requestStream(reqOpts: DecorateRequestOptions) {
-    return this.request_(reqOpts);
+  requestStream(reqOpts: DecorateRequestOptions): r.Request {
+    const opts = extend(true, reqOpts, {shouldReturnStream: true});
+    return this.request_(opts as StreamRequestOptions);
   }
 }

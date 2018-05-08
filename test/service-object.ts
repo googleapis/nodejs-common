@@ -852,10 +852,10 @@ describe('ServiceObject', () => {
   describe('request', () => {
     it('should call through to request_', (done) => {
       const fakeOptions = {} as DecorateRequestOptions;
-      serviceObject.request_ = (reqOpts) => {
+      sandbox.stub(serviceObject, 'request_').callsFake(reqOpts => {
         assert.strictEqual(reqOpts, fakeOptions);
         return Promise.resolve({} as r.Response);
-      };
+      });
       serviceObject.request(fakeOptions)
           .then(
               r => {
@@ -869,9 +869,9 @@ describe('ServiceObject', () => {
     it('should accept a callback', (done) => {
       const response = {body: {abc: '123'}, statusCode: 200} as r.Response;
 
-      serviceObject.request_ = (reqOpts) => {
+      sandbox.stub(serviceObject, 'request_').callsFake(reqOpts => {
         return Promise.resolve(response);
-      };
+      });
 
       serviceObject.request({} as DecorateRequestOptions, (err, res, body) => {
         assert.ifError(err);
@@ -886,10 +886,10 @@ describe('ServiceObject', () => {
     it('should call through to request_', async () => {
       const fakeOptions = {} as DecorateRequestOptions;
       const serviceObject = new ServiceObject(CONFIG);
-      serviceObject.request_ = async (reqOpts) => {
-        assert.strictEqual(reqOpts, fakeOptions);
-        return {} as r.Response;
-      };
+      sandbox.stub(serviceObject, 'request_').callsFake(async (reqOpts) => {
+        assert.deepStrictEqual(reqOpts, {shouldReturnStream: true});
+        return {} as r.Request;
+      });
       await serviceObject.requestStream(fakeOptions);
     });
   });
