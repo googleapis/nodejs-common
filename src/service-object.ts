@@ -93,6 +93,10 @@ export interface GetConfig {
   autoCreate?: boolean;
 }
 
+export interface StreamRequestOptions extends DecorateRequestOptions {
+  shouldReturnStream: true;
+}
+
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
  * object," like a BigQuery dataset or Storage bucket.
@@ -390,7 +394,10 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: DecorateRequestOptions): Promise<r.Response|r.Request> {
+  request_(reqOpts: StreamRequestOptions): r.Request;
+  request_(reqOpts: DecorateRequestOptions): Promise<r.Response>;
+  request_(reqOpts: DecorateRequestOptions|
+           StreamRequestOptions): Promise<r.Response>|r.Request {
     reqOpts = extend(true, {}, reqOpts);
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -450,9 +457,9 @@ class ServiceObject extends EventEmitter {
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    */
-  requestStream(reqOpts: DecorateRequestOptions): Promise<r.Request> {
+  requestStream(reqOpts: DecorateRequestOptions): r.Request {
     const opts = extend(true, reqOpts, {shouldReturnStream: true});
-    return this.request_(opts) as Promise<r.Request>;
+    return this.request_(opts as StreamRequestOptions);
   }
 }
 
