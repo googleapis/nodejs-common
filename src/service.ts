@@ -209,9 +209,18 @@ export class Service {
     });
 
     if (reqOpts.shouldReturnStream) {
-      return this.makeAuthenticatedRequest(reqOpts) as r.Request;
+      // tslint:disable-next-line:no-any
+      return this.makeAuthenticatedRequest(reqOpts) as any as r.Request;
     } else {
-      return pify(this.makeAuthenticatedRequest)(reqOpts);
+      return pify(this.makeAuthenticatedRequest, {multiArgs: true})(reqOpts)
+          .then(args => {
+            /**
+             * Note: this returns an array of results in the form of a
+             * BodyResponseCallback, which means: [body, response].  Return the
+             * response object in the promise result.
+             */
+            return args.length > 1 ? args[1] : null;
+          });
     }
   }
 

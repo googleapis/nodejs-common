@@ -22,6 +22,7 @@ import * as duplexify from 'duplexify';
 import * as ent from 'ent';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
+import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
 import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
@@ -49,10 +50,17 @@ export interface ParsedHttpRespMessage {
 }
 
 export interface MakeAuthenticatedRequest {
+  (reqOpts: DecorateRequestOptions): duplexify.Duplexify;
+  (reqOpts: DecorateRequestOptions,
+   options?: MakeAuthenticatedRequestOptions): void|Abortable;
+  (reqOpts: DecorateRequestOptions,
+   callback?: BodyResponseCallback): void|Abortable;
   (reqOpts: DecorateRequestOptions,
    optionsOrCallback?: MakeAuthenticatedRequestOptions|
-   OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify;
-  getCredentials: Function;
+   BodyResponseCallback): void|Abortable|duplexify.Duplexify;
+  getCredentials:
+      (callback:
+           (err?: Error|null, credentials?: CredentialBody) => void) => void;
   authClient: GoogleAuth;
 }
 
@@ -499,8 +507,7 @@ export class Util {
    * @param {array} config.scopes - Array of scopes required for the API.
    */
   makeAuthenticatedRequestFactory(
-      config: MakeAuthenticatedRequestFactoryConfig = {}):
-      MakeAuthenticatedRequest {
+      config: MakeAuthenticatedRequestFactoryConfig = {}) {
     const googleAutoAuthConfig = extend({}, config);
 
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
