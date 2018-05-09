@@ -1,7 +1,7 @@
 {
   "name": "@google-cloud/common",
   "description": "Common components for Cloud APIs Node.js Client Libraries",
-  "version": "0.18.5",
+  "version": "0.18.6",
   "license": "Apache-2.0",
   "author": "Google Inc.",
   "engines": {
