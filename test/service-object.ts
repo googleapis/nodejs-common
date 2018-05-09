@@ -873,7 +873,7 @@ describe('ServiceObject', () => {
         return Promise.resolve(response);
       });
 
-      serviceObject.request({} as DecorateRequestOptions, (err, res, body) => {
+      serviceObject.request({} as DecorateRequestOptions, (err, body, res) => {
         assert.ifError(err);
         assert.deepStrictEqual(res, response);
         assert.deepStrictEqual(body, response.body);

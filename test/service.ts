@@ -517,7 +517,7 @@ describe('Service', () => {
       };
 
       service.request(
-          fakeOpts, (err: Error, res: RequestResponse, body: {}) => {
+          fakeOpts, (err: Error, body: {}, res: RequestResponse) => {
             assert.ifError(err);
             assert.deepStrictEqual(res, response);
             assert.deepStrictEqual(body, response.body);
