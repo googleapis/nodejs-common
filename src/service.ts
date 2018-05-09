@@ -25,7 +25,7 @@ import * as pify from 'pify';
 import * as r from 'request';
 
 import {StreamRequestOptions} from './service-object';
-import {DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
+import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 
@@ -234,15 +234,16 @@ export class Service {
    * @param {function} callback - The callback function passed to `request`.
    */
   request(reqOpts: DecorateRequestOptions): Promise<r.Response>;
-  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void;
-  request(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback):
+  request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
+      void;
+  request(reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback):
       void|Promise<r.Response> {
     if (!callback) {
       return this.request_(reqOpts) as Promise<r.Response>;
     }
     this.request_(reqOpts).then(
-        res => callback(null, res as r.Response, res.body),
-        err => callback(err, null!, null));
+        res => callback(null, res.body, res as r.Response),
+        err => callback(err, null, null!));
   }
 
   /**
