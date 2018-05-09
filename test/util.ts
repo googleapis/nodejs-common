@@ -734,7 +734,7 @@ describe('common/util', () => {
       });
 
       const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
-      makeAuthenticatedRequest.getCredentials();
+      makeAuthenticatedRequest.getCredentials(util.noop);
     });
 
     it('should return the authClient', () => {

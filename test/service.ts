@@ -20,7 +20,7 @@ import * as proxyquire from 'proxyquire';
 import {Request, RequestResponse} from 'request';
 
 import {Service, ServiceConfig, ServiceOptions} from '../src/service';
-import {DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
+import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
 
 proxyquire.noPreserveCache();
 
@@ -252,11 +252,12 @@ describe('Service', () => {
       const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
       service.makeAuthenticatedRequest =
-          (reqOpts_: DecorateRequestOptions, callback: () => void) => {
+          (reqOpts_: DecorateRequestOptions,
+           callback: BodyResponseCallback) => {
             assert.notStrictEqual(reqOpts_, reqOpts);
             assert.strictEqual(reqOpts_.uri, expectedUri);
             assert.strictEqual(reqOpts.interceptors_, undefined);
-            callback();  // done()
+            callback(null);  // done()
           };
 
       await service.request_(reqOpts);

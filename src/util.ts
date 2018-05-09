@@ -22,6 +22,7 @@ import * as duplexify from 'duplexify';
 import * as ent from 'ent';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
+import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
 import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
@@ -49,10 +50,17 @@ export interface ParsedHttpRespMessage {
 }
 
 export interface MakeAuthenticatedRequest {
+  (reqOpts: DecorateRequestOptions): duplexify.Duplexify;
+  (reqOpts: DecorateRequestOptions,
+   options?: MakeAuthenticatedRequestOptions): void|Abortable;
+  (reqOpts: DecorateRequestOptions,
+   callback?: BodyResponseCallback): void|Abortable;
   (reqOpts: DecorateRequestOptions,
    optionsOrCallback?: MakeAuthenticatedRequestOptions|
-   OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify;
-  getCredentials: Function;
+   BodyResponseCallback): void|Abortable|duplexify.Duplexify;
+  getCredentials:
+      (callback:
+           (err?: Error|null, credentials?: CredentialBody) => void) => void;
   authClient: GoogleAuth;
 }
 
@@ -266,7 +274,7 @@ export class PartialFailureError extends Error {
 }
 
 export interface BodyResponseCallback {
-  (err: Error|null, body: ResponseBody, res: r.Response): void;
+  (err: Error|null, body?: ResponseBody, res?: r.Response): void;
 }
 
 export interface MakeRequestConfig {
@@ -499,8 +507,7 @@ export class Util {
    * @param {array} config.scopes - Array of scopes required for the API.
    */
   makeAuthenticatedRequestFactory(
-      config: MakeAuthenticatedRequestFactoryConfig = {}):
-      MakeAuthenticatedRequest {
+      config: MakeAuthenticatedRequestFactoryConfig = {}) {
     const googleAutoAuthConfig = extend({}, config);
 
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
@@ -522,15 +529,14 @@ export class Util {
         duplexify.Duplexify;
     function makeAuthenticatedRequest(
         reqOpts: DecorateRequestOptions,
-        options?: MakeAuthenticatedRequestOptions|
-        OnAuthenticatedCallback): void|Abortable;
+        options?: MakeAuthenticatedRequestOptions): void|Abortable;
     function makeAuthenticatedRequest(
-        reqOpts: DecorateRequestOptions,
-        callback?: OnAuthenticatedCallback): void|Abortable;
+        reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback): void|
+        Abortable;
     function makeAuthenticatedRequest(
         reqOpts: DecorateRequestOptions,
         optionsOrCallback?: MakeAuthenticatedRequestOptions|
-        OnAuthenticatedCallback): void|Abortable|duplexify.Duplexify {
+        BodyResponseCallback): void|Abortable|duplexify.Duplexify {
       let stream: duplexify.Duplexify;
       const reqConfig = extend({}, config);
       let activeRequest_: void|Abortable|null;
@@ -539,6 +545,12 @@ export class Util {
         stream = duplexify();
         reqConfig.stream = stream;
       }
+
+      const options =
+          typeof optionsOrCallback === 'object' ? optionsOrCallback : undefined;
+      const callback = typeof optionsOrCallback === 'function' ?
+          optionsOrCallback :
+          undefined;
 
       const onAuthenticated =
           (err: Error|null, authenticatedReqOpts?: DecorateRequestOptions) => {
@@ -572,35 +584,23 @@ export class Util {
               }
             }
 
-            let options!: MakeAuthenticatedRequestOptions;
-            let callback!: OnAuthenticatedCallback;
-            switch (typeof optionsOrCallback) {
-              case 'object':
-                options = optionsOrCallback as MakeAuthenticatedRequestOptions;
-                callback = options.onAuthenticated;
-                break;
-              case 'function':
-                callback = optionsOrCallback as OnAuthenticatedCallback;
-                break;
-              default:
-                break;
-            }
-
             if (err) {
               if (stream) {
                 stream.destroy(err);
               } else {
-                callback(err);
+                const fn = options && options.onAuthenticated ?
+                    options.onAuthenticated :
+                    callback;
+                fn!(err);
               }
-
               return;
             }
 
             if (options && options.onAuthenticated) {
-              callback(null, authenticatedReqOpts);
+              options.onAuthenticated(null, authenticatedReqOpts);
             } else {
               activeRequest_ =
-                  util.makeRequest(authenticatedReqOpts!, reqConfig, callback);
+                  util.makeRequest(authenticatedReqOpts!, reqConfig, callback!);
             }
           };
 
