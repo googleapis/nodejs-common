@@ -331,6 +331,12 @@ export class Util {
     const parsedResp = extend(
         true, {err: err || null}, resp && util.parseHttpRespMessage(resp),
         body && util.parseHttpRespBody(body));
+    // Assign the parsed body to resp.body, even if { json: false } was passed
+    // as a request option.
+    // We assume that nobody uses the previously unparsed value of resp.body.
+    if (!parsedResp.err && resp && typeof parsedResp.body === 'object') {
+      parsedResp.resp.body = parsedResp.body;
+    }
 
     callback(parsedResp.err, parsedResp.body, parsedResp.resp);
   }
