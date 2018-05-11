@@ -26,7 +26,6 @@ import * as r from 'request';
 import {Duplex} from 'stream';
 
 import {Service} from '.';
-import {kParsedBody, WithParsedBody} from './service';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
 
 export interface Interceptor {
@@ -443,14 +442,11 @@ class ServiceObject extends EventEmitter {
       void;
   request(reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback):
       void|Promise<r.Response> {
-    // See Service#request for an explanation.
-    const result =
-        this.request_(reqOpts) as Promise<WithParsedBody<r.Response>>;
     if (!callback) {
-      return result;
+      return this.request_(reqOpts) as Promise<r.Response>;
     }
-    result.then(
-        res => callback(null, res[kParsedBody] || res.body, res),
+    this.request_(reqOpts).then(
+        res => callback(null, res.body, res as r.Response),
         err => callback(err, null, null!));
   }
 
