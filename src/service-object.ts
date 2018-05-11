@@ -111,10 +111,10 @@ export interface StreamRequestOptions extends DecorateRequestOptions {
 class ServiceObject extends EventEmitter {
   metadata: {};
   baseUrl?: string;
-  private parent: Service;
+  protected parent: Service;
   private id?: string;
   private createMethod?: Function;
-  private methods: Methods;
+  protected methods: Methods;
   private interceptors: Interceptor[];
   // tslint:disable-next-line:variable-name
   protected Promise?: PromiseConstructor;

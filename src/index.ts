@@ -42,7 +42,7 @@ export {Service} from './service';
  * @type {module:common/serviceObject}
  * @private
  */
-export {ServiceObject} from './service-object';
+export {ServiceObject, ServiceObjectConfig} from './service-object';
 /**
  * @type {module:common/util}
  * @private
