@@ -25,9 +25,17 @@ import * as pify from 'pify';
 import * as r from 'request';
 
 import {StreamRequestOptions} from './service-object';
-import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
+import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, ResponseBody, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
+
+/**
+ * We use this symbol in request_ to store the parsed body on the Response
+ * object. We do this instead of returning both to preserve its method
+ * signature.
+ */
+export const kParsedBody = Symbol();
+export type WithParsedBody<T> = T&{[kParsedBody]: ResponseBody};
 
 export interface ServiceConfig {
   /**
@@ -219,7 +227,18 @@ export class Service {
              * BodyResponseCallback, which means: [body, response].  Return the
              * response object in the promise result.
              */
-            return args.length > 1 ? args[1] : null;
+            if (args.length > 1) {
+              // Make the parsed body a property on the response object.
+              // We use [kParsedBody] instead of over-writing .body
+              // in the possible case where the unparsed body value is
+              // being used.
+              if (!args[1][kParsedBody]) {
+                args[1][kParsedBody] = args[0];
+              }
+              return args[1];
+            } else {
+              return null;
+            }
           });
     }
   }
@@ -238,11 +257,18 @@ export class Service {
       void;
   request(reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback):
       void|Promise<r.Response> {
+    // Since request_ is "public" (from TS's point of view), we make a cast here
+    // rather than changing its signature.
+    // When the TODO above is fixed, the method signature of request_ should be
+    // changed (and possibly also the implementation) so we don't have to do
+    // this.
+    const result =
+        this.request_(reqOpts) as Promise<WithParsedBody<r.Response>>;
     if (!callback) {
-      return this.request_(reqOpts) as Promise<r.Response>;
+      return result;
     }
-    this.request_(reqOpts).then(
-        res => callback(null, res.body, res as r.Response),
+    result.then(
+        res => callback(null, res[kParsedBody] || res.body, res),
         err => callback(err, null, null!));
   }
 
