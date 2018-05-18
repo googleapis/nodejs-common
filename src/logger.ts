@@ -18,6 +18,9 @@
  * @module common/logger
  */
 
+/**
+ * Configuration options to be passed to the Logger constructor.
+ */
 export interface LoggerConfig {
   /**
    * The minimum log level that will print to the console.
@@ -53,16 +56,16 @@ export class Logger {
   static DEFAULT_OPTIONS:
       Readonly<LoggerConfig> = {level: 'error', levels: LEVELS, tag: ''};
 
-  // TODO: Mark this private when TypeScript 2.9 comes out.
-  // See https://github.com/Microsoft/TypeScript/issues/20080 for more
-  // information.
-  [kTag]: string;
+  private[kTag]: string;
 
-  /**
-   * Emits a log at this log level.
-   */
-  // tslint:disable-next-line:no-any
-  [logLevel: string]: (...args: any[]) => this;
+  // tslint:disable:no-any
+  silent!: (...args: any[]) => this;
+  error!: (...args: any[]) => this;
+  warn!: (...args: any[]) => this;
+  info!: (...args: any[]) => this;
+  debug!: (...args: any[]) => this;
+  silly!: (...args: any[]) => this;
+  // tslint:enable:no-any
 
   /**
    * Create a logger to print output to the console.
@@ -88,22 +91,35 @@ export class Logger {
     for (let i = 0; i < options.levels.length; i++) {
       const level = options.levels[i];
       if (i <= levelIndex) {
-        this[level] = (...args) => {
+        // ts: this doesn't have an index signature, but we want to set
+        // properties anyway.
+        // tslint:disable-next-line:no-any
+        (this as any)[level] = (...args: any[]) => {
           args.unshift(level);
           console.log(this[kFormat].apply(this, args));
           return this;
         };
       } else {
-        this[level] = () => this;
+        // tslint:disable-next-line:no-any
+        (this as any)[level] = () => this;
       }
     }
   }
 
-  // TODO: Mark this as protected when TypeScript 2.9 comes out.
   // tslint:disable-next-line:no-any
-  [kFormat](level: string, ...args: any[]): string {
+  private[kFormat](level: string, ...args: any[]): string {
     level = level.toUpperCase();
     const message = args.join(' ');
     return `${level}${this[kTag]} ${message}`;
   }
+}
+
+/**
+ * A type to which a Logger instance can be casted, which defines additional
+ * custom log levels on the Logger instance.
+ * Ex: `const l = new Logger() as CustomLevelsLogger;`
+ */
+export interface CustomLevelsLogger extends Logger {
+  // tslint:disable-next-line:no-any
+  [logLevel: string]: (...args: any[]) => this;
 }

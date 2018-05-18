@@ -20,7 +20,7 @@
 
 import * as is from 'is';
 
-import {kFormat, Logger, LoggerConfig} from './logger';
+import {CustomLevelsLogger, kFormat, Logger, LoggerConfig} from './logger';
 
 // tslint:disable-next-line:no-any
 function isString(obj: any): obj is string {
@@ -48,7 +48,7 @@ function createLogger(optionsOrLevel?: Partial<LoggerConfig>|string) {
   });
   return Object.assign(
       // tslint:disable-next-line:no-any
-      result as Logger & {format: (...args: any[]) => string},
+      result as CustomLevelsLogger & {format: (...args: any[]) => string},
       {levels: options.levels, level: options.level});
 }
 

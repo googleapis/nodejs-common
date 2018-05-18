@@ -18,7 +18,7 @@ import * as assert from 'assert';
 import * as shimmer from 'shimmer';
 
 import * as loggerModule from '../src/logger';
-import {kFormat, kTag, Logger, LoggerConfig} from '../src/logger';
+import {CustomLevelsLogger, Logger, LoggerConfig} from '../src/logger';
 import {logger} from '../src/logger-compat';
 
 const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
@@ -54,7 +54,7 @@ describe('Logger', () => {
   });
 
   it('should create a logger based on default config parameters', () => {
-    const logger = new Logger();
+    const logger = new Logger() as CustomLevelsLogger;
     for (const level of LEVELS) {
       assert.strictEqual(typeof logger[level], 'function');
     }
@@ -64,7 +64,8 @@ describe('Logger', () => {
   });
 
   it('should create a logger with custom levels', () => {
-    const logger = new Logger({level: false, levels: customLevels});
+    const logger =
+        new Logger({level: false, levels: customLevels}) as CustomLevelsLogger;
     for (const customLevel of customLevels) {
       assert.strictEqual(typeof logger[customLevel], 'function');
     }
@@ -81,7 +82,8 @@ describe('Logger', () => {
 
   it('should use a specified level', () => {
     const level = 'level-2';
-    const logger = new Logger({level, levels: customLevels});
+    const logger =
+        new Logger({level, levels: customLevels}) as CustomLevelsLogger;
     for (const customLevel of customLevels) {
       logger[customLevel]('foo');
     }
@@ -89,7 +91,8 @@ describe('Logger', () => {
   });
 
   it('should not log if level is false', () => {
-    const logger = new Logger({level: false, levels: customLevels});
+    const logger =
+        new Logger({level: false, levels: customLevels}) as CustomLevelsLogger;
     for (const customLevel of customLevels) {
       logger[customLevel]('foo');
     }
@@ -122,17 +125,11 @@ describe('Logger', () => {
 });
 
 describe('logger', () => {
-  class FakeLogger implements Logger {
+  class FakeLogger extends Logger {
     static DEFAULT_OPTIONS = Logger.DEFAULT_OPTIONS;
-    // tslint:disable-next-line:no-any
-    [logLevel: string]: (...args: any[]) => this;
-    [kTag] = '';
-    // tslint:disable-next-line:no-any
-    [kFormat](level: string, ...args: any[]): string {
-      return 'foo';
-    }
-    constructor(options: Partial<LoggerConfig>) {
-      capturedOptions = options;
+    constructor(options?: Partial<LoggerConfig>) {
+      super(options);
+      capturedOptions = options!;
     }
   }
 
@@ -163,7 +160,7 @@ describe('logger', () => {
     const loggerInstance = logger();
     assert.strictEqual(loggerInstance.levels, capturedOptions!.levels);
     assert.strictEqual(loggerInstance.level, capturedOptions!.level);
-    assert.strictEqual(loggerInstance.format('hello'), 'foo');
+    assert.strictEqual(loggerInstance.format('hello'), 'HELLO ');
     loggerInstance.format = function(arg) {
       return arg + ' ' + typeof this.format;
     };
@@ -172,18 +169,18 @@ describe('logger', () => {
 
   it('should create a Logger with custom levels', () => {
     const customLevels = ['level-1', 'level-2', 'level-3'];
-    logger({levels: customLevels});
+    logger({level: 'level-1', levels: customLevels});
     assert.deepStrictEqual(capturedOptions!.levels, customLevels);
   });
 
   it('should use a specified level', () => {
-    const level = 'level';
+    const level = 'silly';
     logger({level});
     assert.deepStrictEqual(capturedOptions!.level, level);
   });
 
   it('should treat a single arguments as the level', () => {
-    const level = 'level';
+    const level = 'silly';
     logger(level);
     assert.deepStrictEqual(capturedOptions!.level, level);
   });
