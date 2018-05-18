@@ -22,11 +22,11 @@ import * as arrify from 'arrify';
 import * as extend from 'extend';
 import * as is from 'is';
 import {split} from 'split-array-stream';
-import {Transform} from 'stream';
+import {Transform, TransformOptions} from 'stream';
 
 import {util} from './util';
 
-export interface ParsedArguments {
+export interface ParsedArguments extends TransformOptions {
   /**
    * Query object. This is most commonly an object, but to make the API more
    * simple, it can also be a string in some places.

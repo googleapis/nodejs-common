@@ -99,8 +99,7 @@ export interface CreateLimiterOptions {
   /**
    * Options to pass to the Stream constructor.
    */
-  // tslint:disable-next-line:no-any
-  streamOptions?: any;
+  streamOptions?: TransformOptions;
 }
 
 export interface GlobalContext { config_: {}; }
