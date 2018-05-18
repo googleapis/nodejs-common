@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-// Logger is new in 0.18.0.
 export {GoogleAuthOptions} from 'google-auth-library';
-export {Logger} from './logger';
+
+// Logger is new in 0.18.0.
+export {Logger, LoggerConfig} from './logger';
 // logger is the interface exported prior to 0.18.0. The two logging-related
 // interfaces are not mutually compatible, though the implementation
 // of logger is currently a wrapper around Logger.
@@ -37,7 +38,7 @@ export {paginator} from './paginator';
  * @type {module:common/service}
  * @private
  */
-export {Service} from './service';
+export {Service, ServiceConfig} from './service';
 /**
  * @type {module:common/serviceObject}
  * @private

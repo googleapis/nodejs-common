@@ -18,7 +18,7 @@
  * @module common/logger
  */
 
-export interface LoggerOptions {
+export interface LoggerConfig {
   /**
    * The minimum log level that will print to the console.
    */
@@ -51,7 +51,7 @@ export class Logger {
    * Default logger options.
    */
   static DEFAULT_OPTIONS:
-      Readonly<LoggerOptions> = {level: 'error', levels: LEVELS, tag: ''};
+      Readonly<LoggerConfig> = {level: 'error', levels: LEVELS, tag: ''};
 
   // TODO: Mark this private when TypeScript 2.9 comes out.
   // See https://github.com/Microsoft/TypeScript/issues/20080 for more
@@ -67,8 +67,8 @@ export class Logger {
   /**
    * Create a logger to print output to the console.
    */
-  constructor(opts?: Partial<LoggerOptions>) {
-    const options: LoggerOptions =
+  constructor(opts?: Partial<LoggerConfig>) {
+    const options: LoggerConfig =
         Object.assign({}, Logger.DEFAULT_OPTIONS, opts);
     this[kTag] = options.tag ? ':' + options.tag + ':' : '';
 

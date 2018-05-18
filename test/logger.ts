@@ -18,7 +18,7 @@ import * as assert from 'assert';
 import * as shimmer from 'shimmer';
 
 import * as loggerModule from '../src/logger';
-import {kFormat, kTag, Logger, LoggerOptions} from '../src/logger';
+import {kFormat, kTag, Logger, LoggerConfig} from '../src/logger';
 import {logger} from '../src/logger-compat';
 
 const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
@@ -131,12 +131,12 @@ describe('logger', () => {
     [kFormat](level: string, ...args: any[]): string {
       return 'foo';
     }
-    constructor(options: Partial<LoggerOptions>) {
+    constructor(options: Partial<LoggerConfig>) {
       capturedOptions = options;
     }
   }
 
-  let capturedOptions: Partial<LoggerOptions>|null = null;
+  let capturedOptions: Partial<LoggerConfig>|null = null;
 
   before(() => {
     shimmer.wrap(loggerModule, 'Logger', () => FakeLogger);

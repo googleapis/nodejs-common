@@ -20,21 +20,21 @@
 
 import * as is from 'is';
 
-import {kFormat, Logger, LoggerOptions} from './logger';
+import {kFormat, Logger, LoggerConfig} from './logger';
 
 // tslint:disable-next-line:no-any
 function isString(obj: any): obj is string {
   return is.string(obj);
 }
 
-function createLogger(optionsOrLevel?: Partial<LoggerOptions>|string) {
+function createLogger(optionsOrLevel?: Partial<LoggerConfig>|string) {
   // Canonicalize input.
   if (isString(optionsOrLevel)) {
     optionsOrLevel = {
       level: optionsOrLevel,
     };
   }
-  const options: LoggerOptions =
+  const options: LoggerConfig =
       Object.assign({}, Logger.DEFAULT_OPTIONS, optionsOrLevel);
   const result = new Logger(options);
   Object.defineProperty(result, 'format', {
