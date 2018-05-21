@@ -58,6 +58,9 @@ export class Logger {
 
   private[kTag]: string;
 
+  // ts: The compiler can't statically detect that these will be definitely
+  // assigned. They will be if default log levels are used, so we use non-null
+  // annotations here.
   // tslint:disable:no-any
   silent!: (...args: any[]) => this;
   error!: (...args: any[]) => this;
@@ -91,7 +94,7 @@ export class Logger {
     for (let i = 0; i < options.levels.length; i++) {
       const level = options.levels[i];
       if (i <= levelIndex) {
-        // ts: this doesn't have an index signature, but we want to set
+        // ts: This doesn't have an index signature, but we want to set
         // properties anyway.
         // tslint:disable-next-line:no-any
         (this as any)[level] = (...args: any[]) => {
