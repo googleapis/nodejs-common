@@ -150,10 +150,8 @@ class ServiceObject extends EventEmitter {
     this.Promise = this.parent ? this.parent.Promise : undefined;
 
     if (config.methods) {
-      const allMethodNames =
-          Object.getOwnPropertyNames(ServiceObject.prototype);
-      allMethodNames
-          .filter((methodName) => {
+      Object.getOwnPropertyNames(ServiceObject.prototype)
+          .filter(methodName => {
             return (
                 // All ServiceObjects need `request`.
                 // clang-format off
@@ -164,7 +162,7 @@ class ServiceObject extends EventEmitter {
                 // This method isn't wanted.
                 !config.methods![methodName]);
           })
-          .forEach((methodName) => {
+          .forEach(methodName => {
             this[methodName] = undefined;
           });
     }

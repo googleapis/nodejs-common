@@ -21,6 +21,7 @@
 import * as arrify from 'arrify';
 import {Duplexify} from 'duplexify';
 import * as extend from 'extend';
+import {GoogleAuth} from 'google-auth-library';
 import * as pify from 'pify';
 import * as r from 'request';
 
@@ -63,11 +64,8 @@ export class Service {
   private projectIdRequired: boolean;
   // tslint:disable-next-line:variable-name
   Promise: PromiseConstructor;
-  // TODO: make this private
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
-  // TODO: make this private
-  // tslint:disable-next-line:no-any
-  authClient: any;
+  authClient: GoogleAuth;
   private getCredentials: {};
 
   /**
@@ -134,13 +132,11 @@ export class Service {
     if (!callback) {
       return this.getProjectIdAsync();
     }
-    this.getProjectIdAsync()
-        .then(p => callback(null, p), e => callback(e))
-        .catch(e => callback(e));
+    this.getProjectIdAsync().then(p => callback(null, p), callback);
   }
 
   protected async getProjectIdAsync(): Promise<string> {
-    const projectId = await pify(this.authClient.getProjectId)();
+    const projectId = await this.authClient.getDefaultProjectId();
     if (this.projectId === PROJECT_ID_TOKEN && projectId) {
       this.projectId = projectId;
     }

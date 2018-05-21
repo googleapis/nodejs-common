@@ -23,7 +23,6 @@ export {Logger, LoggerConfig} from './logger';
 // of logger is currently a wrapper around Logger.
 // TODO: logger should eventually be deprecated.
 export {logger} from './logger-compat';
-
 /**
  * @type {module:common/operation}
  * @private
@@ -33,19 +32,19 @@ export {Operation} from './operation';
  * @type {module:common/paginator}
  * @private
  */
-export {paginator} from './paginator';
+export {paginator, Paginator, ParsedArguments} from './paginator';
 /**
  * @type {module:common/service}
  * @private
  */
-export {Service, ServiceConfig} from './service';
+export {Service, ServiceConfig, ServiceOptions} from './service';
 /**
  * @type {module:common/serviceObject}
  * @private
  */
-export {ServiceObject, ServiceObjectConfig} from './service-object';
+export {CreateOptions, DeleteCallback, ExistsCallback, GetConfig, GetMetadataCallback, InstanceResponseCallback, Interceptor, Metadata, Methods, ServiceObject, ServiceObjectConfig, StreamRequestOptions} from './service-object';
 /**
  * @type {module:common/util}
  * @private
  */
-export {util} from './util';
+export {Abortable, AbortableDuplex, ApiError, util} from './util';
