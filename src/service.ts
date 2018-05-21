@@ -22,6 +22,7 @@ import * as arrify from 'arrify';
 import {Duplexify} from 'duplexify';
 import * as extend from 'extend';
 import {GoogleAuth} from 'google-auth-library';
+import * as is from 'is';
 import * as pify from 'pify';
 import * as r from 'request';
 
@@ -209,14 +210,26 @@ export class Service {
       return this.makeAuthenticatedRequest(reqOpts) as any as r.Request;
     } else {
       return pify(this.makeAuthenticatedRequest, {multiArgs: true})(reqOpts)
-          .then(args => {
-            /**
-             * Note: this returns an array of results in the form of a
-             * BodyResponseCallback, which means: [body, response].  Return the
-             * response object in the promise result.
-             */
-            return args.length > 1 ? args[1] : null;
-          });
+          .then(
+              args => {
+                /**
+                 * Note: this returns an array of results in the form of a
+                 * BodyResponseCallback, which means: [body, response].  Return
+                 * the response object in the promise result.
+                 */
+                return args.length > 1 ? args[1] : null;
+              },
+              e => {
+                if (is.array(e) && e.length > 0) {
+                  const [err, body, res] = e;
+                  if (res) {
+                    res.body = err;
+                    err.response = res;
+                  }
+                  throw err;
+                }
+                throw e;
+              });
     }
   }
 
@@ -239,7 +252,8 @@ export class Service {
     }
     this.request_(reqOpts).then(
         res => callback(null, res.body, res as r.Response),
-        err => callback(err, null, null!));
+        err => callback(
+            err, err.response ? err.response.body : undefined, err.response));
   }
 
   /**
