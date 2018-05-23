@@ -17,12 +17,13 @@
 export {GoogleAuthOptions} from 'google-auth-library';
 
 // Logger is new in 0.18.0.
-export {CustomLevelsLogger, Logger, LoggerConfig} from './logger';
+export {Logger, LoggerConfig} from './logger';
 // logger is the interface exported prior to 0.18.0. The two logging-related
 // interfaces are not mutually compatible, though the implementation
 // of logger is currently a wrapper around Logger.
 // TODO: logger should eventually be deprecated.
-export {logger} from './logger-compat';
+export {CustomLevelsLoggerConfig, CustomLevelsLoggerResult, logger} from './logger-compat';
+
 /**
  * @type {module:common/operation}
  * @private
