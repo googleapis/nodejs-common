@@ -20,23 +20,43 @@
 
 import * as is from 'is';
 
-import {kFormat, Logger, LoggerConfig} from './logger';
+import {kFormat, LEVELS, Logger, LoggerConfig} from './logger';
+
+export interface CustomLevelsLoggerConfig extends LoggerConfig {
+  /**
+   * The list of levels to use.
+   */
+  levels: string[];
+}
+
+// tslint:disable:no-any
+export type CustomLevelsLogger = {
+  [logLevel: string]: (...args: any[]) => CustomLevelsLogger;
+}&{
+  format: (...args: any[]) => string;
+  levels: string[];
+  level: string|false;
+};
+// tslint:enable:no-any
 
 // tslint:disable-next-line:no-any
 function isString(obj: any): obj is string {
   return is.string(obj);
 }
 
-function createLogger(optionsOrLevel?: Partial<LoggerConfig>|string) {
+function createLogger(optionsOrLevel?: Partial<CustomLevelsLoggerConfig>|
+                      string): CustomLevelsLogger {
   // Canonicalize input.
   if (isString(optionsOrLevel)) {
     optionsOrLevel = {
       level: optionsOrLevel,
     };
   }
-  const options: LoggerConfig =
-      Object.assign({}, Logger.DEFAULT_OPTIONS, optionsOrLevel);
-  const result = new Logger(options);
+  const options: CustomLevelsLoggerConfig =
+      Object.assign({levels: LEVELS}, Logger.DEFAULT_OPTIONS, optionsOrLevel);
+  // ts: We construct other fields on result after its declaration.
+  // tslint:disable-next-line:no-any
+  const result: CustomLevelsLogger = new Logger(options) as any;
   Object.defineProperty(result, 'format', {
     get() {
       return result[kFormat];
@@ -46,13 +66,8 @@ function createLogger(optionsOrLevel?: Partial<LoggerConfig>|string) {
       result[kFormat] = value.bind(result);
     }
   });
-  return Object.assign(
-      // tslint:disable-next-line:no-any
-      result as Logger & {format: (...args: any[]) => string},
-      {levels: options.levels, level: options.level});
+  return Object.assign(result, {levels: options.levels, level: options.level});
 }
-
-const LEVELS = Logger.DEFAULT_OPTIONS.levels;
 
 /**
  * Create a logger to print output to the console.

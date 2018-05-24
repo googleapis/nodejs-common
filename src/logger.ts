@@ -18,16 +18,14 @@
  * @module common/logger
  */
 
+/**
+ * Configuration options to be passed to the Logger constructor.
+ */
 export interface LoggerConfig {
   /**
    * The minimum log level that will print to the console.
    */
   level: string|false;
-
-  /**
-   * The list of levels to use.
-   */
-  levels: string[];
 
   /**
    * A tag to use in log messages.
@@ -38,7 +36,7 @@ export interface LoggerConfig {
 /**
  * The default list of log levels.
  */
-const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
+export const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
 export const kFormat = Symbol('Logger formatter');
 export const kTag = Symbol('Logger tag format');
@@ -50,19 +48,20 @@ export class Logger {
   /**
    * Default logger options.
    */
-  static DEFAULT_OPTIONS:
-      Readonly<LoggerConfig> = {level: 'error', levels: LEVELS, tag: ''};
+  static DEFAULT_OPTIONS: Readonly<LoggerConfig> = {level: 'error', tag: ''};
 
-  // TODO: Mark this private when TypeScript 2.9 comes out.
-  // See https://github.com/Microsoft/TypeScript/issues/20080 for more
-  // information.
-  [kTag]: string;
+  private[kTag]: string;
 
-  /**
-   * Emits a log at this log level.
-   */
-  // tslint:disable-next-line:no-any
-  [logLevel: string]: (...args: any[]) => this;
+  // ts: The compiler can't statically detect that these will be definitely
+  // assigned, so we use non-null annotations here.
+  // tslint:disable:no-any
+  silent!: (...args: any[]) => this;
+  error!: (...args: any[]) => this;
+  warn!: (...args: any[]) => this;
+  info!: (...args: any[]) => this;
+  debug!: (...args: any[]) => this;
+  silly!: (...args: any[]) => this;
+  // tslint:enable:no-any
 
   /**
    * Create a logger to print output to the console.
@@ -72,36 +71,43 @@ export class Logger {
         Object.assign({}, Logger.DEFAULT_OPTIONS, opts);
     this[kTag] = options.tag ? ':' + options.tag + ':' : '';
 
+    // Get the list of levels.
+    // This is undocumented behavior and subject to change.
+    const levels = (options as {levels?: string[]}).levels || LEVELS;
+
     // Determine lowest log level.
     // If the given level is set to false, don't log anything.
     let levelIndex = -1;
     if (options.level !== false) {
-      levelIndex = options.level ? options.levels.indexOf(options.level) :
-                                   options.levels.length - 1;
+      levelIndex =
+          options.level ? levels.indexOf(options.level) : levels.length - 1;
       if (levelIndex === -1) {
         throw new Error(`Logger: options.level [${
-            options.level}] is not one of options.levels [${
-            options.levels.join(', ')}]`);
+            options.level}] is not one of available levels [${
+            levels.join(', ')}]`);
       }
     }
 
-    for (let i = 0; i < options.levels.length; i++) {
-      const level = options.levels[i];
+    for (let i = 0; i < levels.length; i++) {
+      const level = levels[i];
       if (i <= levelIndex) {
-        this[level] = (...args) => {
+        // ts: This doesn't have an index signature, but we want to set
+        // properties anyway.
+        // tslint:disable-next-line:no-any
+        (this as any)[level] = (...args: any[]) => {
           args.unshift(level);
           console.log(this[kFormat].apply(this, args));
           return this;
         };
       } else {
-        this[level] = () => this;
+        // tslint:disable-next-line:no-any
+        (this as any)[level] = () => this;
       }
     }
   }
 
-  // TODO: Mark this as protected when TypeScript 2.9 comes out.
   // tslint:disable-next-line:no-any
-  [kFormat](level: string, ...args: any[]): string {
+  private[kFormat](level: string, ...args: any[]): string {
     level = level.toUpperCase();
     const message = args.join(' ');
     return `${level}${this[kTag]} ${message}`;
