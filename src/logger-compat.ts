@@ -30,8 +30,8 @@ export interface CustomLevelsLoggerConfig extends LoggerConfig {
 }
 
 // tslint:disable:no-any
-export type CustomLevelsLoggerResult = {
-  [logLevel: string]: (...args: any[]) => CustomLevelsLoggerResult;
+export type CustomLevelsLogger = {
+  [logLevel: string]: (...args: any[]) => CustomLevelsLogger;
 }&{
   format: (...args: any[]) => string;
   levels: string[];
@@ -45,7 +45,7 @@ function isString(obj: any): obj is string {
 }
 
 function createLogger(optionsOrLevel?: Partial<CustomLevelsLoggerConfig>|
-                      string): CustomLevelsLoggerResult {
+                      string): CustomLevelsLogger {
   // Canonicalize input.
   if (isString(optionsOrLevel)) {
     optionsOrLevel = {
@@ -56,7 +56,7 @@ function createLogger(optionsOrLevel?: Partial<CustomLevelsLoggerConfig>|
       Object.assign({levels: LEVELS}, Logger.DEFAULT_OPTIONS, optionsOrLevel);
   // ts: We construct other fields on result after its declaration.
   // tslint:disable-next-line:no-any
-  const result: CustomLevelsLoggerResult = new Logger(options) as any;
+  const result: CustomLevelsLogger = new Logger(options) as any;
   Object.defineProperty(result, 'format', {
     get() {
       return result[kFormat];
