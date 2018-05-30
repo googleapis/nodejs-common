@@ -1001,11 +1001,12 @@ export class Util {
   // tslint:disable-next-line:variable-name
   promisifyAll(Class: Function, options?: PromisifyAllOptions) {
     const exclude = (options && options.exclude) || [];
-    const methods = Object.keys(Class.prototype).filter((methodName) => {
+    const ownPropertyNames = Object.getOwnPropertyNames(Class.prototype);
+    const methods = ownPropertyNames.filter((methodName) => {
       // clang-format off
       return (
         is.fn(Class.prototype[methodName]) && // is it a function?
-        !/(^_|(Stream|_)|promise$)/.test(methodName) && // is it promisable?
+        !/(^_|(Stream|_)|promise$)|^constructor$/.test(methodName) && // is it promisable?
         exclude.indexOf(methodName) === -1
       ); // is it blacklisted?
       // clang-format on
