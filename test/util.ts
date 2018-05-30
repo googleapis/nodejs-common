@@ -1753,6 +1753,22 @@ describe('common/util', () => {
       assert.strictEqual(FakeClass.prototype.promise, util.noop);
     });
 
+    try {
+      eval(`
+        it('should work on es classes', () => {
+          class MyESClass {
+            myMethod(str, callback) {
+              callback(str.toUpperCase());
+            }
+          }
+          util.promisifyAll(MyESClass);
+          assert(MyESClass.prototype.myMethod.promisified_);
+        });
+      `);
+    } catch (error) {
+      it.skip('should work on es classes');
+    }
+
     it('should optionally except an exclude list', () => {
       function FakeClass2() {}
 
