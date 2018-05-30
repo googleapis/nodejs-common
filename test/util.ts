@@ -1753,9 +1753,14 @@ describe('common/util', () => {
       assert.strictEqual(FakeClass.prototype.promise, util.noop);
     });
 
+    // The ts compiler will convert a class to the current node version target,
+    // in this case v4, which means that using the class keyword to create a
+    // class won't actually test that this method works on ES classes. Using
+    // eval works around that compilation. The class syntax is a syntax error
+    // in node v4 which is why the eval call is wrapped in a try catch block.
     try {
       eval(`
-        it('should work on es classes', () => {
+        it('should work on ES classes', () => {
           class MyESClass {
             myMethod(str, callback) {
               callback(str.toUpperCase());
@@ -1766,7 +1771,7 @@ describe('common/util', () => {
         });
       `);
     } catch (error) {
-      it.skip('should work on es classes');
+      it.skip('should work on ES classes');
     }
 
     it('should optionally except an exclude list', () => {

@@ -1001,10 +1001,8 @@ export class Util {
   // tslint:disable-next-line:variable-name
   promisifyAll(Class: Function, options?: PromisifyAllOptions) {
     const exclude = (options && options.exclude) || [];
-    const allProperties = Object.getOwnPropertyNames ?
-        Object.getOwnPropertyNames(Class.prototype) :
-        Object.keys(Class.prototype);
-    const methods = allProperties.filter((methodName) => {
+    const ownPropertyNames = Object.getOwnPropertyNames(Class.prototype);
+    const methods = ownPropertyNames.filter((methodName) => {
       // clang-format off
       return (
         is.fn(Class.prototype[methodName]) && // is it a function?
