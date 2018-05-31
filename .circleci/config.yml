@@ -52,6 +52,7 @@ jobs:
   node4:
     docker:
       - image: 'node:4'
+        user: node
     steps: &unit_tests_steps
       - checkout
       - run: &remove_package_lock
@@ -84,22 +85,27 @@ jobs:
   node6:
     docker:
       - image: 'node:6'
+        user: node
     steps: *unit_tests_steps
   node8:
     docker:
       - image: 'node:8'
+        user: node
     steps: *unit_tests_steps
   node9:
     docker:
       - image: 'node:9'
+        user: node
     steps: *unit_tests_steps
   node10:
     docker:
       - image: 'node:10'
+        user: node
     steps: *unit_tests_steps
   lint:
     docker:
       - image: 'node:8'
+        user: node
     steps:
       - checkout
       - run: *remove_package_lock
@@ -110,6 +116,7 @@ jobs:
   docs:
     docker:
       - image: 'node:8'
+        user: node
     steps:
       - checkout
       - run: *remove_package_lock
@@ -120,6 +127,7 @@ jobs:
   publish_npm:
     docker:
       - image: 'node:8'
+        user: node
     steps:
       - checkout
       - run:
