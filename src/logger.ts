@@ -48,7 +48,7 @@ export class Logger {
   /**
    * The list of log levels.
    */
-  static readonly LEVELS =
+  static readonly LEVELS: ReadonlyArray<string> =
       ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
   private[kTag]: string;
