@@ -31,6 +31,7 @@ export interface CustomLevelsLoggerConfig extends LoggerConfig {
 
 // tslint:disable:no-any
 export type CustomLevelsLogger = {
+  [kFormat]: (...args: any[]) => string;
   [logLevel: string]: (...args: any[]) => CustomLevelsLogger;
 }&{
   format: (...args: any[]) => string;
