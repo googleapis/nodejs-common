@@ -20,7 +20,7 @@
 
 import * as is from 'is';
 
-import {kFormat, LEVELS, Logger, LoggerConfig} from './logger';
+import {kFormat, Logger, LoggerConfig} from './logger';
 
 export interface CustomLevelsLoggerConfig extends LoggerConfig {
   /**
@@ -53,8 +53,8 @@ function createLogger(optionsOrLevel?: Partial<CustomLevelsLoggerConfig>|
       level: optionsOrLevel,
     };
   }
-  const options: CustomLevelsLoggerConfig =
-      Object.assign({levels: LEVELS}, Logger.DEFAULT_OPTIONS, optionsOrLevel);
+  const options: CustomLevelsLoggerConfig = Object.assign(
+      {levels: Logger.LEVELS}, Logger.DEFAULT_OPTIONS, optionsOrLevel);
   // ts: We construct other fields on result after its declaration.
   // tslint:disable-next-line:no-any
   const result: CustomLevelsLogger = new Logger(options) as any;
@@ -74,4 +74,4 @@ function createLogger(optionsOrLevel?: Partial<CustomLevelsLoggerConfig>|
  * Create a logger to print output to the console.
  * Omitted options will default to values provided in defaultLoggerOptions.
  */
-export const logger = Object.assign(createLogger, {LEVELS});
+export const logger = Object.assign(createLogger, {LEVELS: Logger.LEVELS});
