@@ -286,6 +286,7 @@ describe('common/util', () => {
       const partialFailureError = new util.PartialFailureError(error);
 
       assert.strictEqual(partialFailureError.errors, error.errors);
+      assert.strictEqual(partialFailureError.name, 'PartialFailureError');
       assert.strictEqual(partialFailureError.response, error.response);
       assert.strictEqual(partialFailureError.message, error.message);
     });
