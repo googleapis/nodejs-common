@@ -33,11 +33,6 @@ export interface LoggerConfig {
   tag: string;
 }
 
-/**
- * The default list of log levels.
- */
-export const LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
-
 export const kFormat = Symbol('Logger formatter');
 export const kTag = Symbol('Logger tag format');
 
@@ -49,6 +44,10 @@ export class Logger {
    * Default logger options.
    */
   static DEFAULT_OPTIONS: Readonly<LoggerConfig> = {level: 'error', tag: ''};
+  /**
+   * The default list of log levels.
+   */
+  static LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
   private[kTag]: string;
 
@@ -73,7 +72,7 @@ export class Logger {
 
     // Get the list of levels.
     // This is undocumented behavior and subject to change.
-    const levels = (options as {levels?: string[]}).levels || LEVELS;
+    const levels = (options as {levels?: string[]}).levels || Logger.LEVELS;
 
     // Determine lowest log level.
     // If the given level is set to false, don't log anything.
