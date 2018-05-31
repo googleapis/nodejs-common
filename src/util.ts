@@ -265,6 +265,7 @@ export class PartialFailureError extends Error {
     const errorObject = b;
 
     this.errors = errorObject.errors;
+    this.name = 'PartialFailureError';
     this.response = errorObject.response;
 
     const defaultErrorMessage = 'A failure occurred during this request.';
