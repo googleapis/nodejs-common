@@ -28,6 +28,7 @@ import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import {Duplex, Stream, Transform, TransformOptions} from 'stream';
 import * as streamEvents from 'stream-events';
+import * as through from 'through2';
 
 import {Service} from '.';
 import {Interceptor} from './service-object';
@@ -417,7 +418,7 @@ export class Util {
       onComplete?: Function) {
     onComplete = onComplete || util.noop;
 
-    const writeStream = new Transform();
+    const writeStream = through();
     dup.setWritable(writeStream);
 
     const defaultReqOpts = {
