@@ -65,7 +65,8 @@
     "split-array-stream": "^2.0.0",
     "stream-events": "^1.0.4",
     "@types/duplexify": "^3.5.0",
-    "@types/request": "^2.47.0"
+    "@types/request": "^2.47.0",
+    "through2": "^2.0.3"
   },
   "devDependencies": {
     "@google-cloud/nodejs-repo-tools": "^2.2.6",
@@ -102,7 +103,6 @@
     "shimmer": "^1.2.0",
     "sinon": "^5.0.2",
     "source-map-support": "^0.5.4",
-    "through2": "^2.0.3",
     "typescript": "~2.9.1",
     "uuid": "^3.2.1"
   }
