@@ -43,23 +43,25 @@ export class Logger {
   /**
    * Default logger options.
    */
-  static DEFAULT_OPTIONS: Readonly<LoggerConfig> = {level: 'error', tag: ''};
+  static readonly DEFAULT_OPTIONS:
+      Readonly<LoggerConfig> = {level: 'error', tag: ''};
   /**
-   * The default list of log levels.
+   * The list of log levels.
    */
-  static LEVELS = ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
+  static readonly LEVELS: ReadonlyArray<string> =
+      ['silent', 'error', 'warn', 'info', 'debug', 'silly'];
 
   private[kTag]: string;
 
   // ts: The compiler can't statically detect that these will be definitely
   // assigned, so we use non-null annotations here.
   // tslint:disable:no-any
-  silent!: (...args: any[]) => this;
-  error!: (...args: any[]) => this;
-  warn!: (...args: any[]) => this;
-  info!: (...args: any[]) => this;
-  debug!: (...args: any[]) => this;
-  silly!: (...args: any[]) => this;
+  readonly silent!: (...args: any[]) => this;
+  readonly error!: (...args: any[]) => this;
+  readonly warn!: (...args: any[]) => this;
+  readonly info!: (...args: any[]) => this;
+  readonly debug!: (...args: any[]) => this;
+  readonly silly!: (...args: any[]) => this;
   // tslint:enable:no-any
 
   /**
