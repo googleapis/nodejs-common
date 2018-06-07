@@ -18,17 +18,17 @@
  * @module common/util
  */
 
-import * as duplexify from 'duplexify';
-import * as ent from 'ent';
-import * as extend from 'extend';
+import duplexify from 'duplexify';
+import ent from 'ent';
+import extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
-import * as is from 'is';
-import * as r from 'request';
-import * as retryRequest from 'retry-request';
-import {Duplex, Stream, Transform, TransformOptions} from 'stream';
-import * as streamEvents from 'stream-events';
-import * as through from 'through2';
+import is from 'is';
+import r from 'request';
+import retryRequest from 'retry-request';
+import {Transform, TransformOptions} from 'stream';
+import streamEvents from 'stream-events';
+import through from 'through2';
 
 import {Service} from '.';
 import {Interceptor} from './service-object';
@@ -82,7 +82,9 @@ export interface PackageJson {
   version: string;
 }
 
-export interface PromiseMethod extends Function { promisified_?: boolean; }
+export interface PromiseMethod extends Function {
+  promisified_?: boolean;
+}
 
 export interface PromisifyOptions {
   /**
@@ -103,7 +105,9 @@ export interface CreateLimiterOptions {
   streamOptions?: TransformOptions;
 }
 
-export interface GlobalContext { config_: {}; }
+export interface GlobalContext {
+  config_: {};
+}
 
 export interface GlobalConfig {
   projectId?: string;
@@ -684,7 +688,7 @@ export class Util {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
         return err && util.shouldRetryRequest(err);
       },
-    } as retryRequest.Options;
+    } as {} as retryRequest.Options;
 
     if (!config.stream) {
       return retryRequest(reqOpts, options, (err, response, body) => {

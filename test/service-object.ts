@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import * as assert from 'assert';
-import * as extend from 'extend';
-import * as r from 'request';
-import * as sinon from 'sinon';
+import assert from 'assert';
+import extend from 'extend';
+import r from 'request';
+import sinon from 'sinon';
 
 import {Service} from '../src';
 import * as SO from '../src/service-object';
