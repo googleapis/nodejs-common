@@ -18,13 +18,13 @@
  * @module common/service
  */
 
-import * as arrify from 'arrify';
+import arrify from 'arrify';
 import {Duplexify} from 'duplexify';
-import * as extend from 'extend';
+import extend from 'extend';
 import {GoogleAuth} from 'google-auth-library';
-import * as is from 'is';
-import * as pify from 'pify';
-import * as r from 'request';
+import is from 'is';
+import pify from 'pify';
+import r from 'request';
 
 import {StreamRequestOptions} from './service-object';
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';

@@ -18,11 +18,11 @@
  * @module common/service-object
  */
 
-import * as arrify from 'arrify';
+import arrify from 'arrify';
 import {EventEmitter} from 'events';
-import * as extend from 'extend';
-import * as is from 'is';
-import * as r from 'request';
+import extend from 'extend';
+import is from 'is';
+import r from 'request';
 import {Duplex} from 'stream';
 
 import {Service} from '.';
@@ -42,7 +42,9 @@ export type GetMetadataCallback =
     (err: Error|null, metadata?: Metadata|null, apiResponse?: r.Response) =>
         void;
 
-export interface ExistsCallback { (err: Error|null, exists?: boolean): void; }
+export interface ExistsCallback {
+  (err: Error|null, exists?: boolean): void;
+}
 
 export interface ServiceObjectConfig {
   /**
@@ -73,7 +75,9 @@ export interface ServiceObjectConfig {
   parent: Service;
 }
 
-export interface Methods { [methodName: string]: {reqOpts: r.OptionsWithUri}; }
+export interface Methods {
+  [methodName: string]: {reqOpts: r.OptionsWithUri};
+}
 
 export interface CreateOptions {}
 

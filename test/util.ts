@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-import * as assert from 'assert';
-import * as extend from 'extend';
-import * as is from 'is';
-import * as proxyquire from 'proxyquire';
-import * as request from 'request';
-import * as retryRequest from 'retry-request';
-import * as stream from 'stream';
-const streamEvents = require('stream-events');
-import * as sinon from 'sinon';
-import {Util, ApiError, GlobalConfig, DecorateRequestOptions, MakeRequestConfig, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, Abortable, PromisifyAllOptions, MakeWritableStreamOptions, MakeAuthenticatedRequestOptions} from '../src/util';
-import * as duplexify from 'duplexify';
-import {GoogleAuthOptions, GoogleAuth} from 'google-auth-library';
+import assert from 'assert';
 import {AxiosRequestConfig} from 'axios';
-import * as nock from 'nock';
+import duplexify from 'duplexify';
+import extend from 'extend';
+import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
+import is from 'is';
+import nock from 'nock';
+import proxyquire from 'proxyquire';
+import request from 'request';
+import retryRequest from 'retry-request';
+import sinon from 'sinon';
+import stream from 'stream';
+import streamEvents from 'stream-events';
+
+import {Abortable, ApiError, DecorateRequestOptions, GlobalConfig, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, PromisifyAllOptions, Util} from '../src/util';
 
 nock.disableNetConnect();
 
@@ -77,7 +78,7 @@ function fakeStreamEvents() {
 }
 
 describe('common/util', () => {
-  let util: Util;
+  let util: Util&{[index: string]: Function};
   // tslint:disable-next-line:no-any
   let utilOverrides = {} as any;
 
@@ -104,18 +105,13 @@ describe('common/util', () => {
 
     // Override all util methods, allowing them to be mocked. Overrides are
     // removed before each test.
-    Object.getOwnPropertyNames(util).forEach((utilMethod) => {
-      // tslint:disable-next-line:no-any
-      if (typeof (util as any)[utilMethod] !== 'function') {
+    Object.getOwnPropertyNames(util).forEach(utilMethod => {
+      if (typeof util[utilMethod] !== 'function') {
         return;
       }
-      // tslint:disable-next-line:no-any
-      (util as any)[utilMethod] = function() {
-        // tslint:disable-next-line:no-any
-        return ((utilOverrides as any)[utilMethod] ||
-                // tslint:disable-next-line:no-any
-                (utilCached as any)[utilMethod])
-            .apply(this, arguments);
+      util[utilMethod] = function(...args: Array<{}>) {
+        return (utilOverrides[utilMethod] || utilCached[utilMethod])
+            .apply(this, args);
       };
     });
   });
@@ -328,9 +324,7 @@ describe('common/util', () => {
 
       // No projectId specified:
       const globalConfig = {keyFilename: 'key.json'};
-      const overrides = {};
-
-      const options = util.extendGlobalConfig(globalConfig, overrides);
+      const options = util.extendGlobalConfig(globalConfig, {});
 
       if (cachedProjectId) {
         process.env.GCLOUD_PROJECT = cachedProjectId;
@@ -1761,6 +1755,7 @@ describe('common/util', () => {
     // in node v4 which is why the eval call is wrapped in a try catch block.
     try {
       eval(`
+        const assert2 = require('assert');
         it('should work on ES classes', () => {
           class MyESClass {
             myMethod(str, callback) {
@@ -1768,7 +1763,7 @@ describe('common/util', () => {
             }
           }
           util.promisifyAll(MyESClass);
-          assert(MyESClass.prototype.myMethod.promisified_);
+          assert2(MyESClass.prototype.myMethod.promisified_);
         });
       `);
     } catch (error) {

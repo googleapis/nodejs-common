@@ -18,8 +18,8 @@
  * @module common/operation
  */
 
-import * as extend from 'extend';
-import * as pify from 'pify';
+import extend from 'extend';
+import pify from 'pify';
 import {Metadata, ServiceObject, ServiceObjectConfig} from './service-object';
 
 export class Operation extends ServiceObject {

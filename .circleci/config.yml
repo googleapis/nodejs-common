@@ -11,8 +11,6 @@ workflows:
           filters: *all_commits
       - node8:
           filters: *all_commits
-      - node9:
-          filters: *all_commits
       - node10:
           filters: *all_commits
       - lint:
@@ -20,7 +18,6 @@ workflows:
             - node4
             - node6
             - node8
-            - node9
             - node10
           filters: *all_commits
       - docs:
@@ -28,7 +25,6 @@ workflows:
             - node4
             - node6
             - node8
-            - node9
             - node10
           filters: *all_commits
       - publish_npm:
@@ -77,7 +73,7 @@ jobs:
             NPM_CONFIG_PREFIX: /home/node/.npm-global
       - run:
           name: Run unit tests.
-          command: npm test
+          command: npm run compile && npm run test-only
       - run:
           name: Submit coverage data to codecov.
           command: node_modules/.bin/codecov
@@ -90,11 +86,6 @@ jobs:
   node8:
     docker:
       - image: 'node:8'
-        user: node
-    steps: *unit_tests_steps
-  node9:
-    docker:
-      - image: 'node:9'
         user: node
     steps: *unit_tests_steps
   node10:
