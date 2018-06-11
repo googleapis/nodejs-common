@@ -20,7 +20,8 @@
 
 import extend from 'extend';
 import pify from 'pify';
-import {Metadata, ServiceObject, ServiceObjectConfig} from './service-object';
+
+import {GetMetadataCallback, ServiceObject, ServiceObjectConfig} from './service-object';
 
 export class Operation extends ServiceObject {
   completeListeners: number;
@@ -120,15 +121,19 @@ export class Operation extends ServiceObject {
    *
    * @private
    */
-  private poll_(): Promise<Metadata|null> {
-    return pify(this.getMetadata)().then(resp => {
-      if (resp && resp.error) {
-        throw resp.error;
+  protected poll_(callback: GetMetadataCallback): void {
+    this.getMetadata((err, body) => {
+      if (err || body!.error) {
+        callback(err || body!.error as Error);
+        return;
       }
-      if (!resp.done) {
-        return null;
+
+      if (!body!.done) {
+        callback(null);
+        return;
       }
-      return resp;
+
+      callback(null, body);
     });
   }
 
@@ -146,7 +151,7 @@ export class Operation extends ServiceObject {
       return;
     }
     try {
-      const metadata = await this.poll_();
+      const metadata = await pify(this.poll_.bind(this))();
       if (!metadata) {
         setTimeout(this.startPolling_.bind(this), 500);
         return;

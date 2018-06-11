@@ -579,10 +579,10 @@ describe('ServiceObject', () => {
 
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake(async (reqOpts) => {
-            return apiResponse;
+            return {body: apiResponse};
           });
 
-      serviceObject.getMetadata((err) => {
+      serviceObject.getMetadata(err => {
         assert.ifError(err);
         assert.strictEqual(pSvc().metadata, apiResponse);
         done();
@@ -591,16 +591,17 @@ describe('ServiceObject', () => {
 
     it('should execute callback with metadata & API response', (done) => {
       const apiResponse = {};
+      const requestResponse = {body: apiResponse};
 
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake(async (reqOpts) => {
-            return apiResponse;
+            return requestResponse;
           });
 
       serviceObject.getMetadata((err, metadata, apiResponse_) => {
         assert.ifError(err);
         assert.strictEqual(metadata, apiResponse);
-        assert.strictEqual(apiResponse_, apiResponse);
+        assert.deepStrictEqual(requestResponse, apiResponse_);
         done();
       });
     });

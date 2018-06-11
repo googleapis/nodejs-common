@@ -344,7 +344,7 @@ class ServiceObject extends EventEmitter {
     // behavior. Ensure we call the original `request` method.
     this.request(reqOpts).then(
         resp => {
-          this.metadata = resp;
+          this.metadata = resp.body;
           callback(null, this.metadata, resp);
         },
         err => {

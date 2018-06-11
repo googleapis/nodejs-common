@@ -19,7 +19,7 @@ import sinon from 'sinon';
 
 import {Service} from '../src';
 import {Operation} from '../src/operation';
-import {GetMetadataCallback, Metadata, ServiceObject, ServiceObjectConfig} from '../src/service-object';
+import {Metadata, ServiceObject, ServiceObjectConfig} from '../src/service-object';
 import {util} from '../src/util';
 
 describe('Operation', () => {
@@ -183,36 +183,25 @@ describe('Operation', () => {
     });
 
     describe('could not get metadata', () => {
-      it('should callback with an error', async () => {
+      it('should callback with an error', done => {
         const error = new Error('Error.');
-        operation.getMetadata = (callback: (err: Error) => void) => {
-          callback(error);
-        };
-        try {
-          await operation.poll_();
-        } catch (err) {
+        sandbox.stub(operation, 'getMetadata').callsArgWith(0, error);
+        operation.poll_((err: Error) => {
           assert.strictEqual(err, error);
-          return;
-        }
-        throw new Error('expected to throw');
+          done();
+        });
       });
 
-      it('should callback with the operation error', async () => {
+      it('should callback with the operation error', done => {
         const apiResponse = {
           error: {},
         } as Metadata;
-
-        operation.getMetadata = (callback: GetMetadataCallback) => {
-          callback(null, apiResponse);
-        };
-
-        try {
-          await operation.poll_();
-        } catch (err) {
+        sandbox.stub(operation, 'getMetadata')
+            .callsArgWith(0, null, apiResponse);
+        operation.poll_((err: Error) => {
           assert.strictEqual(err, apiResponse.error);
-          return;
-        }
-        throw new Error('expected to throw');
+          done();
+        });
       });
     });
 
@@ -220,14 +209,15 @@ describe('Operation', () => {
       const apiResponse = {done: false};
 
       beforeEach(() => {
-        operation.getMetadata = (callback: GetMetadataCallback) => {
-          callback(null, apiResponse);
-        };
+        sandbox.stub(operation, 'getMetadata')
+            .callsArgWith(0, null, apiResponse);
       });
 
-      it('should callback with no arguments', async () => {
-        const resp = await operation.poll_();
-        assert.strictEqual(resp, null);
+      it('should callback with no arguments', done => {
+        operation.poll_((err: Error, resp: {}) => {
+          assert.strictEqual(resp, undefined);
+          done();
+        });
       });
     });
 
@@ -235,14 +225,15 @@ describe('Operation', () => {
       const apiResponse = {done: true};
 
       beforeEach(() => {
-        operation.getMetadata = (callback: GetMetadataCallback) => {
-          callback(null, apiResponse);
-        };
+        sandbox.stub(operation, 'getMetadata')
+            .callsArgWith(0, null, apiResponse);
       });
 
-      it('should emit complete with metadata', async () => {
-        const resp = await operation.poll_();
-        assert.strictEqual(resp, apiResponse);
+      it('should emit complete with metadata', done => {
+        operation.poll_((err: Error, resp: {}) => {
+          assert.strictEqual(resp, apiResponse);
+          done();
+        });
       });
     });
   });
@@ -256,16 +247,15 @@ describe('Operation', () => {
 
     it('should not call getMetadata if no listeners', (done) => {
       operation.hasActiveListeners = false;
-      operation.getMetadata = done;  // if called, test will fail.
+      sandbox.stub(operation, 'getMetadata')
+          .callsFake(done);  // if called, test will fail.
       operation.startPolling_();
       done();
     });
 
     it('should call getMetadata if listeners are registered', (done) => {
       operation.hasActiveListeners = true;
-      operation.getMetadata = () => {
-        done();
-      };
+      sandbox.stub(operation, 'getMetadata').callsFake(() => done());
       operation.startPolling_();
     });
 
@@ -273,9 +263,7 @@ describe('Operation', () => {
       const error = new Error('Error.');
 
       beforeEach(() => {
-        operation.getMetadata = (callback: GetMetadataCallback) => {
-          callback(error);
-        };
+        sandbox.stub(operation, 'getMetadata').callsArgWith(0, error);
       });
 
       it('should emit the error', (done) => {
@@ -283,7 +271,6 @@ describe('Operation', () => {
           assert.strictEqual(err, error);
           done();
         });
-
         operation.startPolling_();
       });
     });
@@ -292,9 +279,8 @@ describe('Operation', () => {
       const apiResponse = {done: false};
 
       beforeEach(() => {
-        operation.getMetadata = (callback: GetMetadataCallback) => {
-          callback(null, apiResponse);
-        };
+        sandbox.stub(operation, 'getMetadata')
+            .callsArgWith(0, null, apiResponse);
       });
 
       it('should call startPolling_ after 500 ms', (done) => {
@@ -327,18 +313,15 @@ describe('Operation', () => {
       const apiResponse = {done: true};
 
       beforeEach(() => {
-        operation.getMetadata = (callback: GetMetadataCallback) => {
-          callback(null, apiResponse);
-        };
+        sandbox.stub(operation, 'getMetadata')
+            .callsArgWith(0, null, apiResponse);
       });
 
-      it('should emit complete with metadata', (done) => {
+      it('should emit complete with metadata', async () => {
         operation.on('complete', (metadata: {}) => {
           assert.strictEqual(metadata, apiResponse);
-          done();
         });
-
-        operation.startPolling_();
+        await operation.startPolling_();
       });
     });
   });
