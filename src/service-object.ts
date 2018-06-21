@@ -23,7 +23,6 @@ import {EventEmitter} from 'events';
 import extend from 'extend';
 import is from 'is';
 import r from 'request';
-import {Duplex} from 'stream';
 
 import {Service} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
@@ -122,7 +121,8 @@ class ServiceObject extends EventEmitter {
   private interceptors: Interceptor[];
   // tslint:disable-next-line:variable-name
   protected Promise?: PromiseConstructor;
-  [index: string]: {}|undefined;
+  // tslint:disable-next-line:no-any
+  [index: string]: any;
 
   /*
    * @constructor
