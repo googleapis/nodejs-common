@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export {GoogleAuthOptions} from 'google-auth-library';
+export {auth, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 // Logger is new in 0.18.0.
 export {Logger, LoggerConfig} from './logger';
 // logger is the interface exported prior to 0.18.0. The two logging-related

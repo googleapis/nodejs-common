@@ -15,7 +15,7 @@
  */
 
 import assert from 'assert';
-const common = require('../src');
+import * as common from '../src';
 
 describe('common', () => {
   it('should correctly export the common modules', () => {
@@ -25,5 +25,10 @@ describe('common', () => {
     assert(common.Service);
     assert(common.ServiceObject);
     assert(common.util);
+  });
+
+  it('should export auth', () => {
+    assert(common.auth);
+    assert(common.auth instanceof common.GoogleAuth);
   });
 });
