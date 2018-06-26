@@ -550,12 +550,12 @@ describe('ServiceObject', () => {
           .callsFake(async (reqOpts_) => {
             assert.strictEqual(reqOpts_.method, method.reqOpts.method);
             assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
-            done();
+            return {body: {}};
           });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
       serviceObject.methods.getMetadata = method;
-      serviceObject.getMetadata(() => {});
+      serviceObject.getMetadata(() => done());
     });
 
     it('should execute callback with error & apiResponse', (done) => {
