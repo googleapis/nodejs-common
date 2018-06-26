@@ -536,7 +536,7 @@ describe('ServiceObject', () => {
       serviceObject.getMetadata(() => {});
     });
 
-    it.only('should extend the request options with defaults', (done) => {
+    it('should extend the request options with defaults', (done) => {
       const method = {
         reqOpts: {
           method: 'override',
