@@ -59,7 +59,7 @@
     "is": "^3.2.1",
     "pify": "^3.0.0",
     "request": "^2.87.0",
-    "retry-request": "^3.3.1",
+    "retry-request": "^4.0.0",
     "split-array-stream": "^2.0.0",
     "stream-events": "^1.0.4",
     "@types/duplexify": "^3.5.0",
