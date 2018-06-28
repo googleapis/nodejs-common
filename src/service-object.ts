@@ -112,7 +112,8 @@ export interface StreamRequestOptions extends DecorateRequestOptions {
  * object requires specific behavior.
  */
 class ServiceObject extends EventEmitter {
-  metadata: {};
+  // tslint:disable-next-line:no-any
+  metadata: any;
   baseUrl?: string;
   protected parent: Service;
   private id?: string;
