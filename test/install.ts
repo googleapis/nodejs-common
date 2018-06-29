@@ -17,9 +17,9 @@
 import cp from 'child_process';
 import mv from 'mv';
 import {ncp} from 'ncp';
+import os from 'os';
 import pify from 'pify';
 import tmp from 'tmp';
-import os from 'os';
 
 const mvp = pify(mv);
 const ncpp = pify(ncp);
