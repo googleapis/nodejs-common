@@ -19,6 +19,7 @@ import mv from 'mv';
 import {ncp} from 'ncp';
 import pify from 'pify';
 import tmp from 'tmp';
+import os from 'os';
 
 const mvp = pify(mv);
 const ncpp = pify(ncp);
@@ -27,6 +28,7 @@ const stagingDir = tmp.dirSync({keep, unsafeCleanup: true});
 const stagingPath = stagingDir.name;
 const pkg = require('../../package.json');
 const pkgName = 'google-cloud-common';
+const npm = os.platform() === 'win32' ? 'npm.cmd' : 'npm';
 
 const spawnp =
     (command: string, args: string[], options: cp.SpawnOptions = {}) => {
@@ -51,13 +53,13 @@ const spawnp =
  */
 it('should be able to use the d.ts', async () => {
   console.log(`${__filename} staging area: ${stagingPath}`);
-  await spawnp('npm', ['pack']);
+  await spawnp(npm, ['pack']);
   const tarball = `${pkgName}-${pkg.version}.tgz`;
   // stagingPath can be on another filesystem so fs.rename() will fail
   // with EXDEV, hence we use `mv` module here.
   await mvp(tarball, `${stagingPath}/${pkgName}.tgz`);
   await ncpp('test/fixtures/kitchen', `${stagingPath}/`);
-  await spawnp('npm', ['install'], {cwd: `${stagingPath}/`});
+  await spawnp(npm, ['install'], {cwd: `${stagingPath}/`});
 }).timeout(40000);
 
 /**
