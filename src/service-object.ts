@@ -22,7 +22,7 @@ import arrify from 'arrify';
 import {EventEmitter} from 'events';
 import extend from 'extend';
 import is from 'is';
-import r from 'request';
+import * as r from 'request';
 
 import {Service} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
