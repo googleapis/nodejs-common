@@ -16,6 +16,7 @@
 
 import assert from 'assert';
 import extend from 'extend';
+import {RequestError} from 'google-auth-library/build/src/transporters';
 import r from 'request';
 import sinon from 'sinon';
 
@@ -550,12 +551,12 @@ describe('ServiceObject', () => {
           .callsFake(async (reqOpts_) => {
             assert.strictEqual(reqOpts_.method, method.reqOpts.method);
             assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
-            return {body: {}};
+            done();
           });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
       serviceObject.methods.getMetadata = method;
-      serviceObject.getMetadata(() => done());
+      serviceObject.getMetadata(() => {});
     });
 
     it('should execute callback with error & apiResponse', (done) => {
@@ -876,6 +877,22 @@ describe('ServiceObject', () => {
 
       serviceObject.request({} as DecorateRequestOptions, (err, body, res) => {
         assert.ifError(err);
+        assert.deepStrictEqual(res, response);
+        assert.deepStrictEqual(body, response.body);
+        done();
+      });
+    });
+
+    it('should return response with a request error and callback', done => {
+      const errorBody = '🤮';
+      const response = {body: {error: errorBody}, statusCode: 500} as
+          r.Response;
+      const err = new Error(errorBody);
+      // tslint:disable-next-line:no-any
+      (err as any).response = response;
+      sandbox.stub(serviceObject, 'request_').rejects(err);
+      serviceObject.request({} as DecorateRequestOptions, (err, body, res) => {
+        assert(err instanceof Error);
         assert.deepStrictEqual(res, response);
         assert.deepStrictEqual(body, response.body);
         done();
