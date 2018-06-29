@@ -450,7 +450,8 @@ class ServiceObject extends EventEmitter {
     }
     this.request_(reqOpts).then(
         res => callback(null, res.body, res as r.Response),
-        err => callback(err, null, null!));
+        err => callback(
+            err, err.response ? err.response.body : null, err.response));
   }
 
   /**
