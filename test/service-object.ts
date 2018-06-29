@@ -16,8 +16,7 @@
 
 import assert from 'assert';
 import extend from 'extend';
-import {RequestError} from 'google-auth-library/build/src/transporters';
-import r from 'request';
+import * as r from 'request';
 import sinon from 'sinon';
 
 import {Service} from '../src';

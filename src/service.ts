@@ -19,12 +19,11 @@
  */
 
 import arrify from 'arrify';
-import {Duplexify} from 'duplexify';
 import extend from 'extend';
 import {GoogleAuth} from 'google-auth-library';
 import is from 'is';
 import pify from 'pify';
-import r from 'request';
+import * as r from 'request';
 
 import {StreamRequestOptions} from './service-object';
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
