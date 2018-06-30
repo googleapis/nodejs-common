@@ -18,11 +18,11 @@
  * @module common/service
  */
 
-import arrify from 'arrify';
-import extend from 'extend';
+import * as arrify from 'arrify';
+import * as extend from 'extend';
 import {GoogleAuth} from 'google-auth-library';
-import is from 'is';
-import pify from 'pify';
+import * as is from 'is';
+import * as pify from 'pify';
 import * as r from 'request';
 
 import {StreamRequestOptions} from './service-object';

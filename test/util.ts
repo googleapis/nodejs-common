@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import assert from 'assert';
+import * as assert from 'assert';
 import {AxiosRequestConfig} from 'axios';
-import duplexify from 'duplexify';
-import extend from 'extend';
+import * as duplexify from 'duplexify';
+import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import is from 'is';
-import nock from 'nock';
-import proxyquire from 'proxyquire';
-import request from 'request';
-import retryRequest from 'retry-request';
-import sinon from 'sinon';
-import stream from 'stream';
-import streamEvents from 'stream-events';
+import * as is from 'is';
+import * as nock from 'nock';
+import * as proxyquire from 'proxyquire';
+import * as request from 'request';
+import * as retryRequest from 'retry-request';
+import * as sinon from 'sinon';
+import * as stream from 'stream';
+import * as streamEvents from 'stream-events';
 
 import {Abortable, ApiError, DecorateRequestOptions, GlobalConfig, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, PromisifyAllOptions, Util} from '../src/util';
 

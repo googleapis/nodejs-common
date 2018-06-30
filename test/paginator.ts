@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-import assert from 'assert';
-import extend from 'extend';
-import sinon from 'sinon';
-import stream from 'stream';
-import through from 'through2';
-import uuid from 'uuid';
+import * as assert from 'assert';
+import * as sinon from 'sinon';
+import * as stream from 'stream';
+import * as through from 'through2';
+import * as uuid from 'uuid';
 
 import {paginator, Paginator, ParsedArguments} from '../src/paginator';
 import {util} from '../src/util';

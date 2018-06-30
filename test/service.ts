@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import assert from 'assert';
-import extend from 'extend';
-import proxyquire from 'proxyquire';
+import * as assert from 'assert';
+import * as extend from 'extend';
+import * as proxyquire from 'proxyquire';
 import {Request, RequestResponse} from 'request';
 
 import {Service, ServiceConfig, ServiceOptions} from '../src/service';

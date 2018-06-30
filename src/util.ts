@@ -18,17 +18,17 @@
  * @module common/util
  */
 
-import * as d from 'duplexify';
-import ent from 'ent';
-import extend from 'extend';
+import * as duplexify from 'duplexify';
+import * as ent from 'ent';
+import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
-import is from 'is';
+import * as is from 'is';
 import * as r from 'request';
-import retryRequest from 'retry-request';
+import * as retryRequest from 'retry-request';
 import {Transform, TransformOptions} from 'stream';
-import streamEvents from 'stream-events';
-import through from 'through2';
+import * as streamEvents from 'stream-events';
+import * as through from 'through2';
 
 import {Service} from '.';
 import {Interceptor} from './service-object';
@@ -51,14 +51,14 @@ export interface ParsedHttpRespMessage {
 }
 
 export interface MakeAuthenticatedRequest {
-  (reqOpts: DecorateRequestOptions): d.Duplexify;
+  (reqOpts: DecorateRequestOptions): duplexify.Duplexify;
   (reqOpts: DecorateRequestOptions,
    options?: MakeAuthenticatedRequestOptions): void|Abortable;
   (reqOpts: DecorateRequestOptions,
    callback?: BodyResponseCallback): void|Abortable;
   (reqOpts: DecorateRequestOptions,
    optionsOrCallback?: MakeAuthenticatedRequestOptions|
-   BodyResponseCallback): void|Abortable|d.Duplexify;
+   BodyResponseCallback): void|Abortable|duplexify.Duplexify;
   getCredentials:
       (callback:
            (err?: Error|null, credentials?: CredentialBody) => void) => void;
@@ -68,7 +68,7 @@ export interface MakeAuthenticatedRequest {
 export type Abortable = {
   abort(): void
 };
-export type AbortableDuplex = d.Duplexify&Abortable;
+export type AbortableDuplex = duplexify.Duplexify&Abortable;
 
 export interface PromisifyAllOptions extends PromisifyOptions {
   /**
@@ -141,7 +141,7 @@ export interface MakeAuthenticatedRequestFactoryConfig extends
    */
   maxRetries?: number;
 
-  stream?: d.Duplexify;
+  stream?: duplexify.Duplexify;
 }
 
 export interface MakeAuthenticatedRequestOptions {
@@ -298,7 +298,7 @@ export interface MakeRequestConfig {
 
   retries?: number;
 
-  stream?: d.Duplexify;
+  stream?: duplexify.Duplexify;
 
   request?: {};
 
@@ -418,7 +418,7 @@ export class Util {
    * @param {function} onComplete - Callback, executed after the writable Request stream has completed.
    */
   makeWritableStream(
-      dup: d.Duplexify, options: MakeWritableStreamOptions,
+      dup: duplexify.Duplexify, options: MakeWritableStreamOptions,
       onComplete?: Function) {
     onComplete = onComplete || util.noop;
 
@@ -537,7 +537,7 @@ export class Util {
      * authenticated request options.
      */
     function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions):
-        d.Duplexify;
+        duplexify.Duplexify;
     function makeAuthenticatedRequest(
         reqOpts: DecorateRequestOptions,
         options?: MakeAuthenticatedRequestOptions): void|Abortable;
@@ -547,13 +547,13 @@ export class Util {
     function makeAuthenticatedRequest(
         reqOpts: DecorateRequestOptions,
         optionsOrCallback?: MakeAuthenticatedRequestOptions|
-        BodyResponseCallback): void|Abortable|d.Duplexify {
-      let stream: d.Duplexify;
+        BodyResponseCallback): void|Abortable|duplexify.Duplexify {
+      let stream: duplexify.Duplexify;
       const reqConfig = extend({}, config);
       let activeRequest_: void|Abortable|null;
 
       if (!optionsOrCallback) {
-        stream = d.default();
+        stream = duplexify();
         reqConfig.stream = stream;
       }
 
