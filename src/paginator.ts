@@ -18,9 +18,9 @@
  * @module common/paginator
  */
 
-import arrify from 'arrify';
-import extend from 'extend';
-import is from 'is';
+import * as arrify from 'arrify';
+import * as extend from 'extend';
+import * as is from 'is';
 import {split} from 'split-array-stream';
 import {Transform, TransformOptions} from 'stream';
 

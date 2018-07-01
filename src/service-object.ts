@@ -18,10 +18,10 @@
  * @module common/service-object
  */
 
-import arrify from 'arrify';
+import * as arrify from 'arrify';
 import {EventEmitter} from 'events';
-import extend from 'extend';
-import is from 'is';
+import * as extend from 'extend';
+import * as is from 'is';
 import * as r from 'request';
 
 import {Service} from '.';

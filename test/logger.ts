@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import assert from 'assert';
-import shimmer from 'shimmer';
+import * as assert from 'assert';
+import * as shimmer from 'shimmer';
 
 import * as loggerModule from '../src/logger';
 import {Logger, LoggerConfig} from '../src/logger';
