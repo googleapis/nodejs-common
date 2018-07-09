@@ -12,21 +12,13 @@ workflows:
       - node10:
           filters: *all_commits
       - lint:
-          requires:
-            - node6
-            - node8
-            - node10
-          filters: *all_commits
-      - docs:
-          requires:
-            - node6
-            - node8
-            - node10
           filters: *all_commits
       - publish_npm:
           requires:
             - lint
-            - docs
+            - node6
+            - node8
+            - node10
           filters:
             branches:
               ignore: /.*/
@@ -63,13 +55,16 @@ jobs:
           command: |-
             mkdir -p /home/node/.npm-global
             npm install
+            npm run bootstrap
           environment:
             NPM_CONFIG_PREFIX: /home/node/.npm-global
-      - run:
-          name: Run unit tests.
-          command: npm run compile && npm run test-only
+      - run: npm run bootstrap && npm run test-only
       - run: node_modules/.bin/codecov
-  
+  node6:
+    docker:
+      - image: 'node:6'
+        user: node
+    steps: *unit_tests_steps
   node8:
     docker:
       - image: 'node:8'
@@ -88,20 +83,7 @@ jobs:
       - checkout
       - run: *remove_package_lock
       - run: *npm_install_and_link
-      - run:
-          name: Run linting.
-          command: npm run check
-  docs:
-    docker:
-      - image: 'node:8'
-        user: node
-    steps:
-      - checkout
-      - run: *remove_package_lock
-      - run: *npm_install_and_link
-      - run:
-          name: Build documentation.
-          command: npm run docs
+      - run: npm run check
   publish_npm:
     docker:
       - image: 'node:8'
