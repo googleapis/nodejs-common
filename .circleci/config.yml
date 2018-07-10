@@ -45,9 +45,9 @@ workflows:
               only: master
     jobs: *workflow_jobs
 jobs:
-  node4:
+  node6:
     docker:
-      - image: 'node:4'
+      - image: 'node:6'
         user: node
     steps: &unit_tests_steps
       - checkout
@@ -72,15 +72,8 @@ jobs:
       - run:
           name: Run unit tests.
           command: npm run compile && npm run test-only
-      - run:
-          name: Submit coverage data to codecov.
-          command: node_modules/.bin/codecov
-          when: always
-  node6:
-    docker:
-      - image: 'node:6'
-        user: node
-    steps: *unit_tests_steps
+      - run: node_modules/.bin/codecov
+  
   node8:
     docker:
       - image: 'node:8'
@@ -119,10 +112,6 @@ jobs:
         user: node
     steps:
       - checkout
-      - run:
-          name: Set NPM authentication.
-          command: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
+      - run: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
       - run: *npm_install_and_link
-      - run:
-          name: Publish the module to npm.
-          command: npm publish
+      - run: npm publish
