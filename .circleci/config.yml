@@ -3,26 +3,22 @@ workflows:
   version: 2
   tests:
     jobs: &workflow_jobs
-      - node4:
+      - node6:
           filters: &all_commits
             tags:
               only: /.*/
-      - node6:
-          filters: *all_commits
       - node8:
           filters: *all_commits
       - node10:
           filters: *all_commits
       - lint:
           requires:
-            - node4
             - node6
             - node8
             - node10
           filters: *all_commits
       - docs:
           requires:
-            - node4
             - node6
             - node8
             - node10
