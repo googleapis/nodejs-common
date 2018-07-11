@@ -58,8 +58,8 @@ jobs:
             npm run bootstrap
           environment:
             NPM_CONFIG_PREFIX: /home/node/.npm-global
-      - run: npm run bootstrap && npm run test-only
-      - run: node_modules/.bin/codecov
+      - run: npm run test-only
+      - run: npm run codecov
   node6:
     docker:
       - image: 'node:6'
@@ -90,6 +90,6 @@ jobs:
         user: node
     steps:
       - checkout
-      - run: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
+      - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
       - run: *npm_install_and_link
       - run: npm publish
