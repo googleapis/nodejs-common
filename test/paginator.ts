@@ -88,7 +88,7 @@ describe('paginator', () => {
 
       stub('run_', (args, originalMethod) => {
         assert.strictEqual(args, parsedArguments);
-        assert.equal(originalMethod(), expectedReturnValue);
+        assert.strictEqual(originalMethod(), expectedReturnValue);
         done();
       });
 
@@ -106,7 +106,7 @@ describe('paginator', () => {
       cls.uuid = uuid.v1();
 
       stub('run_', (args, originalMethod) => {
-        assert.equal(originalMethod(), cls.uuid);
+        assert.strictEqual(originalMethod(), cls.uuid);
         done();
       });
 
@@ -121,7 +121,7 @@ describe('paginator', () => {
       });
 
       paginator.extend(FakeClass, 'methodToExtend');
-      assert.equal(FakeClass.prototype.methodToExtend(), uniqueValue);
+      assert.strictEqual(FakeClass.prototype.methodToExtend(), uniqueValue);
     });
   });
 
@@ -600,7 +600,7 @@ describe('paginator', () => {
         }
       });
       rs.on('end', () => {
-        assert.equal(originalMethodCalledCount, 1);
+        assert.strictEqual(originalMethodCalledCount, 1);
         done();
       });
     });

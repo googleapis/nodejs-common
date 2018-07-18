@@ -481,8 +481,8 @@ describe('common/util', () => {
       util.makeWritableStream(dup, {
         metadata,
         makeAuthenticatedRequest(request) {
-          assert.equal(request.method, 'POST');
-          assert.equal(request.qs.uploadType, 'multipart');
+          assert.strictEqual(request.method, 'POST');
+          assert.strictEqual(request.qs.uploadType, 'multipart');
 
           assert.strictEqual(Array.isArray(request.multipart), true);
 
@@ -520,9 +520,9 @@ describe('common/util', () => {
           contentType: 'application/json',
         },
         makeAuthenticatedRequest(request) {
-          assert.equal(request.method, req.method);
+          assert.strictEqual(request.method, req.method);
           assert.deepEqual(request.qs, req.qs);
-          assert.equal(request.uri, req.uri);
+          assert.strictEqual(request.uri, req.uri);
 
           // tslint:disable-next-line:no-any
           const mp = request.multipart as any[];
@@ -540,7 +540,7 @@ describe('common/util', () => {
 
       const ws = duplexify();
       ws.on('error', (err) => {
-        assert.equal(err, error);
+        assert.strictEqual(err, error);
         done();
       });
 
@@ -716,7 +716,7 @@ describe('common/util', () => {
     });
 
     it('should return a function', () => {
-      assert.equal(typeof util.makeAuthenticatedRequestFactory(), 'function');
+      assert.strictEqual(typeof util.makeAuthenticatedRequestFactory(), 'function');
     });
 
     it('should return a getCredentials method', (done) => {
@@ -1103,7 +1103,7 @@ describe('common/util', () => {
     function testDefaultRetryRequestConfig(done: () => void) {
       return (reqOpts_: DecorateRequestOptions, config: MakeRequestConfig) => {
         assert.strictEqual(reqOpts_, reqOpts);
-        assert.equal(config.retries, 3);
+        assert.strictEqual(config.retries, 3);
         assert.strictEqual(config.request, fakeRequest);
 
         const error = new Error('Error.');
@@ -1907,7 +1907,7 @@ describe('common/util', () => {
         });
 
         const returnVal = func(() => {});
-        assert.equal(returnVal, undefined);
+        assert.strictEqual(returnVal, undefined);
       });
 
       it('should return a promise when callback omitted', (done) => {

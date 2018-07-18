@@ -63,8 +63,8 @@ describe('ServiceObject', () => {
       (serviceObject.delete() as any)
           // tslint:disable-next-line:no-any
           .then((r: any) => {
-            assert.equal(r[0].body, 'sunny');
-            assert.equal(r[0].statusCode, 123);
+            assert.strictEqual(r[0].body, 'sunny');
+            assert.strictEqual(r[0].statusCode, 123);
             done();
           });
     });
