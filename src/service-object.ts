@@ -18,6 +18,7 @@
  * @module common/service-object
  */
 
+import {promisifyAll} from '@google-cloud/promisify';
 import * as arrify from 'arrify';
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
@@ -468,7 +469,7 @@ class ServiceObject extends EventEmitter {
   }
 }
 
-util.promisifyAll(
+promisifyAll(
     ServiceObject, {exclude: ['requestStream', 'request', 'request_']});
 
 export {ServiceObject};

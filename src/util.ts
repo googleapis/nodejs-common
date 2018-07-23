@@ -30,7 +30,6 @@ import {Transform, TransformOptions} from 'stream';
 import * as streamEvents from 'stream-events';
 import * as through from 'through2';
 
-import {Service} from '.';
 import {Interceptor} from './service-object';
 
 const request = r.defaults({
@@ -70,27 +69,9 @@ export type Abortable = {
 };
 export type AbortableDuplex = duplexify.Duplexify&Abortable;
 
-export interface PromisifyAllOptions extends PromisifyOptions {
-  /**
-   * Array of methods to ignore when promisifying.
-   */
-  exclude?: string[];
-}
-
 export interface PackageJson {
   name: string;
   version: string;
-}
-
-export interface PromiseMethod extends Function {
-  promisified_?: boolean;
-}
-
-export interface PromisifyOptions {
-  /**
-   * Resolve the promise with single arg instead of an array.
-   */
-  singular?: boolean;
 }
 
 export interface CreateLimiterOptions {
@@ -921,109 +902,6 @@ export class Util {
             .replace('/', '-');  // For UA spec-compliance purposes.
 
     return hyphenatedPackageName + '/' + packageJson.version;
-  }
-
-  /**
-   * Wraps a callback style function to conditionally return a promise.
-   *
-   * @param {function} originalMethod - The method to promisify.
-   * @param {object=} options - Promise options.
-   * @param {boolean} options.singular - Resolve the promise with single arg instead of an array.
-   * @return {function} wrapped
-   */
-  promisify(originalMethod: PromiseMethod, options?: PromisifyOptions) {
-    if (originalMethod.promisified_) {
-      return originalMethod;
-    }
-
-    options = options || {};
-
-    const slice = Array.prototype.slice;
-
-    // tslint:disable-next-line:no-any
-    const wrapper: any = function(this: Service) {
-      const context = this;
-      let last;
-
-      for (last = arguments.length - 1; last >= 0; last--) {
-        const arg = arguments[last];
-
-        if (is.undefined(arg)) {
-          continue;  // skip trailing undefined.
-        }
-
-        if (!is.fn(arg)) {
-          break;  // non-callback last argument found.
-        }
-
-        return originalMethod.apply(context, arguments);
-      }
-
-      // peel trailing undefined.
-      const args = slice.call(arguments, 0, last + 1);
-
-      // tslint:disable-next-line:variable-name
-      let PromiseCtor = Promise;
-
-      // Because dedupe will likely create a single install of
-      // @google-cloud/common to be shared amongst all modules, we need to
-      // localize it at the Service level.
-      if (context && context.Promise) {
-        PromiseCtor = context.Promise;
-      }
-
-      return new PromiseCtor((resolve, reject) => {
-        // tslint:disable-next-line:no-any
-        args.push((...args: any[]) => {
-          const callbackArgs = slice.call(args);
-          const err = callbackArgs.shift();
-
-          if (err) {
-            return reject(err);
-          }
-
-          if (options!.singular && callbackArgs.length === 1) {
-            resolve(callbackArgs[0]);
-          } else {
-            resolve(callbackArgs);
-          }
-        });
-
-        originalMethod.apply(context, args);
-      });
-    };
-
-    wrapper.promisified_ = true;
-    return wrapper;
-  }
-
-  /**
-   * Promisifies certain Class methods. This will not promisify private or
-   * streaming methods.
-   *
-   * @param {module:common/service} Class - Service class.
-   * @param {object=} options - Configuration object.
-   */
-  // tslint:disable-next-line:variable-name
-  promisifyAll(Class: Function, options?: PromisifyAllOptions) {
-    const exclude = (options && options.exclude) || [];
-    const ownPropertyNames = Object.getOwnPropertyNames(Class.prototype);
-    const methods = ownPropertyNames.filter((methodName) => {
-      // clang-format off
-      return (
-        is.fn(Class.prototype[methodName]) && // is it a function?
-        !/(^_|(Stream|_)|promise$)|^constructor$/.test(methodName) && // is it promisable?
-        exclude.indexOf(methodName) === -1
-      ); // is it blacklisted?
-      // clang-format on
-    });
-
-    methods.forEach((methodName) => {
-      const originalMethod = Class.prototype[methodName];
-      if (!originalMethod.promisified_) {
-        Class.prototype[methodName] = util.promisify(originalMethod, options);
-      }
-    });
   }
 
   /**
