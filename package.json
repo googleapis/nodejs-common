@@ -37,7 +37,7 @@
     "publish-module": "node ../../scripts/publish.js common",
     "generate-scaffolding": "repo-tools generate all",
     "docs": "jsdoc -c .jsdoc.js",
-    "cover": "nyc --reporter=lcov mocha --require source-map-support/register --require intelli-espower-loader build/test && nyc report",
+    "cover": "nyc --reporter=lcov mocha build/test && nyc report",
     "test-no-cover": "mocha build/test",
     "test": "npm run test-only",
     "test-only": "npm run cover",
