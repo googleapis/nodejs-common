@@ -52,7 +52,7 @@ describe('Operation', () => {
       assert.strictEqual(operation.baseUrl, '');
       assert.strictEqual(operation.parent, FAKE_SERVICE);
       assert.strictEqual(operation.id, OPERATION_ID);
-      assert.deepEqual(operation.methods, {
+      assert.deepStrictEqual(operation.methods, {
         exists: true,
         get: true,
         getMetadata: {
@@ -120,7 +120,7 @@ describe('Operation', () => {
       });
 
       return operation.promise().then((data: {}) => {
-        assert.deepEqual(data, [metadata]);
+        assert.deepStrictEqual(data, [metadata]);
       });
     });
   });
