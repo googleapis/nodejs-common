@@ -129,7 +129,7 @@ describe('common/util', () => {
   });
 
   it('should have set correct defaults on Request', () => {
-    assert.deepEqual(REQUEST_DEFAULT_CONF, {
+    assert.deepStrictEqual(REQUEST_DEFAULT_CONF, {
       timeout: 60000,
       gzip: true,
       forever: true,
@@ -193,7 +193,7 @@ describe('common/util', () => {
 
       const apiError = new ApiError(errorBody);
 
-      assert.deepEqual(apiError.errors, errors);
+      assert.deepStrictEqual(apiError.errors, errors);
     });
 
     it('should append the custom error message', () => {
@@ -338,7 +338,7 @@ describe('common/util', () => {
     it('should not modify original object', () => {
       const globalConfig = {keyFilename: 'key.json'};
       util.extendGlobalConfig(globalConfig, {credentials: {}});
-      assert.deepEqual(globalConfig, {keyFilename: 'key.json'});
+      assert.deepStrictEqual(globalConfig, {keyFilename: 'key.json'});
     });
 
     it('should link the original interceptors_', () => {
@@ -380,8 +380,8 @@ describe('common/util', () => {
 
       util.handleResp(
           fakeError, fakeResponse, fakeResponse.body, (err, body, resp) => {
-            assert.deepEqual(err, fakeError);
-            assert.deepEqual(body, fakeResponse.body);
+            assert.deepStrictEqual(err, fakeError);
+            assert.deepStrictEqual(body, fakeResponse.body);
             assert.deepStrictEqual(resp, fakeResponse);
             done();
           });
@@ -395,7 +395,7 @@ describe('common/util', () => {
       });
 
       util.handleResp(null, fakeResponse, {}, (err) => {
-        assert.deepEqual(err, error);
+        assert.deepStrictEqual(err, error);
         done();
       });
     });
@@ -408,7 +408,7 @@ describe('common/util', () => {
       });
 
       util.handleResp(null, fakeResponse, {}, (err) => {
-        assert.deepEqual(err, error);
+        assert.deepStrictEqual(err, error);
         done();
       });
     });
@@ -454,9 +454,9 @@ describe('common/util', () => {
       ].join(' - ');
 
       const err = parsedHttpRespBody.err as ApiError;
-      assert.deepEqual(err.errors, apiErr.errors);
+      assert.deepStrictEqual(err.errors, apiErr.errors);
       assert.strictEqual(err.code, apiErr.code);
-      assert.deepEqual(err.message, expectedErrorMessage);
+      assert.deepStrictEqual(err.message, expectedErrorMessage);
     });
 
     it('should try to parse JSON if body is string', () => {
@@ -521,7 +521,7 @@ describe('common/util', () => {
         },
         makeAuthenticatedRequest(request) {
           assert.equal(request.method, req.method);
-          assert.deepEqual(request.qs, req.qs);
+          assert.deepStrictEqual(request.qs, req.qs);
           assert.equal(request.uri, req.uri);
 
           // tslint:disable-next-line:no-any
@@ -756,7 +756,7 @@ describe('common/util', () => {
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
         stub('decorateRequest', (reqOpts_, projectId) => {
           assert.strictEqual(reqOpts_, fakeReqOpts);
-          assert.deepEqual(projectId, expectedProjectId);
+          assert.deepStrictEqual(projectId, expectedProjectId);
           return decoratedRequest;
         });
 
@@ -789,7 +789,7 @@ describe('common/util', () => {
           onAuthenticated(
               err: Error, authenticatedReqOpts: DecorateRequestOptions) {
             assert.ifError(err);
-            assert.deepEqual(reqOpts, authenticatedReqOpts);
+            assert.deepStrictEqual(reqOpts, authenticatedReqOpts);
             done();
           },
         });
@@ -799,7 +799,7 @@ describe('common/util', () => {
         const reqOpts = {a: 'b', c: 'd'};
 
         stub('makeRequest', rOpts => {
-          assert.deepEqual(rOpts, reqOpts);
+          assert.deepStrictEqual(rOpts, reqOpts);
           done();
         });
 
@@ -811,7 +811,7 @@ describe('common/util', () => {
       it('should pass correct args to authorizeRequest', (done) => {
         const fake = extend(true, authClient, {
           authorizeRequest: async (rOpts: AxiosRequestConfig) => {
-            assert.deepEqual(rOpts, fakeReqOpts);
+            assert.deepStrictEqual(rOpts, fakeReqOpts);
             done();
           }
         });
@@ -999,7 +999,7 @@ describe('common/util', () => {
           });
           stub('makeRequest', (authenticatedReqOpts, cfg, cb) => {
             assert.deepStrictEqual(authenticatedReqOpts, reqOpts);
-            assert.deepEqual(cfg, config);
+            assert.deepStrictEqual(cfg, config);
             cb();
           });
           const mar = util.makeAuthenticatedRequestFactory(config);
@@ -1461,7 +1461,7 @@ describe('common/util', () => {
         return decoratedUri;
       });
 
-      assert.deepEqual(util.decorateRequest(reqOpts, projectId), {
+      assert.deepStrictEqual(util.decorateRequest(reqOpts, projectId), {
         uri: decoratedUri,
       });
     });
@@ -1471,7 +1471,7 @@ describe('common/util', () => {
     const PROJECT_ID = 'project-id';
 
     it('should replace any {{projectId}} it finds', () => {
-      assert.deepEqual(
+      assert.deepStrictEqual(
           util.replaceProjectIdToken(
               {
                 here: 'A {{projectId}} Z',
@@ -1527,7 +1527,7 @@ describe('common/util', () => {
     });
 
     it('should replace more than one {{projectId}}', () => {
-      assert.deepEqual(
+      assert.deepStrictEqual(
           util.replaceProjectIdToken(
               {
                 here: 'A {{projectId}} M {{projectId}} Z',
