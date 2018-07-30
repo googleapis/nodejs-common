@@ -90,7 +90,7 @@ describe('Service', () => {
               token: OPTIONS.token,
             });
 
-            assert.deepEqual(config, expectedConfig);
+            assert.deepStrictEqual(config, expectedConfig);
 
             return authenticatedRequest;
           };
@@ -134,7 +134,7 @@ describe('Service', () => {
     });
 
     it('should default globalInterceptors to an empty array', () => {
-      assert.deepEqual(service.globalInterceptors, []);
+      assert.deepStrictEqual(service.globalInterceptors, []);
     });
 
     it('should preserve the original global interceptors', () => {
@@ -146,7 +146,7 @@ describe('Service', () => {
     });
 
     it('should default interceptors to an empty array', () => {
-      assert.deepEqual(service.interceptors, []);
+      assert.deepStrictEqual(service.interceptors, []);
     });
 
     it('should localize package.json', () => {
@@ -455,9 +455,9 @@ describe('Service', () => {
         const originalRequestInterceptors = [].slice.call(requestInterceptors);
 
         service.makeAuthenticatedRequest = () => {
-          assert.deepEqual(globalInterceptors, originalGlobalInterceptors);
-          assert.deepEqual(localInterceptors, originalLocalInterceptors);
-          assert.deepEqual(requestInterceptors, originalRequestInterceptors);
+          assert.deepStrictEqual(globalInterceptors, originalGlobalInterceptors);
+          assert.deepStrictEqual(localInterceptors, originalLocalInterceptors);
+          assert.deepStrictEqual(requestInterceptors, originalRequestInterceptors);
           done();
         };
 
