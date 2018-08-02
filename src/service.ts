@@ -25,10 +25,14 @@ import * as is from 'is';
 import * as pify from 'pify';
 import * as r from 'request';
 
-import {StreamRequestOptions} from './service-object';
+
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
+
+export interface StreamRequestOptions extends DecorateRequestOptions {
+  shouldReturnStream: true;
+}
 
 export interface ServiceConfig {
   /**
