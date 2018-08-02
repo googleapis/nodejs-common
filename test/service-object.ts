@@ -819,7 +819,8 @@ describe('ServiceObject', () => {
 
       pSvc().parent.request = async (reqOpts: DecorateRequestOptions) => {
         const serviceObjectInterceptors = pSvc().interceptors;
-        assert.deepStrictEqual(reqOpts.interceptors_, serviceObjectInterceptors);
+        assert.deepStrictEqual(
+            reqOpts.interceptors_, serviceObjectInterceptors);
         assert.notStrictEqual(reqOpts.interceptors_, serviceObjectInterceptors);
         return {} as r.Response;
       };
