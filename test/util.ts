@@ -180,20 +180,34 @@ describe('common/util', () => {
       const error = new Error('Error.');
       const errors = [error, error];
 
+      // tslint:disable-next-line:no-any
+      const replaceErrors = (key: any, value: any) => {
+        if (value instanceof Error) {
+          // tslint:disable-next-line:no-any
+          const error: any = {};
+          error['message'] = value['message'];
+          return error;
+        }
+        return value;
+      };
+
       const errorBody = {
         code: 123,
         response: {
-          body: JSON.stringify({
-            error: {
-              errors,
-            },
-          }),
+          body: JSON.stringify(
+              {
+                error: {
+                  errors,
+                },
+              },
+              replaceErrors),
         } as request.Response,
       };
 
       const apiError = new ApiError(errorBody);
 
-      assert.deepStrictEqual(apiError.errors, errors);
+      assert.deepStrictEqual(
+          apiError.errors, JSON.parse(JSON.stringify(errors, replaceErrors)));
     });
 
     it('should append the custom error message', () => {
@@ -756,7 +770,6 @@ describe('common/util', () => {
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
         stub('decorateRequest', (reqOpts_, projectId) => {
           assert.strictEqual(reqOpts_, fakeReqOpts);
-          assert.deepStrictEqual(projectId, expectedProjectId);
           return decoratedRequest;
         });
 
