@@ -25,7 +25,7 @@ import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
 
-import {Service} from '.';
+import {Service, StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
 
 export interface Interceptor {
@@ -95,10 +95,6 @@ export interface GetConfig {
    * Create the object if it doesn't already exist.
    */
   autoCreate?: boolean;
-}
-
-export interface StreamRequestOptions extends DecorateRequestOptions {
-  shouldReturnStream: true;
 }
 
 /**

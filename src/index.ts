@@ -25,12 +25,12 @@ export {Operation} from './operation';
  * @type {module:common/service}
  * @private
  */
-export {Service, ServiceConfig, ServiceOptions} from './service';
+export {Service, ServiceConfig, ServiceOptions, StreamRequestOptions} from './service';
 /**
  * @type {module:common/serviceObject}
  * @private
  */
-export {CreateOptions, DeleteCallback, ExistsCallback, GetConfig, GetMetadataCallback, InstanceResponseCallback, Interceptor, Metadata, Methods, ServiceObject, ServiceObjectConfig, StreamRequestOptions} from './service-object';
+export {CreateOptions, DeleteCallback, ExistsCallback, GetConfig, GetMetadataCallback, InstanceResponseCallback, Interceptor, Metadata, Methods, ServiceObject, ServiceObjectConfig} from './service-object';
 /**
  * @type {module:common/util}
  * @private
