@@ -115,7 +115,7 @@ class ServiceObject extends EventEmitter {
   metadata: {};
   baseUrl?: string;
   protected parent: Service;
-  private id?: string;
+  protected id?: string;
   private createMethod?: Function;
   protected methods: Methods;
   private interceptors: Interceptor[];
