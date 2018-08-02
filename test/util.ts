@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-import assert from 'assert';
+import * as assert from 'assert';
 import {AxiosRequestConfig} from 'axios';
-import duplexify from 'duplexify';
-import extend from 'extend';
+import * as duplexify from 'duplexify';
+import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import is from 'is';
-import nock from 'nock';
-import proxyquire from 'proxyquire';
-import request from 'request';
-import retryRequest from 'retry-request';
-import sinon from 'sinon';
-import stream from 'stream';
-import streamEvents from 'stream-events';
+import * as is from 'is';
+import * as nock from 'nock';
+import * as proxyquire from 'proxyquire';
+import * as request from 'request';
+import * as retryRequest from 'retry-request';
+import * as sinon from 'sinon';
+import * as stream from 'stream';
+import * as streamEvents from 'stream-events';
 
-import {Abortable, ApiError, DecorateRequestOptions, GlobalConfig, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, PromisifyAllOptions, Util} from '../src/util';
+import {Abortable, ApiError, DecorateRequestOptions, GlobalConfig, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, Util} from '../src/util';
 
 nock.disableNetConnect();
 
@@ -129,7 +129,7 @@ describe('common/util', () => {
   });
 
   it('should have set correct defaults on Request', () => {
-    assert.deepEqual(REQUEST_DEFAULT_CONF, {
+    assert.deepStrictEqual(REQUEST_DEFAULT_CONF, {
       timeout: 60000,
       gzip: true,
       forever: true,
@@ -180,20 +180,34 @@ describe('common/util', () => {
       const error = new Error('Error.');
       const errors = [error, error];
 
+      // tslint:disable-next-line:no-any
+      const replaceErrors = (key: any, value: any) => {
+        if (value instanceof Error) {
+          // tslint:disable-next-line:no-any
+          const error: any = {};
+          error['message'] = value['message'];
+          return error;
+        }
+        return value;
+      };
+
       const errorBody = {
         code: 123,
         response: {
-          body: JSON.stringify({
-            error: {
-              errors,
-            },
-          }),
+          body: JSON.stringify(
+              {
+                error: {
+                  errors,
+                },
+              },
+              replaceErrors),
         } as request.Response,
       };
 
       const apiError = new ApiError(errorBody);
 
-      assert.deepEqual(apiError.errors, errors);
+      assert.deepStrictEqual(
+          apiError.errors, JSON.parse(JSON.stringify(errors, replaceErrors)));
     });
 
     it('should append the custom error message', () => {
@@ -338,7 +352,7 @@ describe('common/util', () => {
     it('should not modify original object', () => {
       const globalConfig = {keyFilename: 'key.json'};
       util.extendGlobalConfig(globalConfig, {credentials: {}});
-      assert.deepEqual(globalConfig, {keyFilename: 'key.json'});
+      assert.deepStrictEqual(globalConfig, {keyFilename: 'key.json'});
     });
 
     it('should link the original interceptors_', () => {
@@ -380,8 +394,8 @@ describe('common/util', () => {
 
       util.handleResp(
           fakeError, fakeResponse, fakeResponse.body, (err, body, resp) => {
-            assert.deepEqual(err, fakeError);
-            assert.deepEqual(body, fakeResponse.body);
+            assert.deepStrictEqual(err, fakeError);
+            assert.deepStrictEqual(body, fakeResponse.body);
             assert.deepStrictEqual(resp, fakeResponse);
             done();
           });
@@ -395,7 +409,7 @@ describe('common/util', () => {
       });
 
       util.handleResp(null, fakeResponse, {}, (err) => {
-        assert.deepEqual(err, error);
+        assert.deepStrictEqual(err, error);
         done();
       });
     });
@@ -408,7 +422,7 @@ describe('common/util', () => {
       });
 
       util.handleResp(null, fakeResponse, {}, (err) => {
-        assert.deepEqual(err, error);
+        assert.deepStrictEqual(err, error);
         done();
       });
     });
@@ -454,9 +468,9 @@ describe('common/util', () => {
       ].join(' - ');
 
       const err = parsedHttpRespBody.err as ApiError;
-      assert.deepEqual(err.errors, apiErr.errors);
+      assert.deepStrictEqual(err.errors, apiErr.errors);
       assert.strictEqual(err.code, apiErr.code);
-      assert.deepEqual(err.message, expectedErrorMessage);
+      assert.deepStrictEqual(err.message, expectedErrorMessage);
     });
 
     it('should try to parse JSON if body is string', () => {
@@ -521,7 +535,7 @@ describe('common/util', () => {
         },
         makeAuthenticatedRequest(request) {
           assert.equal(request.method, req.method);
-          assert.deepEqual(request.qs, req.qs);
+          assert.deepStrictEqual(request.qs, req.qs);
           assert.equal(request.uri, req.uri);
 
           // tslint:disable-next-line:no-any
@@ -756,7 +770,6 @@ describe('common/util', () => {
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
         stub('decorateRequest', (reqOpts_, projectId) => {
           assert.strictEqual(reqOpts_, fakeReqOpts);
-          assert.deepEqual(projectId, expectedProjectId);
           return decoratedRequest;
         });
 
@@ -789,7 +802,7 @@ describe('common/util', () => {
           onAuthenticated(
               err: Error, authenticatedReqOpts: DecorateRequestOptions) {
             assert.ifError(err);
-            assert.deepEqual(reqOpts, authenticatedReqOpts);
+            assert.deepStrictEqual(reqOpts, authenticatedReqOpts);
             done();
           },
         });
@@ -799,7 +812,7 @@ describe('common/util', () => {
         const reqOpts = {a: 'b', c: 'd'};
 
         stub('makeRequest', rOpts => {
-          assert.deepEqual(rOpts, reqOpts);
+          assert.deepStrictEqual(rOpts, reqOpts);
           done();
         });
 
@@ -811,7 +824,7 @@ describe('common/util', () => {
       it('should pass correct args to authorizeRequest', (done) => {
         const fake = extend(true, authClient, {
           authorizeRequest: async (rOpts: AxiosRequestConfig) => {
-            assert.deepEqual(rOpts, fakeReqOpts);
+            assert.deepStrictEqual(rOpts, fakeReqOpts);
             done();
           }
         });
@@ -999,7 +1012,7 @@ describe('common/util', () => {
           });
           stub('makeRequest', (authenticatedReqOpts, cfg, cb) => {
             assert.deepStrictEqual(authenticatedReqOpts, reqOpts);
-            assert.deepEqual(cfg, config);
+            assert.deepStrictEqual(cfg, config);
             cb();
           });
           const mar = util.makeAuthenticatedRequestFactory(config);
@@ -1461,7 +1474,7 @@ describe('common/util', () => {
         return decoratedUri;
       });
 
-      assert.deepEqual(util.decorateRequest(reqOpts, projectId), {
+      assert.deepStrictEqual(util.decorateRequest(reqOpts, projectId), {
         uri: decoratedUri,
       });
     });
@@ -1471,7 +1484,7 @@ describe('common/util', () => {
     const PROJECT_ID = 'project-id';
 
     it('should replace any {{projectId}} it finds', () => {
-      assert.deepEqual(
+      assert.deepStrictEqual(
           util.replaceProjectIdToken(
               {
                 here: 'A {{projectId}} Z',
@@ -1527,7 +1540,7 @@ describe('common/util', () => {
     });
 
     it('should replace more than one {{projectId}}', () => {
-      assert.deepEqual(
+      assert.deepStrictEqual(
           util.replaceProjectIdToken(
               {
                 here: 'A {{projectId}} M {{projectId}} Z',
@@ -1703,239 +1716,6 @@ describe('common/util', () => {
       });
 
       assert.strictEqual(userAgent, 'gcloud-node-storage/0.1.0');
-    });
-  });
-
-  describe('promisifyAll', () => {
-    const fakeArgs = [null, 1, 2, 3];
-    const fakeError = new Error('err.');
-
-    // tslint:disable-next-line
-    let FakeClass: any;
-
-    beforeEach(() => {
-      FakeClass = () => {};
-
-      FakeClass.prototype.methodName = (callback: Function) => {
-        callback.apply(null, fakeArgs);
-      };
-
-      FakeClass.prototype.methodSingle = (callback: Function) => {
-        callback(null, fakeArgs[1]);
-      };
-
-      FakeClass.prototype.methodError = (callback: Function) => {
-        callback(fakeError);
-      };
-
-      FakeClass.prototype.method_ = util.noop;
-      FakeClass.prototype._method = util.noop;
-      FakeClass.prototype.methodStream = util.noop;
-      FakeClass.prototype.promise = util.noop;
-
-      util.promisifyAll(FakeClass);
-      const fc = new FakeClass();
-    });
-
-    it('should promisify the correct method', () => {
-      assert(FakeClass.prototype.methodName.promisified_);
-      assert(FakeClass.prototype.methodSingle.promisified_);
-      assert(FakeClass.prototype.methodError.promisified_);
-
-      assert.strictEqual(FakeClass.prototype.method_, util.noop);
-      assert.strictEqual(FakeClass.prototype._method, util.noop);
-      assert.strictEqual(FakeClass.prototype.methodStream, util.noop);
-      assert.strictEqual(FakeClass.prototype.promise, util.noop);
-    });
-
-    // The ts compiler will convert a class to the current node version target,
-    // in this case v4, which means that using the class keyword to create a
-    // class won't actually test that this method works on ES classes. Using
-    // eval works around that compilation. The class syntax is a syntax error
-    // in node v4 which is why the eval call is wrapped in a try catch block.
-    try {
-      eval(`
-        const assert2 = require('assert');
-        it('should work on ES classes', () => {
-          class MyESClass {
-            myMethod(str, callback) {
-              callback(str.toUpperCase());
-            }
-          }
-          util.promisifyAll(MyESClass);
-          assert2(MyESClass.prototype.myMethod.promisified_);
-        });
-      `);
-    } catch (error) {
-      it.skip('should work on ES classes');
-    }
-
-    it('should optionally except an exclude list', () => {
-      function FakeClass2() {}
-
-      FakeClass2.prototype.methodSync = util.noop;
-      FakeClass2.prototype.method = () => {};
-
-      util.promisifyAll(FakeClass2, {
-        exclude: ['methodSync'],
-      });
-
-      assert.strictEqual(FakeClass2.prototype.methodSync, util.noop);
-      assert(FakeClass2.prototype.method.promisified_);
-    });
-
-    it('should pass the options object to promisify', (done) => {
-      const promisify = util.promisify;
-      const fakeOptions = {
-        a: 'a',
-      } as PromisifyAllOptions;
-
-      util.promisify = (method, options) => {
-        assert.strictEqual(method, FakeClass2.prototype.method);
-        assert.strictEqual(options, fakeOptions);
-        util.promisify = promisify;
-        done();
-      };
-
-      function FakeClass2() {}
-      FakeClass2.prototype.method = () => {};
-
-      util.promisifyAll(FakeClass2, fakeOptions);
-    });
-
-    it('should not re-promisify methods', () => {
-      const method = FakeClass.prototype.methodName;
-
-      util.promisifyAll(FakeClass);
-
-      assert.strictEqual(FakeClass.prototype.methodName, method);
-    });
-  });
-
-  describe('promisify', () => {
-    const fakeContext = {};
-    let func: Function;
-    // tslint:disable-next-line:no-any
-    let fakeArgs: any[];
-
-    beforeEach(() => {
-      fakeArgs = [null, 1, 2, 3];
-
-      func = util.promisify(function(this: {}, callback: () => void) {
-        callback.apply(this, fakeArgs);
-      });
-    });
-
-    it('should not re-promisify the function', () => {
-      const original = func;
-      func = util.promisify(func);
-      assert.strictEqual(original, func);
-    });
-
-    it('should not return a promise in callback mode', (done) => {
-      let returnVal: {};
-      returnVal = func.call(fakeContext, function(this: {}) {
-        const args = [].slice.call(arguments);
-        assert.deepEqual(args, fakeArgs);
-        assert.strictEqual(this, fakeContext);
-        assert(!returnVal);
-        done();
-      });
-    });
-
-    it('should return a promise when the callback is omitted', () => {
-      return func().then((args: Array<{}>) => {
-        assert.deepEqual(args, fakeArgs.slice(1));
-      });
-    });
-
-    it('should reject the promise on a failed request', () => {
-      const error = new Error('err');
-      fakeArgs = [error];
-      return func().then(
-          () => {
-            throw new Error('Should have gone to failure block');
-          },
-          (err: Error) => {
-            assert.strictEqual(err, error);
-          });
-    });
-
-    it('should allow the Promise object to be overridden', () => {
-      // tslint:disable-next-line:variable-name
-      const FakePromise = () => {};
-      const promise = func.call({Promise: FakePromise});
-      assert(promise instanceof FakePromise);
-    });
-
-    it('should resolve singular arguments', () => {
-      const fakeArg = 'hi';
-
-      func = util.promisify((callback: () => void) => {
-        callback.apply(func, [null, fakeArg]);
-      }, {
-        singular: true,
-      });
-
-      return func().then((arg: {}) => {
-        assert.strictEqual(arg, fakeArg);
-      });
-    });
-
-    it('should ignore singular when multiple args are present', () => {
-      // tslint:disable-next-line:no-any
-      const fakeArgs: any[] = ['a', 'b'];
-
-      func = util.promisify((callback: Function) => {
-        callback.apply(func, [null].concat(fakeArgs));
-      }, {
-        singular: true,
-      });
-
-      // tslint:disable-next-line:no-any
-      return func().then((args: any[]) => {
-        assert.deepEqual(args, fakeArgs);
-      });
-    });
-
-    describe('trailing undefined arguments', () => {
-      it('should not return a promise in callback mode', () => {
-        // tslint:disable-next-line:no-any
-        const func = util.promisify((optional: any) => {
-          assert(typeof optional === 'function');
-          optional(null);
-        });
-
-        const returnVal = func(() => {});
-        assert.equal(returnVal, undefined);
-      });
-
-      it('should return a promise when callback omitted', (done) => {
-        // tslint:disable-next-line:no-any
-        const func = util.promisify((optional: any, ...args: any[]) => {
-          assert.strictEqual(args.length, 0);
-          assert(is.fn(optional));
-          optional(null);
-        });
-
-        func(undefined, undefined).then(() => {
-          done();
-        });
-      });
-
-      it('should not mistake non-function args for callbacks', (done) => {
-        const func =
-            // tslint:disable-next-line:no-any
-            util.promisify((foo: any, optional: any, ...args: any[]) => {
-              assert.strictEqual(args.length, 0);
-              assert(is.fn(optional));
-              optional(null);
-            });
-
-        func('foo').then(() => {
-          done();
-        });
-      });
     });
   });
 

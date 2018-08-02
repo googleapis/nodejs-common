@@ -18,8 +18,8 @@
  * @module common/operation
  */
 
-import extend from 'extend';
-import pify from 'pify';
+import * as extend from 'extend';
+import * as pify from 'pify';
 
 import {GetMetadataCallback, ServiceObject, ServiceObjectConfig} from './service-object';
 

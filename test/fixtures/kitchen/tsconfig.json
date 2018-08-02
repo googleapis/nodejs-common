@@ -3,18 +3,8 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "build",
-    "target": "es5",
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": false
   },
-  "include": [
-    "src/*.ts",
-    "src/**/*.ts",
-    "test/*.ts",
-    "test/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "test/fixtures"
-  ]
+  "include": ["src/*.ts"]
 }

@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-import assert from 'assert';
+import * as assert from 'assert';
 const common = require('../src');
 
 describe('common', () => {
   it('should correctly export the common modules', () => {
-    assert(common.logger);
     assert(common.Operation);
-    assert(common.paginator);
     assert(common.Service);
     assert(common.ServiceObject);
     assert(common.util);

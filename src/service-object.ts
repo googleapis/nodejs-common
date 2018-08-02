@@ -18,11 +18,12 @@
  * @module common/service-object
  */
 
-import arrify from 'arrify';
+import {promisifyAll} from '@google-cloud/promisify';
+import * as arrify from 'arrify';
 import {EventEmitter} from 'events';
-import extend from 'extend';
-import is from 'is';
-import r from 'request';
+import * as extend from 'extend';
+import * as is from 'is';
+import * as r from 'request';
 
 import {Service} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
@@ -112,7 +113,8 @@ export interface StreamRequestOptions extends DecorateRequestOptions {
  * object requires specific behavior.
  */
 class ServiceObject extends EventEmitter {
-  metadata: {};
+  // tslint:disable-next-line:no-any
+  metadata: any;
   baseUrl?: string;
   protected parent: Service;
   protected id?: string;
@@ -449,7 +451,8 @@ class ServiceObject extends EventEmitter {
     }
     this.request_(reqOpts).then(
         res => callback(null, res.body, res as r.Response),
-        err => callback(err, null, null!));
+        err => callback(
+            err, err.response ? err.response.body : null, err.response));
   }
 
   /**
@@ -466,7 +469,7 @@ class ServiceObject extends EventEmitter {
   }
 }
 
-util.promisifyAll(
+promisifyAll(
     ServiceObject, {exclude: ['requestStream', 'request', 'request_']});
 
 export {ServiceObject};
