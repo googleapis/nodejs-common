@@ -455,9 +455,11 @@ describe('Service', () => {
         const originalRequestInterceptors = [].slice.call(requestInterceptors);
 
         service.makeAuthenticatedRequest = () => {
-          assert.deepStrictEqual(globalInterceptors, originalGlobalInterceptors);
+          assert.deepStrictEqual(
+              globalInterceptors, originalGlobalInterceptors);
           assert.deepStrictEqual(localInterceptors, originalLocalInterceptors);
-          assert.deepStrictEqual(requestInterceptors, originalRequestInterceptors);
+          assert.deepStrictEqual(
+              requestInterceptors, originalRequestInterceptors);
           done();
         };
 
