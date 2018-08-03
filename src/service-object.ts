@@ -25,7 +25,7 @@ import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';
 
-import {Service} from '.';
+import {Service, StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
 
 export interface Interceptor {
@@ -97,10 +97,6 @@ export interface GetConfig {
   autoCreate?: boolean;
 }
 
-export interface StreamRequestOptions extends DecorateRequestOptions {
-  shouldReturnStream: true;
-}
-
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
  * object," like a BigQuery dataset or Storage bucket.
@@ -117,7 +113,7 @@ class ServiceObject extends EventEmitter {
   metadata: any;
   baseUrl?: string;
   protected parent: Service;
-  private id?: string;
+  protected id?: string;
   private createMethod?: Function;
   protected methods: Methods;
   private interceptors: Interceptor[];
