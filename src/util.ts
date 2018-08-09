@@ -583,7 +583,7 @@ export class Util {
                 const fn = options && options.onAuthenticated ?
                     options.onAuthenticated :
                     callback;
-                fn!(err);
+                (fn as Function)(err);
               }
               return;
             }
