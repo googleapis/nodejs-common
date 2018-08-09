@@ -551,6 +551,7 @@ describe('ServiceObject', () => {
             assert.strictEqual(reqOpts_.method, method.reqOpts.method);
             assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
             done();
+            return {};
           });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
