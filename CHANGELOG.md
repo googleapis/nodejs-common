@@ -4,6 +4,16 @@
 
 [1]: https://www.npmjs.com/package/nodejs-common?activeTab=versions
 
+## v0.21.1
+
+### Bug fixes
+- fix: method metadata can be a boolean (#206)
+
+### Build and Test
+- test: throw on deprecation (#198)
+- chore(deps): update dependency typescript to v3 (#197)
+- chore: ignore package-lock.json (#205)
+
 ## v0.21.0
 
 **This release has breaking changes**.
