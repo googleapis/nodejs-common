@@ -76,7 +76,7 @@ export interface ServiceObjectConfig {
 }
 
 export interface Methods {
-  [methodName: string]: {reqOpts: r.OptionsWithUri};
+  [methodName: string]: {reqOpts?: r.OptionsWithUri}|boolean;
 }
 
 export interface CreateOptions {}
@@ -116,7 +116,7 @@ class ServiceObject extends EventEmitter {
   protected id?: string;
   private createMethod?: Function;
   protected methods: Methods;
-  private interceptors: Interceptor[];
+  protected interceptors: Interceptor[];
   // tslint:disable-next-line:variable-name
   protected Promise?: PromiseConstructor;
   // tslint:disable-next-line:no-any
@@ -217,7 +217,8 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   delete(callback?: DeleteCallback) {
-    const methodConfig = this.methods.delete || {};
+    const methodConfig =
+        (typeof this.methods.delete === 'object' && this.methods.delete) || {};
     callback = callback || util.noop;
 
     const reqOpts = extend(
@@ -229,13 +230,7 @@ class ServiceObject extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts).then(
-        res => {
-          callback!(null, res);
-        },
-        err => {
-          callback!(err);
-        });
+    this.request(reqOpts).then(res => callback!(null, res), callback);
   }
 
   /**
@@ -331,7 +326,9 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   getMetadata(callback: GetMetadataCallback) {
-    const methodConfig = this.methods.getMetadata || {};
+    const methodConfig = (typeof this.methods.getMetadata === 'object' &&
+                          this.methods.getMetadata) ||
+        {};
     const reqOpts = extend(
         {
           uri: '',
@@ -340,14 +337,10 @@ class ServiceObject extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts).then(
-        resp => {
-          this.metadata = resp.body;
-          callback(null, this.metadata, resp);
-        },
-        err => {
-          callback!(err);
-        });
+    this.request(reqOpts).then(resp => {
+      this.metadata = resp.body;
+      callback(null, this.metadata, resp);
+    }, callback);
   }
 
   /**
@@ -360,10 +353,13 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   setMetadata(
-      metadata: {}, callback?: (err: Error|null, resp?: r.Response) => void) {
+      metadata: Metadata,
+      callback?: (err: Error|null, resp?: r.Response) => void) {
     const self = this;
     callback = callback || util.noop;
-    const methodConfig = this.methods.setMetadata || {};
+    const methodConfig = (typeof this.methods.setMetadata === 'object' &&
+                          this.methods.setMetadata) ||
+        {};
 
     const reqOpts = extend(
         true, {
@@ -375,14 +371,10 @@ class ServiceObject extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts).then(
-        resp => {
-          self.metadata = resp;
-          callback!(null, resp);
-        },
-        err => {
-          callback!(err);
-        });
+    this.request(reqOpts).then(resp => {
+      self.metadata = resp;
+      callback!(null, resp);
+    }, callback);
   }
 
   /**
