@@ -48,8 +48,6 @@ const fakeReqOpts: DecorateRequestOptions = {
 
 const fakeError = new Error('this error is like so fake');
 
-let REQUEST_DEFAULT_CONF: request.CoreOptions;
-
 // tslint:disable-next-line:no-any
 let requestOverride: any;
 function fakeRequest() {
@@ -60,7 +58,6 @@ function fakeRequest() {
 (fakeRequest as any).defaults = (defaultConfiguration: any) => {
   // Ignore the default values, so we don't have to test for them in every API
   // call.
-  REQUEST_DEFAULT_CONF = defaultConfiguration;
   return fakeRequest;
 };
 
@@ -95,7 +92,6 @@ describe('common/util', () => {
   before(() => {
     util = proxyquire('../src/util', {
              'google-auth-library': fakeGoogleAuth,
-             request: fakeRequest,
              'retry-request': fakeRetryRequest,
              '@google-cloud/projectify': {
                replaceProjectIdToken: fakeReplaceProjectIdToken,
@@ -112,17 +108,6 @@ describe('common/util', () => {
   });
   afterEach(() => {
     sandbox.restore();
-  });
-
-  it('should have set correct defaults on Request', () => {
-    assert.deepStrictEqual(REQUEST_DEFAULT_CONF, {
-      timeout: 60000,
-      gzip: true,
-      forever: true,
-      pool: {
-        maxSockets: Infinity,
-      },
-    });
   });
 
   describe('ApiError', () => {
@@ -444,6 +429,7 @@ describe('common/util', () => {
 
           done();
         },
+        requestModule: request,
       });
     });
 
@@ -475,6 +461,7 @@ describe('common/util', () => {
         },
 
         request: req,
+        requestModule: request,
       });
     });
 
@@ -491,6 +478,7 @@ describe('common/util', () => {
         makeAuthenticatedRequest(request, opts) {
           opts!.onAuthenticated(error);
         },
+        requestModule: request,
       });
     });
 
@@ -503,6 +491,7 @@ describe('common/util', () => {
 
       util.makeWritableStream(dup, {
         makeAuthenticatedRequest() {},
+        requestModule: request,
       });
     });
 
@@ -525,6 +514,10 @@ describe('common/util', () => {
             callback(error);
           };
 
+      requestOverride.defaults = (opts: DecorateRequestOptions) => {
+        return requestOverride;
+      };
+
       dup.on('error', (err) => {
         assert.strictEqual(err, error);
         done();
@@ -534,6 +527,7 @@ describe('common/util', () => {
         makeAuthenticatedRequest(request, opts) {
           opts.onAuthenticated(null);
         },
+        requestModule: requestOverride,
       });
 
       setImmediate(() => {
@@ -558,11 +552,16 @@ describe('common/util', () => {
             callback(null, fakeResponse);
           };
 
+      requestOverride.defaults = (opts: DecorateRequestOptions) => {
+        return requestOverride;
+      };
+
       const options = {
         // tslint:disable-next-line:no-any
         makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
           opts.onAuthenticated();
         },
+        requestModule: requestOverride,
       };
 
       dup.on('response', (resp) => {
@@ -589,12 +588,16 @@ describe('common/util', () => {
           (reqOpts: DecorateRequestOptions, callback: () => void) => {
             callback();
           };
+      requestOverride.defaults = (opts: DecorateRequestOptions) => {
+        return requestOverride;
+      };
 
       const options = {
         // tslint:disable-next-line:no-any
         makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
           opts.onAuthenticated();
         },
+        requestModule: requestOverride,
       };
 
       util.makeWritableStream(dup, options, (data: {}) => {
@@ -618,6 +621,7 @@ describe('common/util', () => {
     it('should create an authClient', (done) => {
       const config = {
         test: true,
+        request,
       } as MakeAuthenticatedRequestFactoryConfig;
 
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth')
@@ -633,6 +637,7 @@ describe('common/util', () => {
     it('should not pass projectId token to google-auth-library', (done) => {
       const config = {
         projectId: '{{projectId}}',
+        request,
       };
 
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth').callsFake(config_ => {
@@ -647,6 +652,7 @@ describe('common/util', () => {
     it('should not remove projectId from config object', (done) => {
       const config = {
         projectId: '{{projectId}}',
+        request,
       };
 
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth').callsFake(() => {
@@ -659,7 +665,8 @@ describe('common/util', () => {
     });
 
     it('should return a function', () => {
-      assert.equal(typeof util.makeAuthenticatedRequestFactory(), 'function');
+      assert.equal(
+          typeof util.makeAuthenticatedRequestFactory({request}), 'function');
     });
 
     it('should return a getCredentials method', (done) => {
@@ -671,14 +678,15 @@ describe('common/util', () => {
         return {getCredentials};
       });
 
-      const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory();
+      const makeAuthenticatedRequest =
+          util.makeAuthenticatedRequestFactory({request});
       makeAuthenticatedRequest.getCredentials(util.noop);
     });
 
     it('should return the authClient', () => {
       const authClient = {getCredentials() {}};
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-      const mar = util.makeAuthenticatedRequestFactory();
+      const mar = util.makeAuthenticatedRequestFactory({request});
       assert.strictEqual(mar.authClient, authClient);
     });
 
@@ -687,6 +695,7 @@ describe('common/util', () => {
       let makeAuthenticatedRequest: any;
       const config = {
         customEndpoint: true,
+        request,
       };
       const expectedProjectId = authClient.projectId;
 
@@ -761,7 +770,7 @@ describe('common/util', () => {
           return new stream.PassThrough();
         };
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(fake);
-        const mar = util.makeAuthenticatedRequestFactory();
+        const mar = util.makeAuthenticatedRequestFactory({request});
         mar(fakeReqOpts);
       });
 
@@ -776,7 +785,7 @@ describe('common/util', () => {
         retryRequestOverride = () => {
           return new stream.PassThrough();
         };
-        const mar = util.makeAuthenticatedRequestFactory();
+        const mar = util.makeAuthenticatedRequestFactory({request});
         const s = mar(fakeReqOpts);
         assert(s instanceof stream.Stream);
       });
@@ -795,6 +804,7 @@ describe('common/util', () => {
           const makeAuthenticatedRequest =
               util.makeAuthenticatedRequestFactory({
                 customEndpoint: true,
+                request,
               });
 
           makeAuthenticatedRequest(reqOpts, {
@@ -808,6 +818,7 @@ describe('common/util', () => {
           const config = {
             customEndpoint: true,
             projectId: 'project-id',
+            request
           };
 
           stub('decorateRequest', (reqOpts, projectId) => {
@@ -836,7 +847,7 @@ describe('common/util', () => {
         it('should attempt request anyway', (done) => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const makeAuthenticatedRequest =
-              util.makeAuthenticatedRequestFactory();
+              util.makeAuthenticatedRequestFactory({request});
 
           const correctReqOpts = {} as DecorateRequestOptions;
           const incorrectReqOpts = {} as DecorateRequestOptions;
@@ -863,7 +874,7 @@ describe('common/util', () => {
           });
 
           const makeAuthenticatedRequest =
-              util.makeAuthenticatedRequestFactory();
+              util.makeAuthenticatedRequestFactory({request});
           makeAuthenticatedRequest(fakeReqOpts, {
             onAuthenticated(err) {
               assert.notStrictEqual(err, decorateRequestError);
@@ -875,7 +886,7 @@ describe('common/util', () => {
 
         it('should invoke the callback with error', (done) => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-          const mar = util.makeAuthenticatedRequestFactory();
+          const mar = util.makeAuthenticatedRequestFactory({request});
           mar(fakeReqOpts, err => {
             assert.strictEqual(err, error);
             done();
@@ -884,7 +895,7 @@ describe('common/util', () => {
 
         it('should exec onAuthenticated callback with error', (done) => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-          const mar = util.makeAuthenticatedRequestFactory();
+          const mar = util.makeAuthenticatedRequestFactory({request});
           mar(fakeReqOpts, {
             onAuthenticated(err) {
               assert.strictEqual(err, error);
@@ -895,7 +906,7 @@ describe('common/util', () => {
 
         it('should emit an error and end the stream', (done) => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-          const mar = util.makeAuthenticatedRequestFactory();
+          const mar = util.makeAuthenticatedRequestFactory({request});
           // tslint:disable-next-line:no-any
           const stream = mar(fakeReqOpts) as any;
           stream.on('error', (err: Error) => {
@@ -923,7 +934,7 @@ describe('common/util', () => {
             return reqOpts;
           });
 
-          const mar = util.makeAuthenticatedRequestFactory();
+          const mar = util.makeAuthenticatedRequestFactory({request});
           mar(reqOpts, {
             onAuthenticated(err, authenticatedReqOpts) {
               assert.strictEqual(authenticatedReqOpts, reqOpts);
@@ -934,7 +945,10 @@ describe('common/util', () => {
 
         it('should make request with correct options', (done) => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-          const config = {keyFile: 'foo'};
+          const config = {
+            keyFile: 'foo',
+            request,
+          };
           stub('decorateRequest', reqOpts_ => {
             assert.deepStrictEqual(reqOpts_, reqOpts);
             return reqOpts;
@@ -954,7 +968,7 @@ describe('common/util', () => {
             abort: done,
           };
           sandbox.stub(util, 'makeRequest').returns(retryRequest);
-          const mar = util.makeAuthenticatedRequestFactory();
+          const mar = util.makeAuthenticatedRequestFactory({request});
           const req = mar(reqOpts, assert.ifError) as Abortable;
           req.abort();
         });
@@ -968,11 +982,12 @@ describe('common/util', () => {
             return retryRequest;
           });
 
-          const mar = util.makeAuthenticatedRequestFactory();
-          const request = mar(reqOpts, assert.ifError) as Abortable;
+          const mar = util.makeAuthenticatedRequestFactory({request});
+          const authenticatedRequest =
+              mar(reqOpts, assert.ifError) as Abortable;
 
-          request.abort();  // done()
-          request.abort();  // done()
+          authenticatedRequest.abort();  // done()
+          authenticatedRequest.abort();  // done()
         });
 
         it('should provide stream to makeRequest', (done) => {
@@ -983,7 +998,7 @@ describe('common/util', () => {
               done();
             });
           });
-          const mar = util.makeAuthenticatedRequestFactory({});
+          const mar = util.makeAuthenticatedRequestFactory({request});
           const stream = mar(reqOpts);
         });
       });
@@ -1061,7 +1076,7 @@ describe('common/util', () => {
       };
     }
 
-    const noRetryRequestConfig = {autoRetry: false};
+    const noRetryRequestConfig = {autoRetry: false, request};
     function testNoRetryRequestConfig(done: () => void) {
       return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
         assert.strictEqual(config.retries, 0);
@@ -1069,7 +1084,7 @@ describe('common/util', () => {
       };
     }
 
-    const customRetryRequestConfig = {maxRetries: 10};
+    const customRetryRequestConfig = {maxRetries: 10, request};
     function testCustomRetryRequestConfig(done: () => void) {
       return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
         assert.strictEqual(config.retries, customRetryRequestConfig.maxRetries);
@@ -1080,7 +1095,8 @@ describe('common/util', () => {
     describe('callback mode', () => {
       it('should pass the default options to retryRequest', (done) => {
         retryRequestOverride = testDefaultRetryRequestConfig(done);
-        util.makeRequest(reqOpts, {}, () => {});
+        // tslint:disable-next-line:no-any
+        util.makeRequest(reqOpts, {request: fakeRequest as any}, () => {});
       });
 
       it('should allow turning off retries to retryRequest', (done) => {
@@ -1098,8 +1114,8 @@ describe('common/util', () => {
         retryRequestOverride = () => {
           return requestInstance;
         };
-        const request = util.makeRequest(reqOpts, assert.ifError);
-        assert.strictEqual(request, requestInstance);
+        const res = util.makeRequest(reqOpts, {request}, assert.ifError);
+        assert.strictEqual(res, requestInstance);
       });
     });
 
@@ -1136,7 +1152,7 @@ describe('common/util', () => {
           return requestStream;
         };
 
-        util.makeRequest(reqOpts, {stream: userStream}, util.noop);
+        util.makeRequest(reqOpts, {stream: userStream, request}, util.noop);
       });
 
       describe('GET requests', () => {
@@ -1147,7 +1163,7 @@ describe('common/util', () => {
             setImmediate(done);
             return new stream.Stream();
           };
-          util.makeRequest(reqOpts, {stream: userStream}, util.noop);
+          util.makeRequest(reqOpts, {stream: userStream, request}, util.noop);
         });
 
         it('should set the readable stream', (done) => {
@@ -1160,7 +1176,7 @@ describe('common/util', () => {
             assert.strictEqual(stream, retryRequestStream);
             done();
           };
-          util.makeRequest(reqOpts, {stream: userStream}, util.noop);
+          util.makeRequest(reqOpts, {stream: userStream, request}, util.noop);
         });
 
         it('should expose the abort method from retryRequest', (done) => {
@@ -1173,7 +1189,7 @@ describe('common/util', () => {
             return requestStream;
           };
 
-          util.makeRequest(reqOpts, {stream: userStream}, util.noop);
+          util.makeRequest(reqOpts, {stream: userStream, request}, util.noop);
           userStream.abort();
         });
       });
@@ -1192,7 +1208,13 @@ describe('common/util', () => {
             return userStream;
           };
 
-          util.makeRequest(reqOpts, {stream: userStream}, util.noop);
+          requestOverride.defaults = (opts: DecorateRequestOptions) => {
+            return requestOverride;
+          };
+
+          util.makeRequest(
+              reqOpts, {stream: userStream, request: requestOverride},
+              util.noop);
         });
 
         it('should set the writable stream', (done) => {
@@ -1203,41 +1225,44 @@ describe('common/util', () => {
             return requestStream;
           };
 
+          requestOverride.defaults = (opts: DecorateRequestOptions) => {
+            return requestOverride;
+          };
+
           userStream.setWritable = (stream) => {
             assert.strictEqual(stream, requestStream);
             done();
           };
 
           util.makeRequest(
-              {method: 'POST'} as DecorateRequestOptions, {stream: userStream},
-              util.noop);
+              {method: 'POST'} as DecorateRequestOptions,
+              {stream: userStream, request: requestOverride}, util.noop);
         });
 
         it('should expose the abort method from request', (done) => {
           const userStream = duplexify() as duplexify.Duplexify & Abortable;
 
-          requestOverride = () => {
+          requestOverride = Object.assign(() => {
             const requestStream =
                 duplexify() as duplexify.Duplexify & Abortable;
             requestStream.abort = done;
             return requestStream;
-          };
+          }, {defaults: () => requestOverride});
 
-          util.makeRequest(reqOpts, {stream: userStream}, util.noop);
+          util.makeRequest(
+              reqOpts, {stream: userStream, request: requestOverride},
+              util.noop);
           userStream.abort();
         });
       });
     });
 
     describe('callback mode', () => {
-      it('should optionally accept config', (done) => {
-        retryRequestOverride = testDefaultRetryRequestConfig(done);
-        util.makeRequest(reqOpts, assert.ifError);
-      });
-
       it('should pass the default options to retryRequest', (done) => {
         retryRequestOverride = testDefaultRetryRequestConfig(done);
-        util.makeRequest(reqOpts, {}, assert.ifError);
+        util.makeRequest(
+            // tslint:disable-next-line:no-any
+            reqOpts, {request: fakeRequest as any}, assert.ifError);
       });
 
       it('should allow turning off retries to retryRequest', (done) => {
@@ -1267,7 +1292,7 @@ describe('common/util', () => {
           done();
         });
 
-        util.makeRequest(fakeReqOpts, {}, assert.ifError);
+        util.makeRequest(fakeReqOpts, {request}, assert.ifError);
       });
     });
   });

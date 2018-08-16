@@ -15,6 +15,7 @@
  */
 
 import * as assert from 'assert';
+import * as r from 'request';  // Only needed for type declarations.
 import * as sinon from 'sinon';
 
 import {Service} from '../src';
@@ -32,7 +33,11 @@ describe('Operation', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    operation = new Operation({parent: FAKE_SERVICE, id: OPERATION_ID});
+    operation = new Operation({
+      parent: FAKE_SERVICE,
+      id: OPERATION_ID,
+      requestModule: {} as typeof r,
+    });
     operation.Promise = Promise;
   });
 
