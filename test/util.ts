@@ -723,7 +723,7 @@ describe('common/util', () => {
       it('should decorate the request', (done) => {
         const decoratedRequest = {};
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-        stub('decorateRequest', (reqOpts_, projectId) => {
+        stub('decorateRequest', (reqOpts_) => {
           assert.strictEqual(reqOpts_, fakeReqOpts);
           return decoratedRequest;
         });

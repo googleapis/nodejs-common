@@ -27,7 +27,6 @@ import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
 import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
-import {TransformOptions} from 'stream';
 import * as through from 'through2';
 
 import {Interceptor} from './service-object';
@@ -72,29 +71,6 @@ export type AbortableDuplex = duplexify.Duplexify&Abortable;
 export interface PackageJson {
   name: string;
   version: string;
-}
-
-export interface CreateLimiterOptions {
-  /**
-   * The maximum number of API calls to make.
-   */
-  maxApiCalls?: number;
-
-  /**
-   * Options to pass to the Stream constructor.
-   */
-  streamOptions?: TransformOptions;
-}
-
-export interface GlobalContext {
-  config_: {};
-}
-
-export interface GlobalConfig {
-  projectId?: string;
-  credentials?: {};
-  keyFilename?: string;
-  interceptors_?: {};
 }
 
 export interface MakeAuthenticatedRequestFactoryConfig extends
@@ -175,7 +151,6 @@ export interface DecorateRequestOptions extends r.OptionsWithUri {
   interceptors_?: Interceptor[];
   shouldReturnStream?: boolean;
 }
-
 
 export interface ParsedHttpResponseBody {
   body: ResponseBody;
@@ -479,7 +454,6 @@ export class Util {
 
     return false;
   }
-
 
   /**
    * Get a function for making authenticated requests.
