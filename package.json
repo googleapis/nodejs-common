@@ -34,6 +34,7 @@
     "Tim Swast <swast@google.com>"
   ],
   "scripts": {
+    "generate-scaffolding": "repo-tools generate all",
     "docs": "jsdoc -c .jsdoc.js",
     "cover": "nyc --reporter=lcov mocha build/test && nyc report",
     "test-no-cover": "mocha build/test",
@@ -48,6 +49,7 @@
     "check": "gts check"
   },
   "dependencies": {
+    "@google-cloud/nodejs-repo-tools": "^2.3.0",
     "@google-cloud/projectify": "^0.3.0",
     "@google-cloud/promisify": "^0.3.0",
     "@types/duplexify": "^3.5.0",
