@@ -18,6 +18,7 @@
  * @module common/util
  */
 
+import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as duplexify from 'duplexify';
 import * as ent from 'ent';
 import * as extend from 'extend';
@@ -26,8 +27,6 @@ import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
 import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
-import {Transform, TransformOptions} from 'stream';
-import * as streamEvents from 'stream-events';
 import * as through from 'through2';
 
 import {Interceptor} from './service-object';
@@ -72,29 +71,6 @@ export type AbortableDuplex = duplexify.Duplexify&Abortable;
 export interface PackageJson {
   name: string;
   version: string;
-}
-
-export interface CreateLimiterOptions {
-  /**
-   * The maximum number of API calls to make.
-   */
-  maxApiCalls?: number;
-
-  /**
-   * Options to pass to the Stream constructor.
-   */
-  streamOptions?: TransformOptions;
-}
-
-export interface GlobalContext {
-  config_: {};
-}
-
-export interface GlobalConfig {
-  projectId?: string;
-  credentials?: {};
-  keyFilename?: string;
-  interceptors_?: {};
 }
 
 export interface MakeAuthenticatedRequestFactoryConfig extends
@@ -175,7 +151,6 @@ export interface DecorateRequestOptions extends r.OptionsWithUri {
   interceptors_?: Interceptor[];
   shouldReturnStream?: boolean;
 }
-
 
 export interface ParsedHttpResponseBody {
   body: ResponseBody;
@@ -480,7 +455,6 @@ export class Util {
     return false;
   }
 
-
   /**
    * Get a function for making authenticated requests.
    *
@@ -714,150 +688,18 @@ export class Util {
     if (is.object(reqOpts.qs)) {
       delete reqOpts.qs.autoPaginate;
       delete reqOpts.qs.autoPaginateVal;
-      reqOpts.qs = util.replaceProjectIdToken(reqOpts.qs, projectId);
+      reqOpts.qs = replaceProjectIdToken(reqOpts.qs, projectId);
     }
 
     if (is.object(reqOpts.json)) {
       delete reqOpts.json.autoPaginate;
       delete reqOpts.json.autoPaginateVal;
-      reqOpts.json = util.replaceProjectIdToken(reqOpts.json, projectId);
+      reqOpts.json = replaceProjectIdToken(reqOpts.json, projectId);
     }
 
-    reqOpts.uri = util.replaceProjectIdToken(reqOpts.uri, projectId);
+    reqOpts.uri = replaceProjectIdToken(reqOpts.uri, projectId);
 
     return reqOpts;
-  }
-
-  /**
-   * Populate the `{{projectId}}` placeholder.
-   *
-   * @throws {Error} If a projectId is required, but one is not provided.
-   *
-   * @param {*} - Any input value that may contain a placeholder. Arrays and objects will be looped.
-   * @param {string} projectId - A projectId. If not provided
-   * @return {*} - The original argument with all placeholders populated.
-   */
-  // tslint:disable-next-line:no-any
-  replaceProjectIdToken(value: string|string[]|{}, projectId: string): any {
-    if (is.array(value)) {
-      value = (value as string[])
-                  .map(v => util.replaceProjectIdToken(v, projectId));
-    }
-
-    if (value !== null && typeof value === 'object' &&
-        is.fn(value.hasOwnProperty)) {
-      for (const opt in value) {
-        if (value.hasOwnProperty(opt)) {
-          // tslint:disable-next-line:no-any
-          const v = value as any;
-          v[opt] = util.replaceProjectIdToken(v[opt], projectId);
-        }
-      }
-    }
-
-    if (typeof value === 'string' &&
-        (value as string).indexOf('{{projectId}}') > -1) {
-      if (!projectId || projectId === '{{projectId}}') {
-        throw new MissingProjectIdError();
-      }
-      value = (value as string).replace(/{{projectId}}/g, projectId);
-    }
-
-    return value;
-  }
-
-  /**
-   * Extend a global configuration object with user options provided at the time
-   * of sub-module instantiation.
-   *
-   * Connection details currently come in two ways: `credentials` or
-   * `keyFilename`. Because of this, we have a special exception when overriding
-   * a global configuration object. If a user provides either to the global
-   * configuration, then provides another at submodule instantiation-time, the
-   * latter is preferred.
-   *
-   * @param  {object} globalConfig - The global configuration object.
-   * @param  {object=} overrides - The instantiation-time configuration object.
-   * @return {object}
-   */
-  extendGlobalConfig(globalConfig: GlobalConfig|null, overrides: GlobalConfig) {
-    globalConfig = globalConfig || {};
-    overrides = overrides || {};
-
-    const defaultConfig: GlobalConfig = {};
-
-    if (process.env.GCLOUD_PROJECT) {
-      defaultConfig.projectId = process.env.GCLOUD_PROJECT;
-    }
-
-    const options = extend({}, globalConfig);
-
-    const hasGlobalConnection = options.credentials || options.keyFilename;
-    const isOverridingConnection =
-        overrides.credentials || overrides.keyFilename;
-
-    if (hasGlobalConnection && isOverridingConnection) {
-      delete options.credentials;
-      delete options.keyFilename;
-    }
-
-    const extendedConfig = extend(true, defaultConfig, options, overrides);
-
-    // Preserve the original (not cloned) interceptors.
-    extendedConfig.interceptors_ = globalConfig.interceptors_;
-
-    return extendedConfig;
-  }
-
-  /**
-   * Merge and validate API configurations.
-   *
-   * @param {object} globalContext - gcloud-level context.
-   * @param {object} globalContext.config_ - gcloud-level configuration.
-   * @param {object} localConfig - Service-level configurations.
-   * @return {object} config - Merged and validated configuration.
-   */
-  normalizeArguments(
-      globalContext: GlobalContext|null, localConfig: GlobalConfig) {
-    const globalConfig = globalContext && globalContext.config_ as GlobalConfig;
-    return util.extendGlobalConfig(globalConfig, localConfig);
-  }
-
-  /**
-   * Limit requests according to a `maxApiCalls` limit.
-   *
-   * @param {function} makeRequestFn - The function that will be called.
-   * @param {object=} options - Configuration object.
-   * @param {number} options.maxApiCalls - The maximum number of API calls to make.
-   * @param {object} options.streamOptions - Options to pass to the Stream constructor.
-   */
-  createLimiter(makeRequestFn: Function, options?: CreateLimiterOptions) {
-    options = options || {};
-
-    const streamOptions = options.streamOptions || {};
-    streamOptions.objectMode = true;
-    const stream = streamEvents(new Transform(streamOptions)) as Transform;
-
-    let requestsMade = 0;
-    let requestsToMake = -1;
-
-    if (is.number(options.maxApiCalls)) {
-      requestsToMake = options.maxApiCalls!;
-    }
-
-    return {
-      // tslint:disable-next-line:no-any
-      makeRequest(...args: any[]) {
-        requestsMade++;
-        if (requestsToMake >= 0 && requestsMade > requestsToMake) {
-          stream.push(null);
-          return;
-        }
-        makeRequestFn.apply(null, args);
-        return stream;
-      },
-      stream,
-    };
   }
 
   // tslint:disable-next-line:no-any
@@ -902,17 +744,6 @@ export class Util {
             .replace('/', '-');  // For UA spec-compliance purposes.
 
     return hyphenatedPackageName + '/' + packageJson.version;
-  }
-
-  /**
-   * This will mask properties of an object from console.log.
-   *
-   * @param {object} object - The object to assign the property to.
-   * @param {string} propName - Property name.
-   * @param {*} value - Value.
-   */
-  privatize(object: {}, propName: string, value: {}) {
-    Object.defineProperty(object, propName, {value, writable: true});
   }
 }
 

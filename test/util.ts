@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
+import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as assert from 'assert';
 import {AxiosRequestConfig} from 'axios';
 import * as duplexify from 'duplexify';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import * as is from 'is';
 import * as nock from 'nock';
 import * as proxyquire from 'proxyquire';
 import * as request from 'request';
 import * as retryRequest from 'retry-request';
 import * as sinon from 'sinon';
 import * as stream from 'stream';
-import * as streamEvents from 'stream-events';
 
-import {Abortable, ApiError, DecorateRequestOptions, GlobalConfig, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, Util} from '../src/util';
+import {Abortable, ApiError, DecorateRequestOptions, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, Util} from '../src/util';
 
 nock.disableNetConnect();
 
@@ -72,9 +71,10 @@ function fakeRetryRequest() {
 }
 
 // tslint:disable-next-line:no-any
-let streamEventsOverride: any;
-function fakeStreamEvents() {
-  return (streamEventsOverride || streamEvents).apply(null, arguments);
+let replaceProjectIdTokenOverride: any;
+function fakeReplaceProjectIdToken() {
+  return (replaceProjectIdTokenOverride || replaceProjectIdToken)
+      .apply(null, arguments);
 }
 
 describe('common/util', () => {
@@ -99,7 +99,9 @@ describe('common/util', () => {
              'google-auth-library': fakeGoogleAuth,
              request: fakeRequest,
              'retry-request': fakeRetryRequest,
-             'stream-events': fakeStreamEvents,
+             '@google-cloud/projectify': {
+               replaceProjectIdToken: fakeReplaceProjectIdToken,
+             },
            }).util;
     const utilCached = extend(true, {}, util);
 
@@ -121,7 +123,7 @@ describe('common/util', () => {
     sandbox = sinon.createSandbox();
     requestOverride = null;
     retryRequestOverride = null;
-    streamEventsOverride = null;
+    replaceProjectIdTokenOverride = null;
     utilOverrides = {};
   });
   afterEach(() => {
@@ -313,53 +315,6 @@ describe('common/util', () => {
       const partialFailureError = new util.PartialFailureError(error);
 
       assert.strictEqual(partialFailureError.message, expectedErrorMessage);
-    });
-  });
-
-  describe('extendGlobalConfig', () => {
-    it('should favor `keyFilename` when `credentials` is global', () => {
-      const globalConfig = {credentials: {}};
-      const options = util.extendGlobalConfig(globalConfig, {
-        keyFilename: 'key.json',
-      });
-      assert.strictEqual(options.credentials, undefined);
-    });
-
-    it('should favor `credentials` when `keyFilename` is global', () => {
-      const globalConfig = {keyFilename: 'key.json'};
-      const options = util.extendGlobalConfig(globalConfig, {credentials: {}});
-      assert.strictEqual(options.keyFilename, undefined);
-    });
-
-    it('should honor the GCLOUD_PROJECT environment variable', () => {
-      const newProjectId = 'envvar-project-id';
-      const cachedProjectId = process.env.GCLOUD_PROJECT;
-      process.env.GCLOUD_PROJECT = newProjectId;
-
-      // No projectId specified:
-      const globalConfig = {keyFilename: 'key.json'};
-      const options = util.extendGlobalConfig(globalConfig, {});
-
-      if (cachedProjectId) {
-        process.env.GCLOUD_PROJECT = cachedProjectId;
-      } else {
-        delete process.env.GCLOUD_PROJECT;
-      }
-
-      assert.strictEqual(options.projectId, newProjectId);
-    });
-
-    it('should not modify original object', () => {
-      const globalConfig = {keyFilename: 'key.json'};
-      util.extendGlobalConfig(globalConfig, {credentials: {}});
-      assert.deepStrictEqual(globalConfig, {keyFilename: 'key.json'});
-    });
-
-    it('should link the original interceptors_', () => {
-      const interceptors: Array<{}> = [];
-      const globalConfig = {interceptors_: interceptors};
-      util.extendGlobalConfig(globalConfig, {});
-      assert.strictEqual(globalConfig.interceptors_, interceptors);
     });
   });
 
@@ -768,7 +723,7 @@ describe('common/util', () => {
       it('should decorate the request', (done) => {
         const decoratedRequest = {};
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-        stub('decorateRequest', (reqOpts_, projectId) => {
+        stub('decorateRequest', (reqOpts_) => {
           assert.strictEqual(reqOpts_, fakeReqOpts);
           return decoratedRequest;
         });
@@ -1468,11 +1423,11 @@ describe('common/util', () => {
       };
       const decoratedUri = 'http://decorated';
 
-      stub('replaceProjectIdToken', (uri, projectId_) => {
+      replaceProjectIdTokenOverride = (uri: string, projectId_: string) => {
         assert.strictEqual(uri, reqOpts.uri);
         assert.strictEqual(projectId_, projectId);
         return decoratedUri;
-      });
+      };
 
       assert.deepStrictEqual(util.decorateRequest(reqOpts, projectId), {
         uri: decoratedUri,
@@ -1485,7 +1440,7 @@ describe('common/util', () => {
 
     it('should replace any {{projectId}} it finds', () => {
       assert.deepStrictEqual(
-          util.replaceProjectIdToken(
+          replaceProjectIdToken(
               {
                 here: 'A {{projectId}} Z',
                 nested: {
@@ -1541,7 +1496,7 @@ describe('common/util', () => {
 
     it('should replace more than one {{projectId}}', () => {
       assert.deepStrictEqual(
-          util.replaceProjectIdToken(
+          replaceProjectIdToken(
               {
                 here: 'A {{projectId}} M {{projectId}} Z',
               },
@@ -1558,106 +1513,6 @@ describe('common/util', () => {
           here: '{{projectId}}',
         });
       }, new RegExp(util.MissingProjectIdError.name));
-    });
-  });
-
-  describe('normalizeArguments', () => {
-    const fakeContext = {
-      config_: {
-        projectId: 'grapespaceship911',
-      },
-    };
-
-    it('should return an extended object', () => {
-      const local = {a: 'b'} as GlobalConfig;
-      let config;
-
-      stub('extendGlobalConfig', (globalConfig, localConfig) => {
-        assert.strictEqual(globalConfig, fakeContext.config_);
-        assert.strictEqual(localConfig, local);
-        return fakeContext.config_;
-      });
-
-      config = util.normalizeArguments(fakeContext, local);
-      assert.strictEqual(config, fakeContext.config_);
-    });
-  });
-
-  describe('createLimiter', () => {
-    function REQUEST_FN() {}
-    const OPTIONS = {
-      streamOptions: {
-        highWaterMark: 8,
-      },
-    };
-
-    it('should create an object stream with stream-events', (done) => {
-      streamEventsOverride = (stream: stream.Readable) => {
-        // tslint:disable-next-line:no-any
-        assert.strictEqual((stream as any)._readableState.objectMode, true);
-        setImmediate(done);
-        return stream;
-      };
-
-      util.createLimiter(REQUEST_FN, OPTIONS);
-    });
-
-    it('should return a makeRequest function', () => {
-      const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
-      assert(is.fn(limiter.makeRequest));
-    });
-
-    it('should return the created stream', () => {
-      const streamEventsStream = {};
-
-      streamEventsOverride = () => {
-        return streamEventsStream;
-      };
-
-      const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
-      assert.strictEqual(limiter.stream, streamEventsStream);
-    });
-
-    it('should pass stream options to through', () => {
-      const limiter = util.createLimiter(REQUEST_FN, OPTIONS);
-
-      assert.strictEqual(
-          // tslint:disable-next-line:no-any
-          (limiter.stream as any)._readableState.highWaterMark,
-          OPTIONS.streamOptions.highWaterMark);
-    });
-
-    describe('makeRequest', () => {
-      it('should pass arguments to request method', (done) => {
-        const args = [{}, {}];
-
-        const limiter = util.createLimiter((obj1: {}, obj2: {}) => {
-          assert.strictEqual(obj1, args[0]);
-          assert.strictEqual(obj2, args[1]);
-          done();
-        });
-
-        limiter.makeRequest.apply(null, args);
-      });
-
-      it('should not make more requests than the limit', (done) => {
-        let callsMade = 0;
-        const maxApiCalls = 10;
-
-        const limiter = util.createLimiter(() => {
-          callsMade++;
-          limiter.makeRequest();
-        }, {
-          maxApiCalls,
-        });
-
-        limiter.makeRequest();
-
-        limiter.stream.on('data', util.noop).on('end', () => {
-          assert.strictEqual(callsMade, maxApiCalls);
-          done();
-        });
-      });
     });
   });
 
@@ -1716,23 +1571,6 @@ describe('common/util', () => {
       });
 
       assert.strictEqual(userAgent, 'gcloud-node-storage/0.1.0');
-    });
-  });
-
-  describe('privatize', () => {
-    it('should set value', () => {
-      // tslint:disable-next-line:no-any
-      const obj: any = {};
-      util.privatize(obj, 'value', true);
-      assert.strictEqual(obj.value, true);
-    });
-
-    it('should allow values to be overwritten', () => {
-      // tslint:disable-next-line:no-any
-      const obj: any = {};
-      util.privatize(obj, 'value', true);
-      obj.value = false;
-      assert.strictEqual(obj.value, false);
     });
   });
 });
