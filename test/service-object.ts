@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import assert from 'assert';
-import extend from 'extend';
-import r from 'request';
-import sinon from 'sinon';
+import * as assert from 'assert';
+import * as extend from 'extend';
+import * as r from 'request';
+import * as sinon from 'sinon';
 
 import {Service} from '../src';
 import * as SO from '../src/service-object';
@@ -70,7 +70,7 @@ describe('ServiceObject', () => {
     });
 
     it('should create an empty metadata object', () => {
-      assert.deepEqual(pSvc().metadata, {});
+      assert.deepStrictEqual(pSvc().metadata, {});
     });
 
     it('should localize the baseUrl', () => {
@@ -97,7 +97,7 @@ describe('ServiceObject', () => {
     });
 
     it('should default methods to an empty object', () => {
-      assert.deepEqual(pSvc().methods, {});
+      assert.deepStrictEqual(pSvc().methods, {});
     });
 
     it('should clear out methods that are not asked for', () => {
@@ -241,7 +241,7 @@ describe('ServiceObject', () => {
       const serviceObject = new ServiceObject(config);
       // tslint:disable-next-line:no-any
       serviceObject.create(options, (...args: any[]) => {
-        assert.deepEqual([].slice.call(args), args);
+        assert.deepStrictEqual([].slice.call(args), args);
         done();
       });
     });
@@ -273,7 +273,7 @@ describe('ServiceObject', () => {
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake(async (reqOpts_) => {
             assert.strictEqual(reqOpts_.method, method.reqOpts.method);
-            assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
+            assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
             done();
           });
 
@@ -486,7 +486,7 @@ describe('ServiceObject', () => {
                     (configOrCallback: SO.GetConfig|SO.InstanceResponseCallback,
                      callback?: SO.InstanceResponseCallback) => {
                       const config = configOrCallback as SO.GetConfig;
-                      assert.deepEqual(config, {});
+                      assert.deepStrictEqual(config, {});
                       callback!(null);  // done()
                     };
                 callback!(error, null, apiResponse);
@@ -513,7 +513,7 @@ describe('ServiceObject', () => {
                   callback = typeof configOrCallback === 'function' ?
                       configOrCallback :
                       callback;
-                  assert.deepEqual(config, {});
+                  assert.deepStrictEqual(config, {});
                   callback!(null, null, {} as r.Response);  // done()
                 };
             callback(error, null, undefined);
@@ -549,13 +549,14 @@ describe('ServiceObject', () => {
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake(async (reqOpts_) => {
             assert.strictEqual(reqOpts_.method, method.reqOpts.method);
-            assert.deepEqual(reqOpts_.qs, method.reqOpts.qs);
-            return {body: {}};
+            assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
+            done();
+            return {};
           });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
       serviceObject.methods.getMetadata = method;
-      serviceObject.getMetadata(() => done());
+      serviceObject.getMetadata(() => {});
     });
 
     it('should execute callback with error & apiResponse', (done) => {
@@ -716,7 +717,7 @@ describe('ServiceObject', () => {
       pSvc().parent.request = async (reqOpts_: DecorateRequestOptions) => {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
-        assert.deepEqual(reqOpts_.interceptors_, []);
+        assert.deepStrictEqual(reqOpts_.interceptors_, []);
         return {} as r.Response;
       };
 
@@ -796,10 +797,10 @@ describe('ServiceObject', () => {
       });
 
       parent.parent.request = async (reqOpts: DecorateRequestOptions) => {
-        assert.deepEqual(reqOpts.interceptors_![0].request({}), {
+        assert.deepStrictEqual(reqOpts.interceptors_![0].request({}), {
           child: true,
         });
-        assert.deepEqual(reqOpts.interceptors_![1].request({}), {
+        assert.deepStrictEqual(reqOpts.interceptors_![1].request({}), {
           parent: true,
         });
         return {} as r.Response;
@@ -819,7 +820,8 @@ describe('ServiceObject', () => {
 
       pSvc().parent.request = async (reqOpts: DecorateRequestOptions) => {
         const serviceObjectInterceptors = pSvc().interceptors;
-        assert.deepEqual(reqOpts.interceptors_, serviceObjectInterceptors);
+        assert.deepStrictEqual(
+            reqOpts.interceptors_, serviceObjectInterceptors);
         assert.notStrictEqual(reqOpts.interceptors_, serviceObjectInterceptors);
         return {} as r.Response;
       };
@@ -840,7 +842,7 @@ describe('ServiceObject', () => {
           async (reqOpts_: DecorateRequestOptions) => {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
-        assert.deepEqual(reqOpts_.interceptors_, []);
+        assert.deepStrictEqual(reqOpts_.interceptors_, []);
         return fakeObj;
       };
 
@@ -876,6 +878,22 @@ describe('ServiceObject', () => {
 
       serviceObject.request({} as DecorateRequestOptions, (err, body, res) => {
         assert.ifError(err);
+        assert.deepStrictEqual(res, response);
+        assert.deepStrictEqual(body, response.body);
+        done();
+      });
+    });
+
+    it('should return response with a request error and callback', done => {
+      const errorBody = '🤮';
+      const response = {body: {error: errorBody}, statusCode: 500} as
+          r.Response;
+      const err = new Error(errorBody);
+      // tslint:disable-next-line:no-any
+      (err as any).response = response;
+      sandbox.stub(serviceObject, 'request_').rejects(err);
+      serviceObject.request({} as DecorateRequestOptions, (err, body, res) => {
+        assert(err instanceof Error);
         assert.deepStrictEqual(res, response);
         assert.deepStrictEqual(body, response.body);
         done();

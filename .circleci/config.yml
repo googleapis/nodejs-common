@@ -3,26 +3,22 @@ workflows:
   version: 2
   tests:
     jobs: &workflow_jobs
-      - node4:
+      - node6:
           filters: &all_commits
             tags:
               only: /.*/
-      - node6:
-          filters: *all_commits
       - node8:
           filters: *all_commits
       - node10:
           filters: *all_commits
       - lint:
           requires:
-            - node4
             - node6
             - node8
             - node10
           filters: *all_commits
       - docs:
           requires:
-            - node4
             - node6
             - node8
             - node10
@@ -45,23 +41,12 @@ workflows:
               only: master
     jobs: *workflow_jobs
 jobs:
-  node4:
+  node6:
     docker:
-      - image: 'node:4'
+      - image: 'node:6'
         user: node
     steps: &unit_tests_steps
-      - checkout
-      - run: &remove_package_lock
-          name: Remove package-lock.json if needed.
-          command: |
-            WORKFLOW_NAME=`python .circleci/get_workflow_name.py`
-            echo "Workflow name: $WORKFLOW_NAME"
-            if [ "$WORKFLOW_NAME" = "nightly" ]; then
-              echo "Nightly build detected, removing package-lock.json."
-              rm -f package-lock.json samples/package-lock.json
-            else
-              echo "Not a nightly build, skipping this step."
-            fi
+      - checkout 
       - run: &npm_install_and_link
           name: Install and link the module
           command: |-
@@ -72,15 +57,8 @@ jobs:
       - run:
           name: Run unit tests.
           command: npm run compile && npm run test-only
-      - run:
-          name: Submit coverage data to codecov.
-          command: node_modules/.bin/codecov
-          when: always
-  node6:
-    docker:
-      - image: 'node:6'
-        user: node
-    steps: *unit_tests_steps
+      - run: node_modules/.bin/codecov
+  
   node8:
     docker:
       - image: 'node:8'
@@ -97,7 +75,6 @@ jobs:
         user: node
     steps:
       - checkout
-      - run: *remove_package_lock
       - run: *npm_install_and_link
       - run:
           name: Run linting.
@@ -108,7 +85,6 @@ jobs:
         user: node
     steps:
       - checkout
-      - run: *remove_package_lock
       - run: *npm_install_and_link
       - run:
           name: Build documentation.
@@ -119,10 +95,6 @@ jobs:
         user: node
     steps:
       - checkout
-      - run:
-          name: Set NPM authentication.
-          command: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
+      - run: 'echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc'
       - run: *npm_install_and_link
-      - run:
-          name: Publish the module to npm.
-          command: npm publish
+      - run: npm publish

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import assert from 'assert';
-import extend from 'extend';
-import proxyquire from 'proxyquire';
+import * as assert from 'assert';
+import * as extend from 'extend';
+import * as proxyquire from 'proxyquire';
 import {Request, RequestResponse} from 'request';
 
 import {Service, ServiceConfig, ServiceOptions} from '../src/service';
@@ -90,7 +90,7 @@ describe('Service', () => {
               token: OPTIONS.token,
             });
 
-            assert.deepEqual(config, expectedConfig);
+            assert.deepStrictEqual(config, expectedConfig);
 
             return authenticatedRequest;
           };
@@ -134,7 +134,7 @@ describe('Service', () => {
     });
 
     it('should default globalInterceptors to an empty array', () => {
-      assert.deepEqual(service.globalInterceptors, []);
+      assert.deepStrictEqual(service.globalInterceptors, []);
     });
 
     it('should preserve the original global interceptors', () => {
@@ -146,7 +146,7 @@ describe('Service', () => {
     });
 
     it('should default interceptors to an empty array', () => {
-      assert.deepEqual(service.interceptors, []);
+      assert.deepStrictEqual(service.interceptors, []);
     });
 
     it('should localize package.json', () => {
@@ -455,9 +455,11 @@ describe('Service', () => {
         const originalRequestInterceptors = [].slice.call(requestInterceptors);
 
         service.makeAuthenticatedRequest = () => {
-          assert.deepEqual(globalInterceptors, originalGlobalInterceptors);
-          assert.deepEqual(localInterceptors, originalLocalInterceptors);
-          assert.deepEqual(requestInterceptors, originalRequestInterceptors);
+          assert.deepStrictEqual(
+              globalInterceptors, originalGlobalInterceptors);
+          assert.deepStrictEqual(localInterceptors, originalLocalInterceptors);
+          assert.deepStrictEqual(
+              requestInterceptors, originalRequestInterceptors);
           done();
         };
 
