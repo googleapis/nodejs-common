@@ -72,7 +72,7 @@ export interface ServiceObjectConfig {
    * The parent service instance. For example, an instance of Storage if the
    * object is Bucket.
    */
-  parent: Service;
+  parent: Service|ServiceObject;
 }
 
 export interface Methods {
@@ -112,13 +112,13 @@ class ServiceObject extends EventEmitter {
   // tslint:disable-next-line:no-any
   metadata: any;
   baseUrl?: string;
-  protected parent: Service;
+  protected parent: Service|ServiceObject;
   protected id?: string;
   private createMethod?: Function;
   protected methods: Methods;
   protected interceptors: Interceptor[];
   // tslint:disable-next-line:variable-name
-  protected Promise?: PromiseConstructor;
+  Promise?: PromiseConstructor;
   // tslint:disable-next-line:no-any
   [index: string]: any;
 
