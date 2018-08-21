@@ -4,6 +4,16 @@
 
 [1]: https://www.npmjs.com/package/nodejs-common?activeTab=versions
 
+## v1.0.0
+
+### Commits
+
+- fix: Remove old code & replace project ID token in multipart arrays. (#215)
+- fix: allow ServiceObject`s parent to be an ServiceObject (#212)
+- fix: increase timeout for install test (#214)
+- fix(deps): update dependency pify to v4 (#208)
+- chore: remove dead code and packages (#209)
+
 ## v0.21.1
 
 ### Bug fixes
