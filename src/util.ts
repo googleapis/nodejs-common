@@ -158,15 +158,6 @@ export interface ParsedHttpResponseBody {
 }
 
 /**
- * Custom error type for missing project ID errors.
- */
-export class MissingProjectIdError extends Error {
-  message = `Sorry, we cannot connect to Cloud Services without a project
-    ID. You may specify one with an environment variable named
-    "GOOGLE_CLOUD_PROJECT".`.replace(/ +/g, ' ');
-}
-
-/**
  * Custom error type for API errors.
  *
  * @param {object} errorBody - Error object.
@@ -262,7 +253,6 @@ export interface MakeRequestConfig {
 }
 
 export class Util {
-  MissingProjectIdError = MissingProjectIdError;
   ApiError = ApiError;
   PartialFailureError = PartialFailureError;
 
@@ -457,8 +447,6 @@ export class Util {
 
   /**
    * Get a function for making authenticated requests.
-   *
-   * @throws {Error} If a projectId is requested, but not able to be detected.
    *
    * @param {object} config - Configuration object.
    * @param {boolean=} config.autoRetry - Automatically retry requests if the
@@ -689,6 +677,12 @@ export class Util {
       delete reqOpts.qs.autoPaginate;
       delete reqOpts.qs.autoPaginateVal;
       reqOpts.qs = replaceProjectIdToken(reqOpts.qs, projectId);
+    }
+
+    if (is.array(reqOpts.multipart)) {
+      reqOpts.multipart = (reqOpts.multipart as []).map(part => {
+        return replaceProjectIdToken(part, projectId);
+      });
     }
 
     if (is.object(reqOpts.json)) {
