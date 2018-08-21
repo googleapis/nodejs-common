@@ -79,8 +79,6 @@ function fakeReplaceProjectIdToken() {
 
 describe('common/util', () => {
   let util: Util&{[index: string]: Function};
-  // tslint:disable-next-line:no-any
-  let utilOverrides = {} as any;
 
   // tslint:disable-next-line:no-any
   function stub(method: keyof Util, meth: (...args: any[]) => void) {
@@ -103,19 +101,6 @@ describe('common/util', () => {
                replaceProjectIdToken: fakeReplaceProjectIdToken,
              },
            }).util;
-    const utilCached = extend(true, {}, util);
-
-    // Override all util methods, allowing them to be mocked. Overrides are
-    // removed before each test.
-    Object.getOwnPropertyNames(util).forEach(utilMethod => {
-      if (typeof util[utilMethod] !== 'function') {
-        return;
-      }
-      util[utilMethod] = function(...args: Array<{}>) {
-        return (utilOverrides[utilMethod] || utilCached[utilMethod])
-            .apply(this, args);
-      };
-    });
   });
 
   let sandbox: sinon.SinonSandbox;
@@ -124,7 +109,6 @@ describe('common/util', () => {
     requestOverride = null;
     retryRequestOverride = null;
     replaceProjectIdTokenOverride = null;
-    utilOverrides = {};
   });
   afterEach(() => {
     sandbox.restore();
@@ -139,16 +123,6 @@ describe('common/util', () => {
         maxSockets: Infinity,
       },
     });
-  });
-
-  it('should export an error for module instantiation errors', () => {
-    const errorMessage =
-        `Sorry, we cannot connect to Cloud Services without a project
-    ID. You may specify one with an environment variable named
-    "GOOGLE_CLOUD_PROJECT".`.replace(/ +/g, ' ');
-
-    const missingProjectIdError = new util.MissingProjectIdError();
-    assert.strictEqual(missingProjectIdError.message, errorMessage);
   });
 
   describe('ApiError', () => {
@@ -1386,8 +1360,10 @@ describe('common/util', () => {
       };
       const decoratedQs = {};
 
-      utilOverrides.replaceProjectIdToken = (qs: {}, projectId_: string) => {
-        utilOverrides = {};
+      replaceProjectIdTokenOverride = (qs: {}, projectId_: string) => {
+        if (qs === reqOpts.uri) {
+          return;
+        }
         assert.deepStrictEqual(qs, reqOpts.qs);
         assert.strictEqual(projectId_, projectId);
         return decoratedQs;
@@ -1395,6 +1371,30 @@ describe('common/util', () => {
 
       const decoratedRequest = util.decorateRequest(reqOpts, projectId);
       assert.deepStrictEqual(decoratedRequest.qs, decoratedQs);
+    });
+
+    it('should replace project ID tokens for multipart array', () => {
+      const projectId = 'project-id';
+      const reqOpts = {
+        uri: 'http://',
+        multipart: [{
+          'Content-Type': '...',
+          body: '...',
+        }],
+      };
+      const decoratedPart = {};
+
+      replaceProjectIdTokenOverride = (part: {}, projectId_: string) => {
+        if (part === reqOpts.uri) {
+          return;
+        }
+        assert.deepStrictEqual(part, reqOpts.multipart[0]);
+        assert.strictEqual(projectId_, projectId);
+        return decoratedPart;
+      };
+
+      const decoratedRequest = util.decorateRequest(reqOpts, projectId);
+      assert.deepStrictEqual(decoratedRequest.multipart, [decoratedPart]);
     });
 
     it('should replace project ID tokens for json object', () => {
@@ -1405,8 +1405,10 @@ describe('common/util', () => {
       };
       const decoratedJson = {};
 
-      utilOverrides.replaceProjectIdToken = (json: {}, projectId_: string) => {
-        utilOverrides = {};
+      replaceProjectIdTokenOverride = (json: {}, projectId_: string) => {
+        if (json === reqOpts.uri) {
+          return;
+        }
         assert.strictEqual(reqOpts.json, json);
         assert.strictEqual(projectId_, projectId);
         return decoratedJson;
@@ -1432,87 +1434,6 @@ describe('common/util', () => {
       assert.deepStrictEqual(util.decorateRequest(reqOpts, projectId), {
         uri: decoratedUri,
       });
-    });
-  });
-
-  describe('projectId placeholder', () => {
-    const PROJECT_ID = 'project-id';
-
-    it('should replace any {{projectId}} it finds', () => {
-      assert.deepStrictEqual(
-          replaceProjectIdToken(
-              {
-                here: 'A {{projectId}} Z',
-                nested: {
-                  here: 'A {{projectId}} Z',
-                  nested: {
-                    here: 'A {{projectId}} Z',
-                  },
-                },
-                array: [
-                  {
-                    here: 'A {{projectId}} Z',
-                    nested: {
-                      here: 'A {{projectId}} Z',
-                    },
-                    nestedArray: [
-                      {
-                        here: 'A {{projectId}} Z',
-                        nested: {
-                          here: 'A {{projectId}} Z',
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
-              PROJECT_ID),
-          {
-            here: 'A ' + PROJECT_ID + ' Z',
-            nested: {
-              here: 'A ' + PROJECT_ID + ' Z',
-              nested: {
-                here: 'A ' + PROJECT_ID + ' Z',
-              },
-            },
-            array: [
-              {
-                here: 'A ' + PROJECT_ID + ' Z',
-                nested: {
-                  here: 'A ' + PROJECT_ID + ' Z',
-                },
-                nestedArray: [
-                  {
-                    here: 'A ' + PROJECT_ID + ' Z',
-                    nested: {
-                      here: 'A ' + PROJECT_ID + ' Z',
-                    },
-                  },
-                ],
-              },
-            ],
-          });
-    });
-
-    it('should replace more than one {{projectId}}', () => {
-      assert.deepStrictEqual(
-          replaceProjectIdToken(
-              {
-                here: 'A {{projectId}} M {{projectId}} Z',
-              },
-              PROJECT_ID),
-          {
-            here: 'A ' + PROJECT_ID + ' M ' + PROJECT_ID + ' Z',
-          });
-    });
-
-    it('should throw if it needs a projectId and cannot find it', () => {
-      assert.throws(() => {
-        // tslint:disable-next-line:no-any
-        (util as any).replaceProjectIdToken({
-          here: '{{projectId}}',
-        });
-      }, new RegExp(util.MissingProjectIdError.name));
     });
   });
 
