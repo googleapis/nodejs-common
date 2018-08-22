@@ -23,7 +23,7 @@ import * as extend from 'extend';
 import {GoogleAuth} from 'google-auth-library';
 import * as is from 'is';
 import * as pify from 'pify';
-import * as r from 'request';
+import * as r from 'request';  // Only needed for type declarations.
 
 
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
@@ -47,6 +47,7 @@ export interface ServiceConfig {
 
   projectIdRequired?: boolean;
   packageJson: PackageJson;
+  requestModule: typeof r;
 }
 
 export interface ServiceOptions {
@@ -71,6 +72,7 @@ export class Service {
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
   authClient: GoogleAuth;
   private getCredentials: {};
+  requestModule: typeof r;
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like
@@ -97,6 +99,7 @@ export class Service {
     this.projectId = options.projectId || PROJECT_ID_TOKEN;
     this.projectIdRequired = config.projectIdRequired !== false;
     this.Promise = options.promise || Promise;
+    this.requestModule = config.requestModule;
 
     const reqCfg = extend({}, config, {
       projectIdRequired: this.projectIdRequired,
@@ -105,6 +108,7 @@ export class Service {
       keyFile: options.keyFilename,
       email: options.email,
       token: options.token,
+      request: this.requestModule,
     });
 
     this.makeAuthenticatedRequest =

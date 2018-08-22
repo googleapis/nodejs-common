@@ -41,6 +41,7 @@ describe('ServiceObject', () => {
     parent: {} as Service,
     id: 'id',
     createMethod: util.noop,
+    requestModule: {} as typeof r,
   };
 
   beforeEach(() => {

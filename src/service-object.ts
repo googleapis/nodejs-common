@@ -23,7 +23,7 @@ import * as arrify from 'arrify';
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
 import * as is from 'is';
-import * as r from 'request';
+import * as r from 'request';  // Only needed for type declarations.
 
 import {Service, StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
@@ -73,6 +73,11 @@ export interface ServiceObjectConfig {
    * object is Bucket.
    */
   parent: Service|ServiceObject;
+
+  /**
+   * Dependency for HTTP calls.
+   */
+  requestModule: typeof r;
 }
 
 export interface Methods {
@@ -121,6 +126,7 @@ class ServiceObject extends EventEmitter {
   Promise?: PromiseConstructor;
   // tslint:disable-next-line:no-any
   [index: string]: any;
+  requestModule: typeof r;
 
   /*
    * @constructor
@@ -150,6 +156,7 @@ class ServiceObject extends EventEmitter {
     this.methods = config.methods || {};
     this.interceptors = [];
     this.Promise = this.parent ? this.parent.Promise : undefined;
+    this.requestModule = config.requestModule;
 
     if (config.methods) {
       Object.getOwnPropertyNames(ServiceObject.prototype)

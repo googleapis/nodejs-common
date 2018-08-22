@@ -31,14 +31,14 @@ import * as through from 'through2';
 
 import {Interceptor} from './service-object';
 
-const request = r.defaults({
+const requestDefaults = {
   timeout: 60000,
   gzip: true,
   forever: true,
   pool: {
     maxSockets: Infinity,
   },
-});
+};
 
 // tslint:disable-next-line:no-any
 export type ResponseBody = any;
@@ -99,6 +99,8 @@ export interface MakeAuthenticatedRequestFactoryConfig extends
   maxRetries?: number;
 
   stream?: duplexify.Duplexify;
+
+  request: typeof r;
 }
 
 export interface MakeAuthenticatedRequestOptions {
@@ -137,6 +139,11 @@ export interface MakeWritableStreamOptions {
    * Request object, in the format of a standard Node.js http.request() object.
    */
   request?: r.Options;
+
+  /**
+   * Dependency for HTTP calls.
+   */
+  requestModule: typeof r;
 
   makeAuthenticatedRequest(reqOpts: r.OptionsWithUri, fnobj: {
     onAuthenticated(err: Error|null, authenticatedReqOpts?: r.Options): void
@@ -247,7 +254,7 @@ export interface MakeRequestConfig {
 
   stream?: duplexify.Duplexify;
 
-  request?: {};
+  request?: typeof r;
 
   shouldRetryFn?: (response?: r.Response) => boolean;
 }
@@ -401,6 +408,7 @@ export class Util {
           return;
         }
 
+        const request = options.requestModule.defaults(requestDefaults);
         request(authenticatedReqOpts!, (err, resp, body) => {
           util.handleResp(err, resp, body, (err, data) => {
             if (err) {
@@ -460,8 +468,8 @@ export class Util {
    * @param {string=} config.keyFile - Path to a .json, .pem, or .p12 keyfile.
    * @param {array} config.scopes - Array of scopes required for the API.
    */
-  makeAuthenticatedRequestFactory(
-      config: MakeAuthenticatedRequestFactoryConfig = {}) {
+  makeAuthenticatedRequestFactory(config:
+                                      MakeAuthenticatedRequestFactoryConfig) {
     const googleAutoAuthConfig = extend({}, config);
 
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
@@ -606,26 +614,14 @@ export class Util {
    * (default: true)
    * @param {number=} config.maxRetries - Maximum number of automatic retries
    *     attempted before returning the error. (default: 3)
+   * @param {typeof r=} config.request - HTTP module for request calls.
    * @param {function} callback - The callback function.
    */
-  makeRequest(reqOpts: r.Options, callback: BodyResponseCallback): Abortable;
   makeRequest(
       reqOpts: r.Options, config: MakeRequestConfig,
-      callback: BodyResponseCallback): void|Abortable;
-  makeRequest(
-      reqOpts: r.Options,
-      configOrCallback: MakeRequestConfig|BodyResponseCallback,
-      callback?: BodyResponseCallback): void|Abortable {
-    let config: MakeRequestConfig = {};
-    if (is.fn(configOrCallback)) {
-      callback = configOrCallback as BodyResponseCallback;
-    } else {
-      config = configOrCallback as MakeRequestConfig;
-    }
-    config = config || {};
-
+      callback: BodyResponseCallback): void|Abortable {
     const options = {
-      request,
+      request: (config.request as typeof r).defaults(requestDefaults),
       retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
       shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
@@ -648,6 +644,7 @@ export class Util {
       dup.setReadable(requestStream);
     } else {
       // Streaming writable HTTP requests cannot be retried.
+      const request = (options.request as typeof r).defaults(requestDefaults);
       requestStream = request(reqOpts);
       dup.setWritable(requestStream);
     }
