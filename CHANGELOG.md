@@ -4,6 +4,17 @@
 
 [1]: https://www.npmjs.com/package/nodejs-common?activeTab=versions
 
+## v0.23.0
+
+### Fixes
+- fix: move repo-tools to dev dependencies (#218)
+
+### Features
+- feat: make HTTP dependency configurable (#210)
+
+### Keepin the lights on
+- chore: run repo-tools (#219)
+
 ## v0.22.0
 
 ### Commits
