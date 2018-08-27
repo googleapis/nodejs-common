@@ -33,10 +33,8 @@ export interface Interceptor {
   [index: string]: any;
 }
 
-export interface Metadata {
-  error?: Error;
-  done?: boolean;
-}
+// tslint:disable-next-line:no-any
+export type Metadata = any;
 
 export type GetMetadataCallback =
     (err: Error|null, metadata?: Metadata|null, apiResponse?: r.Response) =>
@@ -81,7 +79,7 @@ export interface ServiceObjectConfig {
 }
 
 export interface Methods {
-  [methodName: string]: {reqOpts?: r.OptionsWithUri}|boolean;
+  [methodName: string]: {reqOpts?: r.CoreOptions}|boolean;
 }
 
 export interface CreateOptions {}
@@ -118,7 +116,7 @@ class ServiceObject extends EventEmitter {
   metadata: any;
   baseUrl?: string;
   protected parent: Service|ServiceObject;
-  protected id?: string;
+  id?: string;
   private createMethod?: Function;
   protected methods: Methods;
   protected interceptors: Interceptor[];

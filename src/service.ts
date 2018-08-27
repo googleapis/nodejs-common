@@ -24,8 +24,6 @@ import {GoogleAuth} from 'google-auth-library';
 import * as is from 'is';
 import * as pify from 'pify';
 import * as r from 'request';  // Only needed for type declarations.
-
-
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
