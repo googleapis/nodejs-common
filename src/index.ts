@@ -15,7 +15,6 @@
  */
 
 export {GoogleAuthOptions} from 'google-auth-library';
-
 /**
  * @type {module:common/operation}
  * @private
@@ -35,4 +34,4 @@ export {CreateOptions, DeleteCallback, ExistsCallback, GetConfig, GetMetadataCal
  * @type {module:common/util}
  * @private
  */
-export {Abortable, AbortableDuplex, ApiError, util} from './util';
+export {Abortable, AbortableDuplex, ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
