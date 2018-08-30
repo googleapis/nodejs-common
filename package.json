@@ -65,7 +65,7 @@
     "duplexify": "^3.6.0",
     "ent": "^2.2.0",
     "extend": "^3.0.1",
-    "google-auth-library": "^1.6.0",
+    "google-auth-library": "^2.0.0",
     "is": "^3.2.1",
     "pify": "^4.0.0",
     "retry-request": "^4.0.0",
