@@ -644,8 +644,7 @@ export class Util {
       dup.setReadable(requestStream);
     } else {
       // Streaming writable HTTP requests cannot be retried.
-      const request = (options.request as typeof r).defaults(requestDefaults);
-      requestStream = request(reqOpts);
+      requestStream = options.request!(reqOpts);
       dup.setWritable(requestStream);
     }
 
