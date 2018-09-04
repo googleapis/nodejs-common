@@ -4,6 +4,19 @@
 
 [1]: https://www.npmjs.com/package/nodejs-common?activeTab=versions
 
+## v0.24.0
+
+**BREAKING CHANGES**: This release includes an update to `google-auth-library` [2.0](https://github.com/google/google-auth-library-nodejs/releases/tag/v2.0.0), which has a variety of breaking changes.
+
+### Bug fixes
+- fix: set default once (#226)
+- fix: export DecorateRequestOptions and BodyResponseCallback (#225)
+- fix: fix the types (#221)
+
+### Dependencies
+- fix(deps): update dependency google-auth-library to v2 (#224)
+- chore(deps): update dependency nyc to v13 (#223)
+
 ## v0.23.0
 
 ### Fixes
