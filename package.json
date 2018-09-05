@@ -12,7 +12,6 @@
   "types": "./build/src/index.d.ts",
   "files": [
     "build/src",
-    "package.json",
     "AUTHORS",
     "CONTRIBUTORS",
     "LICENSE"
@@ -43,18 +42,20 @@
   ],
   "scripts": {
     "generate-scaffolding": "repo-tools generate all",
-    "docs": "jsdoc -c .jsdoc.js",
+    "docs": "echo no docs 👻",
     "cover": "nyc --reporter=lcov mocha build/test && nyc report",
     "test-no-cover": "mocha build/test",
     "test": "npm run test-only",
     "test-only": "npm run cover",
-    "posttest": "npm run check && npm run license-check",
+    "posttest": "npm run lint && npm run license-check",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "license-check": "jsgl --local .",
     "compile": "tsc -p .",
     "fix": "gts fix",
-    "check": "gts check"
+    "lint": "gts check",
+    "system-test": "echo no system tests 👻",
+    "samples-test": "cd samples/ && npm link ../ && npm test && cd ../"
   },
   "dependencies": {
     "@google-cloud/projectify": "^0.3.0",
