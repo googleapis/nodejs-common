@@ -1,0 +1,19 @@
+{
+  "description": "Samples for the nodejs-common npm module.",
+  "license": "Apache-2.0",
+  "author": "Google LLC",
+  "engines": {
+    "node": ">=8"
+  },
+  "repository": "googleapis/nodejs-common",
+  "private": true,
+  "scripts": {
+    "test": "mocha system-test"
+  },
+  "dependencies": {
+    "@google-cloud/common": "*"
+  },
+  "devDependencies": {
+    "mocha": "^5.2.0"
+  }
+}
