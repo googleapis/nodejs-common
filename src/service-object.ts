@@ -112,10 +112,9 @@ export interface GetConfig {
  * object requires specific behavior.
  */
 class ServiceObject extends EventEmitter {
-  // tslint:disable-next-line:no-any
-  metadata: any;
+  metadata: Metadata;
   baseUrl?: string;
-  protected parent: Service|ServiceObject;
+  parent: Service|ServiceObject;
   id?: string;
   private createMethod?: Function;
   protected methods: Methods;
