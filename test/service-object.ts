@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {promisify} from '@google-cloud/promisify';
 import * as assert from 'assert';
 import * as extend from 'extend';
 import * as r from 'request';
@@ -378,17 +379,19 @@ describe('ServiceObject', () => {
 
   describe('get', () => {
     it('should get the metadata', (done) => {
-      serviceObject.getMetadata = () => {
-        done();
-      };
+      serviceObject.getMetadata =
+          promisify((_callback: SO.GetMetadataCallback): void => {
+            done();
+          });
 
       serviceObject.get(assert.ifError);
     });
 
     it('handles not getting a config', (done) => {
-      serviceObject.getMetadata = () => {
-        done();
-      };
+      serviceObject.getMetadata =
+          promisify((_callback: SO.GetMetadataCallback): void => {
+            done();
+          });
       (serviceObject as FakeServiceObject).get(undefined, assert.ifError);
     });
 
@@ -396,9 +399,10 @@ describe('ServiceObject', () => {
       const error = new Error('Error.');
       const metadata = {} as SO.Metadata;
 
-      serviceObject.getMetadata = (callback) => {
-        callback(error, metadata);
-      };
+      serviceObject.getMetadata =
+          promisify((callback: SO.GetMetadataCallback) => {
+            callback(error, metadata);
+          });
 
       serviceObject.get((err, instance, metadata_) => {
         assert.strictEqual(err, error);
@@ -412,9 +416,10 @@ describe('ServiceObject', () => {
     it('should execute callback with instance & metadata', (done) => {
       const metadata = {} as SO.Metadata;
 
-      serviceObject.getMetadata = (callback) => {
-        callback(null, metadata);
-      };
+      serviceObject.getMetadata =
+          promisify((callback: SO.GetMetadataCallback) => {
+            callback(null, metadata);
+          });
 
       serviceObject.get((err, instance, metadata_) => {
         assert.ifError(err);
@@ -438,9 +443,10 @@ describe('ServiceObject', () => {
           autoCreate: true,
         };
 
-        serviceObject.getMetadata = (callback) => {
-          callback(ERROR, METADATA);
-        };
+        serviceObject.getMetadata =
+            promisify((callback: SO.GetMetadataCallback) => {
+              callback(ERROR, METADATA);
+            });
       });
 
       it('should not auto create if there is no create method', (done) => {
