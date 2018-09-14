@@ -104,6 +104,8 @@ export interface ResponseCallback {
   (err: Error|null, apiResponse?: r.Response): void;
 }
 
+export type SetMetadataResponse = [r.Request];
+
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
  * object," like a BigQuery dataset or Storage bucket.
@@ -361,9 +363,9 @@ class ServiceObject extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(metadata: Metadata): Promise<void>;
+  setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
   setMetadata(metadata: Metadata, callback: ResponseCallback): void;
-  setMetadata(metadata: Metadata, callback?: ResponseCallback): Promise<void>|
+  setMetadata(metadata: Metadata, callback?: ResponseCallback): Promise<SetMetadataResponse>|
       void {
     const self = this;
     callback = callback || util.noop;
