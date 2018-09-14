@@ -359,7 +359,6 @@ class ServiceObject extends EventEmitter {
    * @param {object} metadata - The metadata to set on this object.
    * @param {function=} callback - The callback function.
    * @param {?error} callback.err - An error returned while making this request.
-   * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
   setMetadata(metadata: Metadata): Promise<void>;
