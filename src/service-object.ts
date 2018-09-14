@@ -100,6 +100,12 @@ export interface GetConfig {
   autoCreate?: boolean;
 }
 
+export interface ResponseCallback {
+  (err: Error|null, apiResponse?: r.Response): void;
+}
+
+export type SetMetadataResponse = [r.Request];
+
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
  * object," like a BigQuery dataset or Storage bucket.
@@ -329,7 +335,9 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.metadata - The metadata for this object.
    * @param {object} callback.apiResponse - The full API response.
    */
-  getMetadata(callback: GetMetadataCallback) {
+  getMetadata(): Promise<Metadata>;
+  getMetadata(callback: GetMetadataCallback): void;
+  getMetadata(callback?: GetMetadataCallback): Promise<Metadata>|void {
     const methodConfig = (typeof this.methods.getMetadata === 'object' &&
                           this.methods.getMetadata) ||
         {};
@@ -343,7 +351,7 @@ class ServiceObject extends EventEmitter {
     // behavior. Ensure we call the original `request` method.
     this.request(reqOpts).then(resp => {
       this.metadata = resp.body;
-      callback(null, this.metadata, resp);
+      callback!(null, this.metadata, resp);
     }, callback);
   }
 
@@ -353,12 +361,12 @@ class ServiceObject extends EventEmitter {
    * @param {object} metadata - The metadata to set on this object.
    * @param {function=} callback - The callback function.
    * @param {?error} callback.err - An error returned while making this request.
-   * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(
-      metadata: Metadata,
-      callback?: (err: Error|null, resp?: r.Response) => void) {
+  setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
+  setMetadata(metadata: Metadata, callback: ResponseCallback): void;
+  setMetadata(metadata: Metadata, callback?: ResponseCallback):
+      Promise<SetMetadataResponse>|void {
     const self = this;
     callback = callback || util.noop;
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
@@ -375,7 +383,7 @@ class ServiceObject extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts).then(resp => {
+    this.request(reqOpts).then((resp: r.Response) => {
       self.metadata = resp;
       callback!(null, resp);
     }, callback);
