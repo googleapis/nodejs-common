@@ -365,8 +365,8 @@ class ServiceObject extends EventEmitter {
    */
   setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
   setMetadata(metadata: Metadata, callback: ResponseCallback): void;
-  setMetadata(metadata: Metadata, callback?: ResponseCallback): Promise<SetMetadataResponse>|
-      void {
+  setMetadata(metadata: Metadata, callback?: ResponseCallback):
+      Promise<SetMetadataResponse>|void {
     const self = this;
     callback = callback || util.noop;
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
