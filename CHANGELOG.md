@@ -4,6 +4,16 @@
 
 [1]: https://www.npmjs.com/package/nodejs-common?activeTab=versions
 
+## v0.25.0
+
+### Implementation Changes
+Some types improvements.
+- Improve types for SO.getMetadata, setMetadata ([#235](https://github.com/googleapis/nodejs-common/pull/235))
+- Expose the parent property on service-object ([#233](https://github.com/googleapis/nodejs-common/pull/233))
+
+### Internal / Testing Changes
+- Update CI config ([#232](https://github.com/googleapis/nodejs-common/pull/232))
+
 ## v0.24.0
 
 **BREAKING CHANGES**: This release includes an update to `google-auth-library` [2.0](https://github.com/google/google-auth-library-nodejs/releases/tag/v2.0.0), which has a variety of breaking changes.
