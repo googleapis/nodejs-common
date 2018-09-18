@@ -106,6 +106,9 @@ export interface ResponseCallback {
 
 export type SetMetadataResponse = [r.Request];
 
+export type GetResponse =
+    [ServiceObject | null | undefined, r.Response | undefined];
+
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
  * object," like a BigQuery dataset or Storage bucket.
@@ -276,10 +279,12 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(config: GetConfig, callback?: InstanceResponseCallback): void;
+  get(): Promise<GetResponse>;
   get(callback: InstanceResponseCallback): void;
-  get(configOrCallback: GetConfig|InstanceResponseCallback,
-      callback?: InstanceResponseCallback): void {
+  get(config: GetConfig): Promise<GetResponse>;
+  get(config: GetConfig, callback: InstanceResponseCallback): void;
+  get(configOrCallback?: GetConfig|InstanceResponseCallback,
+      callback?: InstanceResponseCallback): void|Promise<GetResponse> {
     const self = this;
 
     let config: GetConfig = {};
@@ -298,7 +303,7 @@ class ServiceObject extends EventEmitter {
         err: ApiError|null, instance: ServiceObject, apiResponse: r.Response) {
       if (err) {
         if (err.code === 409) {
-          self.get(config, callback);
+          self.get(config, callback!);
           return;
         }
         callback!(err, null, apiResponse);
