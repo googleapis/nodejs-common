@@ -191,11 +191,13 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  create(options: CreateOptions, callback?: InstanceResponseCallback): void;
-  create(callback?: InstanceResponseCallback): void;
+  create(options?: CreateOptions): Promise<[ServiceObject, r.Response]>;
+  create(options: CreateOptions, callback: InstanceResponseCallback): void;
+  create(callback: InstanceResponseCallback): void;
   create(
       optionsOrCallback?: CreateOptions|InstanceResponseCallback,
-      callback?: InstanceResponseCallback): void {
+      callback?: InstanceResponseCallback):
+      void|Promise<[ServiceObject, r.Response]> {
     const self = this;
     const args = [this.id] as Array<{}>;
 
@@ -228,7 +230,9 @@ class ServiceObject extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  delete(callback?: DeleteCallback) {
+  delete(): Promise<[r.Response]>;
+  delete(callback: DeleteCallback): void;
+  delete(callback?: DeleteCallback): Promise<[r.Response]>|void {
     const methodConfig =
         (typeof this.methods.delete === 'object' && this.methods.delete) || {};
     callback = callback || util.noop;
@@ -252,17 +256,19 @@ class ServiceObject extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {boolean} callback.exists - Whether the object exists or not.
    */
-  exists(callback: ExistsCallback) {
+  exists(): Promise<boolean>;
+  exists(callback: ExistsCallback): void;
+  exists(callback?: ExistsCallback): void|Promise<boolean> {
     this.get(err => {
       if (err) {
         if (err.code === 404) {
-          callback(null, false);
+          callback!(null, false);
         } else {
-          callback(err);
+          callback!(err);
         }
         return;
       }
-      callback(null, true);
+      callback!(null, true);
     });
   }
 
@@ -284,7 +290,6 @@ class ServiceObject extends EventEmitter {
   get(configOrCallback?: GetConfig|InstanceResponseCallback,
       callback?: InstanceResponseCallback): void|Promise<GetResponse> {
     const self = this;
-
     let config: GetConfig = {};
     if (typeof configOrCallback === 'function') {
       callback = configOrCallback;
