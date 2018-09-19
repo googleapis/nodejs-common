@@ -313,7 +313,8 @@ describe('ServiceObject', () => {
 
   describe('exists', () => {
     it('should call get', (done) => {
-      serviceObject.get = () => {
+      // tslint:disable-next-line:no-any
+      (serviceObject as any).get = () => {
         done();
       };
 
@@ -323,14 +324,10 @@ describe('ServiceObject', () => {
     it('should execute callback with false if 404', (done) => {
       const error = new ApiError('');
       error.code = 404;
-      serviceObject.get =
-          (configOrCallback: SO.GetConfig|SO.InstanceResponseCallback,
-           callback?: SO.InstanceResponseCallback) => {
-            callback = typeof configOrCallback === 'function' ?
-                configOrCallback :
-                callback;
-            callback!(error);
-          };
+      // tslint:disable-next-line:no-any
+      (serviceObject as any).get = (callback: SO.InstanceResponseCallback) => {
+        callback(error);
+      };
 
       serviceObject.exists((err, exists) => {
         assert.ifError(err);
@@ -342,15 +339,10 @@ describe('ServiceObject', () => {
     it('should execute callback with error if not 404', (done) => {
       const error = new ApiError('');
       error.code = 500;
-
-      serviceObject.get =
-          (configOrCallback: SO.GetConfig|SO.InstanceResponseCallback,
-           callback?: SO.InstanceResponseCallback) => {
-            callback = typeof configOrCallback === 'function' ?
-                configOrCallback :
-                callback;
-            callback!(error);
-          };
+      // tslint:disable-next-line:no-any
+      (serviceObject as any).get = (callback: SO.InstanceResponseCallback) => {
+        callback(error);
+      };
 
       serviceObject.exists((err, exists) => {
         assert.strictEqual(err, error);
@@ -360,14 +352,10 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with true if no error', (done) => {
-      serviceObject.get =
-          (configOrCallback: SO.GetConfig|SO.InstanceResponseCallback,
-           callback?: SO.InstanceResponseCallback) => {
-            callback = typeof configOrCallback === 'function' ?
-                configOrCallback :
-                callback;
-            callback!(null);
-          };
+      // tslint:disable-next-line:no-any
+      (serviceObject as any).get = (callback: SO.InstanceResponseCallback) => {
+        callback(null);
+      };
 
       serviceObject.exists((err, exists) => {
         assert.ifError(err);
@@ -489,7 +477,8 @@ describe('ServiceObject', () => {
                 callback = typeof optionsOrCallback === 'function' ?
                     optionsOrCallback :
                     callback;
-                serviceObject.get =
+                // tslint:disable-next-line:no-any
+                (serviceObject as any).get =
                     (configOrCallback: SO.GetConfig|SO.InstanceResponseCallback,
                      callback?: SO.InstanceResponseCallback) => {
                       const config = configOrCallback as SO.GetConfig;
@@ -511,7 +500,8 @@ describe('ServiceObject', () => {
           const error = new ApiError('errrr');
           error.code = 409;
           serviceObject.create = (callback: SO.InstanceResponseCallback) => {
-            serviceObject.get =
+            // tslint:disable-next-line:no-any
+            (serviceObject as any).get =
                 (configOrCallback: SO.GetConfig|SO.InstanceResponseCallback,
                  callback?: SO.InstanceResponseCallback) => {
                   const config = typeof configOrCallback === 'object' ?
