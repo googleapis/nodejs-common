@@ -104,7 +104,7 @@ export interface ResponseCallback {
   (err: Error|null, apiResponse?: r.Response): void;
 }
 
-export type SetMetadataResponse = [r.Request];
+export type SetMetadataResponse = [r.Response];
 
 export type GetResponse = [ServiceObject, r.Response];
 
