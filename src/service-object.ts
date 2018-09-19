@@ -104,7 +104,7 @@ export interface ResponseCallback {
   (err: Error|null, apiResponse?: r.Response): void;
 }
 
-export type SetMetadataResponse = [r.Request];
+export type SetMetadataResponse = [r.Response];
 
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
