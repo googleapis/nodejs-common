@@ -278,9 +278,8 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(): Promise<GetResponse>;
+  get(config?: GetConfig): Promise<GetResponse>;
   get(callback: InstanceResponseCallback): void;
-  get(config: GetConfig): Promise<GetResponse>;
   get(config: GetConfig, callback: InstanceResponseCallback): void;
   get(configOrCallback?: GetConfig|InstanceResponseCallback,
       callback?: InstanceResponseCallback): void|Promise<GetResponse> {
