@@ -4,6 +4,14 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.25.1
+
+### Implementation Changes
+- Improve TypeScript types for async operations ([#241](https://github.com/googleapis/nodejs-common/pull/241))
+- Enhance typing of ServiceObject.prototype.get ([#239](https://github.com/googleapis/nodejs-common/pull/239))
+- Fix TypeScript setMetadata return type ([#240](https://github.com/googleapis/nodejs-common/pull/240))
+- Enable no-var in eslint ([#238](https://github.com/googleapis/nodejs-common/pull/238))
+
 ## v0.25.0
 
 ### Implementation Changes
