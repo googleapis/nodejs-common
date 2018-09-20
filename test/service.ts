@@ -237,6 +237,12 @@ describe('Service', () => {
         done();
       });
     });
+
+    it('should return a promise if no callback is provided', () => {
+      const value = {};
+      service.getProjectIdAsync = () => value;
+      assert.strictEqual(service.getProjectId(), value);
+    });
   });
 
   describe('request_', () => {
@@ -486,6 +492,28 @@ describe('Service', () => {
 
         service.request_({uri: ''}, assert.ifError);
       });
+    });
+    describe('error handling', () => {
+      it('should re-throw any makeAuthenticatedRequest callback error',
+         async () => {
+           type Response = {body?: {}};
+           type Callback = (err: Error, body: void, res: Response) => void;
+           const err =
+               new Error('An error returned by makeAuthenticatedRequest');
+           const body = undefined;
+           const res: Response = {};
+           service.makeAuthenticatedRequest =
+               (reqOpts: void, callback: Callback) => {
+                 callback(err, body, res);
+               };
+           try {
+             await service.request_({uri: ''});
+             throw new Error('The previous line ^^ should have thrown');
+           } catch (e) {
+             assert.strictEqual(e, err);
+             assert.strictEqual(res.body, err);
+           }
+         });
     });
   });
 
