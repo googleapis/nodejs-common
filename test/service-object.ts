@@ -451,18 +451,20 @@ describe('ServiceObject', () => {
                          maxResults: 5,
                        }) as SO.GetConfig;
 
-        serviceObject.create = (config_: SO.InstanceResponseCallback) => {
-          assert.strictEqual(config_, config);
-          done();
-        };
+        sandbox.stub(serviceObject, 'create')
+            .callsFake((config_: SO.InstanceResponseCallback) => {
+              assert.strictEqual(config_, config);
+              done();
+            });
 
         serviceObject.get(config, assert.ifError);
       });
 
       it('should pass only a callback to create if no config', (done) => {
-        serviceObject.create = (callback: SO.InstanceResponseCallback) => {
-          callback(null);  // done()
-        };
+        sandbox.stub(serviceObject, 'create')
+            .callsFake((callback: SO.InstanceResponseCallback) => {
+              callback(null);  // done()
+            });
         serviceObject.get(AUTO_CREATE_CONFIG, done);
       });
 
@@ -471,22 +473,25 @@ describe('ServiceObject', () => {
           const error = new Error('Error.');
           const apiResponse = {} as r.Response;
 
-          serviceObject.create =
-              (optionsOrCallback?: SO.CreateOptions|SO.InstanceResponseCallback,
-               callback?: SO.InstanceResponseCallback) => {
-                callback = typeof optionsOrCallback === 'function' ?
-                    optionsOrCallback :
-                    callback;
-                // tslint:disable-next-line:no-any
-                (serviceObject as any).get =
-                    (configOrCallback: SO.GetConfig|SO.InstanceResponseCallback,
-                     callback?: SO.InstanceResponseCallback) => {
-                      const config = configOrCallback as SO.GetConfig;
-                      assert.deepStrictEqual(config, {});
-                      callback!(null);  // done()
-                    };
-                callback!(error, null, apiResponse);
-              };
+          sandbox.stub(serviceObject, 'create')
+              .callsFake(
+                  (optionsOrCallback?: SO.CreateOptions|
+                   SO.InstanceResponseCallback,
+                   callback?: SO.InstanceResponseCallback) => {
+                    callback = typeof optionsOrCallback === 'function' ?
+                        optionsOrCallback :
+                        callback;
+                    sandbox.stub(serviceObject, 'get')
+                        .callsFake(
+                            (configOrCallback: SO.GetConfig|
+                             SO.InstanceResponseCallback,
+                             callback?: SO.InstanceResponseCallback) => {
+                              const config = configOrCallback as SO.GetConfig;
+                              assert.deepStrictEqual(config, {});
+                              callback!(null);  // done()
+                            });
+                    callback!(error, null, apiResponse);
+                  });
 
           serviceObject.get(AUTO_CREATE_CONFIG, (err, instance, resp) => {
             assert.strictEqual(err, error);
@@ -499,22 +504,24 @@ describe('ServiceObject', () => {
         it('should refresh the metadata after a 409', (done) => {
           const error = new ApiError('errrr');
           error.code = 409;
-          serviceObject.create = (callback: SO.InstanceResponseCallback) => {
-            // tslint:disable-next-line:no-any
-            (serviceObject as any).get =
-                (configOrCallback: SO.GetConfig|SO.InstanceResponseCallback,
-                 callback?: SO.InstanceResponseCallback) => {
-                  const config = typeof configOrCallback === 'object' ?
-                      configOrCallback :
-                      {};
-                  callback = typeof configOrCallback === 'function' ?
-                      configOrCallback :
-                      callback;
-                  assert.deepStrictEqual(config, {});
-                  callback!(null, null, {} as r.Response);  // done()
-                };
-            callback(error, null, undefined);
-          };
+          sandbox.stub(serviceObject, 'create')
+              .callsFake((callback: SO.InstanceResponseCallback) => {
+                sandbox.stub(serviceObject, 'get')
+                    .callsFake(
+                        (configOrCallback: SO.GetConfig|
+                         SO.InstanceResponseCallback,
+                         callback?: SO.InstanceResponseCallback) => {
+                          const config = typeof configOrCallback === 'object' ?
+                              configOrCallback :
+                              {};
+                          callback = typeof configOrCallback === 'function' ?
+                              configOrCallback :
+                              callback;
+                          assert.deepStrictEqual(config, {});
+                          callback!(null, null, {} as r.Response);  // done()
+                        });
+                callback(error, null, undefined);
+              });
           serviceObject.get(AUTO_CREATE_CONFIG, done);
         });
       });
