@@ -2,7 +2,7 @@
 
 [npm history][1]
 
-[1]: https://www.npmjs.com/package/nodejs-common?activeTab=versions
+[1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
 ## v0.25.0
 
