@@ -25,8 +25,17 @@ import * as extend from 'extend';
 import * as is from 'is';
 import * as r from 'request';  // Only needed for type declarations.
 
-import {Service, StreamRequestOptions} from '.';
+import {StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
+
+export interface ServiceObjectParent {
+  // tslint:disable-next-line:variable-name
+  Promise?: PromiseConstructor;
+  requestStream(reqOpts: DecorateRequestOptions): r.Request;
+  request(reqOpts: DecorateRequestOptions): Promise<r.Response>;
+  request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
+      void;
+}
 
 export interface Interceptor {
   // tslint:disable-next-line:no-any
@@ -70,7 +79,7 @@ export interface ServiceObjectConfig {
    * The parent service instance. For example, an instance of Storage if the
    * object is Bucket.
    */
-  parent: Service|ServiceObject;
+  parent: ServiceObjectParent;
 
   /**
    * Dependency for HTTP calls.
@@ -122,7 +131,7 @@ export type GetResponse = [ServiceObject, r.Response];
 class ServiceObject extends EventEmitter {
   metadata: Metadata;
   baseUrl?: string;
-  parent: Service|ServiceObject;
+  parent: ServiceObjectParent;
   id?: string;
   private createMethod?: Function;
   protected methods: Methods;
@@ -256,9 +265,9 @@ class ServiceObject extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {boolean} callback.exists - Whether the object exists or not.
    */
-  exists(): Promise<boolean>;
+  exists(): Promise<[boolean]>;
   exists(callback: ExistsCallback): void;
-  exists(callback?: ExistsCallback): void|Promise<boolean> {
+  exists(callback?: ExistsCallback): void|Promise<[boolean]> {
     this.get(err => {
       if (err) {
         if (err.code === 404) {

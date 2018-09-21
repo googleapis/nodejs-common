@@ -29,9 +29,9 @@ export {Service, ServiceConfig, ServiceOptions, StreamRequestOptions} from './se
  * @type {module:common/serviceObject}
  * @private
  */
-export {CreateOptions, DeleteCallback, ExistsCallback, GetConfig, GetMetadataCallback, InstanceResponseCallback, Interceptor, Metadata, Methods, ResponseCallback, ServiceObject, ServiceObjectConfig, SetMetadataResponse} from './service-object';
+export {CreateOptions, DeleteCallback, ExistsCallback, GetConfig, GetMetadataCallback, InstanceResponseCallback, Interceptor, Metadata, Methods, ResponseCallback, ServiceObject, ServiceObjectConfig, ServiceObjectParent, SetMetadataResponse} from './service-object';
 /**
  * @type {module:common/util}
  * @private
  */
-export {Abortable, AbortableDuplex, ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
+export {Abortable, AbortableDuplex, ApiError, BodyResponseCallback, DecorateRequestOptions, ResponseBody, util} from './util';
