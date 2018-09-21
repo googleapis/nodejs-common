@@ -4,6 +4,11 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.25.3
+
+### Bug fixes
+- fix(types): improve TypeScript types ([#248](https://github.com/googleapis/nodejs-common/pull/248))
+
 ## v0.25.2
 
 ### Bug fixes
