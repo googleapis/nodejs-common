@@ -197,7 +197,7 @@ describe('Service', () => {
   describe('getProjectId', () => {
     it('should get the project ID from the auth client', (done) => {
       service.authClient = {
-        getDefaultProjectId() {
+        getProjectId() {
           done();
         },
       };
@@ -209,7 +209,7 @@ describe('Service', () => {
       const error = new Error('Error.');
 
       service.authClient = {
-        async getDefaultProjectId() {
+        async getProjectId() {
           throw error;
         },
       };
@@ -225,7 +225,7 @@ describe('Service', () => {
       const projectId = 'detected-project-id';
 
       service.authClient = {
-        async getDefaultProjectId() {
+        async getProjectId() {
           return projectId;
         },
       };

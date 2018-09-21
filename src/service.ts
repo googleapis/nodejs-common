@@ -142,7 +142,7 @@ export class Service {
   }
 
   protected async getProjectIdAsync(): Promise<string> {
-    const projectId = await this.authClient.getDefaultProjectId();
+    const projectId = await this.authClient.getProjectId();
     if (this.projectId === PROJECT_ID_TOKEN && projectId) {
       this.projectId = projectId;
     }
