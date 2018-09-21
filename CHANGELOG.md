@@ -4,6 +4,11 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.25.2
+
+### Bug fixes
+- fix(service): Use getProjectId instead of getDefaultProjectId ([#246](https://github.com/googleapis/nodejs-common/pull/246))
+
 ## v0.25.1
 
 ### Implementation Changes
