@@ -4,7 +4,6 @@
 
 [![release level](https://img.shields.io/badge/release%20level-alpha-orange.svg?style&#x3D;flat)](https://cloud.google.com/terms/launch-stages)
 [![CircleCI](https://img.shields.io/circleci/project/github/googleapis/nodejs-common.svg?style=flat)](https://circleci.com/gh/googleapis/nodejs-common)
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/github/googleapis/nodejs-common?branch=master&svg=true)](https://ci.appveyor.com/project/googleapis/nodejs-common)
 [![codecov](https://img.shields.io/codecov/c/github/googleapis/nodejs-common/master.svg?style=flat)](https://codecov.io/gh/googleapis/nodejs-common)
 
 > Node.js Common package
