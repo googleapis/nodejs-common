@@ -94,13 +94,6 @@ describe('Operation', () => {
       operation.startPolling_ = util.noop;
     });
 
-    it('should return an instance of the localized Promise', () => {
-      // tslint:disable-next-line:variable-name
-      const FakePromise = (operation.Promise = () => {});
-      const promise = operation.promise();
-      assert(promise instanceof FakePromise);
-    });
-
     it('should reject the promise if an error occurs', () => {
       const error = new Error('err');
 

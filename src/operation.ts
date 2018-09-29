@@ -79,12 +79,11 @@ export class Operation extends ServiceObject {
    * @return {promise}
    */
   promise() {
-    return new this.Promise!
-        ((resolve: Function, reject: (err: Error) => void) => {
-          this.on('error', reject).on('complete', (metadata: {}) => {
-            resolve([metadata]);
-          });
-        });
+    return new Promise((resolve: Function, reject: (err: Error) => void) => {
+      this.on('error', reject).on('complete', (metadata: {}) => {
+        resolve([metadata]);
+      });
+    });
   }
 
   /**

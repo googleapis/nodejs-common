@@ -29,8 +29,6 @@ import {StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
 
 export interface ServiceObjectParent {
-  // tslint:disable-next-line:variable-name
-  Promise?: PromiseConstructor;
   requestStream(reqOpts: DecorateRequestOptions): r.Request;
   request(reqOpts: DecorateRequestOptions): Promise<r.Response>;
   request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
@@ -136,8 +134,6 @@ class ServiceObject extends EventEmitter {
   private createMethod?: Function;
   protected methods: Methods;
   protected interceptors: Interceptor[];
-  // tslint:disable-next-line:variable-name
-  Promise?: PromiseConstructor;
   // tslint:disable-next-line:no-any
   [index: string]: any;
   requestModule: typeof r;
@@ -169,7 +165,6 @@ class ServiceObject extends EventEmitter {
     this.createMethod = config.createMethod;
     this.methods = config.methods || {};
     this.interceptors = [];
-    this.Promise = this.parent ? this.parent.Promise : undefined;
     this.requestModule = config.requestModule;
 
     if (config.methods) {

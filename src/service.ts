@@ -51,7 +51,6 @@ export interface ServiceConfig {
 export interface ServiceOptions {
   interceptors_?: {};
   projectId?: string;
-  promise?: PromiseConstructor;
   credentials?: {};
   keyFilename?: string;
   email?: string;
@@ -65,8 +64,6 @@ export class Service {
   private packageJson: PackageJson;
   projectId: string;
   private projectIdRequired: boolean;
-  // tslint:disable-next-line:variable-name
-  Promise: PromiseConstructor;
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
   authClient: GoogleAuth;
   private getCredentials: {};
@@ -96,7 +93,6 @@ export class Service {
     this.packageJson = config.packageJson;
     this.projectId = options.projectId || PROJECT_ID_TOKEN;
     this.projectIdRequired = config.projectIdRequired !== false;
-    this.Promise = options.promise || Promise;
     this.requestModule = config.requestModule;
 
     const reqCfg = extend({}, config, {
