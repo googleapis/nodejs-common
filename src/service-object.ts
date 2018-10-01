@@ -211,7 +211,7 @@ class ServiceObject extends EventEmitter {
     const args = [this.id] as Array<{}>;
 
     if (typeof optionsOrCallback === 'function') {
-      callback = optionsOrCallback;
+      callback = optionsOrCallback as InstanceResponseCallback;
     }
 
     if (typeof optionsOrCallback === 'object') {
