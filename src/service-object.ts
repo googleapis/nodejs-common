@@ -91,8 +91,6 @@ export interface Methods {
   [methodName: string]: {reqOpts?: r.CoreOptions}|boolean;
 }
 
-export interface CreateOptions {}
-
 export interface InstanceResponseCallback {
   (err: ApiError|null, instance?: ServiceObject|null,
    apiResponse?: r.Response): void;
@@ -102,10 +100,14 @@ export interface DeleteCallback {
   (err: Error|null, apiResponse?: r.Response): void;
 }
 
-export interface GetConfig {
-  /**
-   * Create the object if it doesn't already exist.
-   */
+export interface CreateOptions {
+  // tslint:disable-next-line:no-any
+  [propertyName: string]: any;
+}
+
+export interface GetConfig extends CreateOptions {
+  // autoCreate:true creates the service object if it doesn't already exist
+  // in which case the rest of this config get passed into the "create" method
   autoCreate?: boolean;
 }
 
