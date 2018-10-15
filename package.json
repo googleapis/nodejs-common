@@ -55,7 +55,8 @@
     "compile": "tsc -p .",
     "fix": "gts fix",
     "lint": "gts check",
-    "system-test": "echo no system tests 👻",
+    "presystem-test": "npm run compile",
+    "system-test": "mocha build/system-test",
     "samples-test": "cd samples/ && npm link ../ && npm test && cd ../"
   },
   "dependencies": {

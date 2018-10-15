@@ -58,7 +58,7 @@ it('should be able to use the d.ts', async () => {
   // stagingPath can be on another filesystem so fs.rename() will fail
   // with EXDEV, hence we use `mv` module here.
   await mvp(tarball, `${stagingPath}/${pkgName}.tgz`);
-  await ncpp('test/fixtures/kitchen', `${stagingPath}/`);
+  await ncpp('system-test/fixtures/kitchen', `${stagingPath}/`);
   await spawnp(npm, ['install'], {cwd: `${stagingPath}/`});
 }).timeout(120000);
 

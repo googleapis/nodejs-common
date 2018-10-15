@@ -95,8 +95,8 @@ describe('Operation', () => {
     });
 
     it('should return an instance of the localized Promise', () => {
-      // tslint:disable-next-line:variable-name
-      const FakePromise = (operation.Promise = () => {});
+      class FakePromise<T> extends Promise<T> {}
+      operation.Promise = FakePromise;
       const promise = operation.promise();
       assert(promise instanceof FakePromise);
     });
