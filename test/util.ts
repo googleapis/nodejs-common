@@ -54,21 +54,18 @@ function fakeRequest() {
   return (requestOverride || request).apply(null, arguments);
 }
 
-// tslint:disable-next-line:no-any
-(fakeRequest as any).defaults = (defaultConfiguration: any) => {
+fakeRequest.defaults = (defaultConfiguration: {}) => {
   // Ignore the default values, so we don't have to test for them in every API
   // call.
   return fakeRequest;
 };
 
-// tslint:disable-next-line:no-any
-let retryRequestOverride: any;
+let retryRequestOverride: Function|null;
 function fakeRetryRequest() {
   return (retryRequestOverride || retryRequest).apply(null, arguments);
 }
 
-// tslint:disable-next-line:no-any
-let replaceProjectIdTokenOverride: any;
+let replaceProjectIdTokenOverride: Function|null;
 function fakeReplaceProjectIdToken() {
   return (replaceProjectIdTokenOverride || replaceProjectIdToken)
       .apply(null, arguments);
@@ -82,10 +79,11 @@ describe('common/util', () => {
     return sandbox.stub(util, method).callsFake(meth);
   }
 
-  // tslint:disable-next-line:no-any
   const fakeGoogleAuth = {
-    GoogleAuth: (config?: GoogleAuthOptions) => {
-      return new GoogleAuth(config);
+    GoogleAuth: class {
+      constructor(config?: GoogleAuthOptions) {
+        return new GoogleAuth(config);
+      }
     }
   };
 
@@ -140,12 +138,9 @@ describe('common/util', () => {
     it('should parse the response body for errors', () => {
       const error = new Error('Error.');
       const errors = [error, error];
-
-      // tslint:disable-next-line:no-any
-      const replaceErrors = (key: any, value: any) => {
+      const replaceErrors = (key: string, value: {}) => {
         if (value instanceof Error) {
-          // tslint:disable-next-line:no-any
-          const error: any = {};
+          const error: {[index: string]: {}} = {};
           error['message'] = value['message'];
           return error;
         }
