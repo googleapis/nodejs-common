@@ -149,7 +149,7 @@ export interface MakeWritableStreamOptions {
   }): void;
 }
 
-export interface DecorateRequestOptions extends r.OptionsWithUri {
+export interface DecorateRequestOptions extends r.Options {
   autoPaginate?: boolean;
   autoPaginateVal?: boolean;
   objectMode?: boolean;
