@@ -69,7 +69,6 @@
     "ent": "^2.2.0",
     "extend": "^3.0.1",
     "google-auth-library": "^2.0.0",
-    "is": "^3.2.1",
     "pify": "^4.0.0",
     "retry-request": "^4.0.0",
     "through2": "^2.0.3"
@@ -79,7 +78,6 @@
     "@types/arrify": "^1.0.4",
     "@types/ent": "^2.2.1",
     "@types/extend": "^3.0.0",
-    "@types/is": "0.0.20",
     "@types/mocha": "^5.2.1",
     "@types/mv": "^2.1.0",
     "@types/ncp": "^2.0.1",

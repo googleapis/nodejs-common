@@ -21,7 +21,6 @@
 import * as arrify from 'arrify';
 import * as extend from 'extend';
 import {GoogleAuth} from 'google-auth-library';
-import * as is from 'is';
 import * as pify from 'pify';
 import * as r from 'request';  // Only needed for type declarations.
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
@@ -225,7 +224,7 @@ export class Service {
                 return args.length > 1 ? args[1] : null;
               },
               e => {
-                if (is.array(e) && e.length > 0) {
+                if (Array.isArray(e) && e.length > 0) {
                   const [err, body, res] = e;
                   if (res) {
                     res.body = err;

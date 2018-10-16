@@ -24,7 +24,6 @@ import * as ent from 'ent';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
-import * as is from 'is';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import * as through from 'through2';
@@ -340,7 +339,7 @@ export class Util {
       body,
     };
 
-    if (is.string(body)) {
+    if (typeof body === 'string') {
       try {
         parsedHttpRespBody.body = JSON.parse(body);
       } catch (err) {
@@ -669,19 +668,19 @@ export class Util {
     delete reqOpts.autoPaginateVal;
     delete reqOpts.objectMode;
 
-    if (is.object(reqOpts.qs)) {
+    if (reqOpts.qs !== null && typeof reqOpts.qs === 'object') {
       delete reqOpts.qs.autoPaginate;
       delete reqOpts.qs.autoPaginateVal;
       reqOpts.qs = replaceProjectIdToken(reqOpts.qs, projectId);
     }
 
-    if (is.array(reqOpts.multipart)) {
+    if (Array.isArray(reqOpts.multipart)) {
       reqOpts.multipart = (reqOpts.multipart as []).map(part => {
         return replaceProjectIdToken(part, projectId);
       });
     }
 
-    if (is.object(reqOpts.json)) {
+    if (reqOpts.json !== null && typeof reqOpts.json === 'object') {
       delete reqOpts.json.autoPaginate;
       delete reqOpts.json.autoPaginateVal;
       reqOpts.json = replaceProjectIdToken(reqOpts.json, projectId);
