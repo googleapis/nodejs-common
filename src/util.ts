@@ -630,7 +630,7 @@ export class Util {
       },
     } as {} as retryRequest.Options;
 
-    if (is.number(reqOpts.maxRetries)) {
+    if (typeof reqOpts.maxRetries === 'number') {
       options.retries = reqOpts.maxRetries;
     }
 
