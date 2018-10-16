@@ -149,10 +149,11 @@ export interface MakeWritableStreamOptions {
   }): void;
 }
 
-export interface DecorateRequestOptions extends r.OptionsWithUri {
+export interface DecorateRequestOptions extends r.CoreOptions {
   autoPaginate?: boolean;
   autoPaginateVal?: boolean;
   objectMode?: boolean;
+  maxRetries?: number;
   uri: string;
   interceptors_?: Interceptor[];
   shouldReturnStream?: boolean;
@@ -382,6 +383,7 @@ export class Util {
       qs: {
         uploadType: 'multipart',
       },
+      maxRetries: 0,
     };
 
     const metadata = options.metadata || {};
@@ -617,7 +619,7 @@ export class Util {
    * @param {function} callback - The callback function.
    */
   makeRequest(
-      reqOpts: r.Options, config: MakeRequestConfig,
+      reqOpts: DecorateRequestOptions, config: MakeRequestConfig,
       callback: BodyResponseCallback): void|Abortable {
     const options = {
       request: (config.request as typeof r).defaults(requestDefaults),
@@ -627,6 +629,10 @@ export class Util {
         return err && util.shouldRetryRequest(err);
       },
     } as {} as retryRequest.Options;
+
+    if (typeof reqOpts.maxRetries === 'number') {
+      options.retries = reqOpts.maxRetries;
+    }
 
     if (!config.stream) {
       return retryRequest(reqOpts, options, (err, response, body) => {

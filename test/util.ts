@@ -403,9 +403,10 @@ describe('common/util', () => {
       const metadata = {a: 'b', c: 'd'} as any;
       util.makeWritableStream(dup, {
         metadata,
-        makeAuthenticatedRequest(request) {
+        makeAuthenticatedRequest(request: DecorateRequestOptions) {
           assert.equal(request.method, 'POST');
           assert.equal(request.qs.uploadType, 'multipart');
+          assert.strictEqual(request.maxRetries, 0);
 
           assert.strictEqual(Array.isArray(request.multipart), true);
 
@@ -1087,33 +1088,6 @@ describe('common/util', () => {
       };
     }
 
-    describe('callback mode', () => {
-      it('should pass the default options to retryRequest', (done) => {
-        retryRequestOverride = testDefaultRetryRequestConfig(done);
-        // tslint:disable-next-line:no-any
-        util.makeRequest(reqOpts, {request: fakeRequest as any}, () => {});
-      });
-
-      it('should allow turning off retries to retryRequest', (done) => {
-        retryRequestOverride = testNoRetryRequestConfig(done);
-        util.makeRequest(reqOpts, noRetryRequestConfig, () => {});
-      });
-
-      it('should override number of retries to retryRequest', (done) => {
-        retryRequestOverride = testCustomRetryRequestConfig(done);
-        util.makeRequest(reqOpts, customRetryRequestConfig, () => {});
-      });
-
-      it('should return the instance of retryRequest', () => {
-        const requestInstance = {};
-        retryRequestOverride = () => {
-          return requestInstance;
-        };
-        const res = util.makeRequest(reqOpts, {request}, assert.ifError);
-        assert.strictEqual(res, requestInstance);
-      });
-    });
-
     describe('stream mode', () => {
       it('should forward the specified events to the stream', (done) => {
         const requestStream = duplexify();
@@ -1268,6 +1242,23 @@ describe('common/util', () => {
       it('should override number of retries to retryRequest', (done) => {
         retryRequestOverride = testCustomRetryRequestConfig(done);
         util.makeRequest(reqOpts, customRetryRequestConfig, assert.ifError);
+      });
+
+      it('should allow request options to control retry setting', (done) => {
+        retryRequestOverride = testCustomRetryRequestConfig(done);
+        const reqOptsWithRetrySettings =
+            extend({}, reqOpts, customRetryRequestConfig);
+        util.makeRequest(
+            reqOptsWithRetrySettings, noRetryRequestConfig, assert.ifError);
+      });
+
+      it('should return the instance of retryRequest', () => {
+        const requestInstance = {};
+        retryRequestOverride = () => {
+          return requestInstance;
+        };
+        const res = util.makeRequest(reqOpts, {request}, assert.ifError);
+        assert.strictEqual(res, requestInstance);
       });
 
       it('should let handleResp handle the response', (done) => {
