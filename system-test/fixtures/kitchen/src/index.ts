@@ -4,7 +4,7 @@ import {GoogleAuthOptions, Operation,Service, ServiceConfig, ServiceOptions,
   ServiceObjectConfig, StreamRequestOptions, Abortable, AbortableDuplex,
   ApiError, util} from '@google-cloud/common';
 
-util.makeRequest({url: 'test'}, {}, (err, body, res) => {
+util.makeRequest({uri: 'test'}, {}, (err, body, res) => {
   console.log(err);
 });
 

@@ -22,7 +22,6 @@ import {promisifyAll} from '@google-cloud/promisify';
 import * as arrify from 'arrify';
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
-import * as is from 'is';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {StreamRequestOptions} from '.';
@@ -310,7 +309,7 @@ class ServiceObject extends EventEmitter {
       config = configOrCallback;
     }
 
-    const autoCreate = config.autoCreate && is.fn(this.create);
+    const autoCreate = config.autoCreate && typeof this.create === 'function';
     delete config.autoCreate;
 
     function onCreate(
@@ -332,7 +331,7 @@ class ServiceObject extends EventEmitter {
       if (err) {
         if (err.code === 404 && autoCreate) {
           const args: Array<Function|GetConfig> = [];
-          if (!is.empty(config)) {
+          if (Object.keys(config).length > 0) {
             args.push(config);
           }
           args.push(onCreate);
