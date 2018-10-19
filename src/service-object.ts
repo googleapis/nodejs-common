@@ -116,6 +116,8 @@ export type SetMetadataResponse = [r.Response];
 
 export type GetResponse = [ServiceObject, r.Response];
 
+export interface SetMetadataOptions {}
+
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
  * object," like a BigQuery dataset or Storage bucket.
@@ -379,11 +381,16 @@ class ServiceObject extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
+  setMetadata(metadata: Metadata, options?: SetMetadataOptions): Promise<SetMetadataResponse>;
   setMetadata(metadata: Metadata, callback: ResponseCallback): void;
-  setMetadata(metadata: Metadata, callback?: ResponseCallback):
+  setMetadata(metadata: Metadata, options: SetMetadataOptions, callback: ResponseCallback): void;
+  setMetadata(metadata: Metadata, optionsOrCallback?: SetMetadataOptions|ResponseCallback, callback?: ResponseCallback):
       Promise<SetMetadataResponse>|void {
     const self = this;
+
+    callback = typeof optionsOrCallback === 'function' ? optionsOrCallback as ResponseCallback : callback;
+    const options = typeof optionsOrCallback === 'object' ? optionsOrCallback : {};
+
     callback = callback || util.noop;
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
                           this.methods.setMetadata) ||
@@ -394,6 +401,7 @@ class ServiceObject extends EventEmitter {
           method: 'PATCH',
           uri: '',
           json: metadata,
+          qs: options,
         },
         methodConfig.reqOpts);
 

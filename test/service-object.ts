@@ -664,7 +664,7 @@ describe('ServiceObject', () => {
             throw error;
           });
 
-      serviceObject.setMetadata({}, (err, apiResponse_) => {
+      serviceObject.setMetadata({}, (err: Error, apiResponse_: r.Response) => {
         assert.strictEqual(err, error);
         assert.strictEqual(apiResponse_, undefined);
         done();
@@ -679,7 +679,7 @@ describe('ServiceObject', () => {
             return apiResponse;
           });
 
-      serviceObject.setMetadata({}, (err) => {
+      serviceObject.setMetadata({}, (err: Error) => {
         assert.ifError(err);
         assert.strictEqual(pSvc().metadata, apiResponse);
         done();
@@ -694,7 +694,7 @@ describe('ServiceObject', () => {
             return apiResponse;
           });
 
-      serviceObject.setMetadata({}, (err, apiResponse_) => {
+      serviceObject.setMetadata({}, (err: Error, apiResponse_: r.Response) => {
         assert.ifError(err);
         assert.strictEqual(apiResponse_, apiResponse);
         done();
