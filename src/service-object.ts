@@ -109,7 +109,7 @@ export interface GetConfig {
 }
 
 export interface ResponseCallback {
-  (err: Error|null, apiResponse?: r.Response): void;
+  (err?: Error|null, apiResponse?: r.Response): void;
 }
 
 export type SetMetadataResponse = [r.Response];
