@@ -475,8 +475,7 @@ describe('ServiceObject', () => {
 
           sandbox.stub(serviceObject, 'create')
               .callsFake(
-                  (optionsOrCallback?: SO.CreateOptions|
-                   SO.InstanceResponseCallback,
+                  (optionsOrCallback?: {}|SO.InstanceResponseCallback,
                    callback?: SO.InstanceResponseCallback) => {
                     callback = typeof optionsOrCallback === 'function' ?
                         optionsOrCallback as SO.InstanceResponseCallback :
