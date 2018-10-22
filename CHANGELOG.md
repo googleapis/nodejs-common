@@ -4,6 +4,31 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.26.0
+
+### Implementation Changes
+- fix(typescript): Make ResponseCallback match subtype ([#271](https://github.com/googleapis/nodejs-common/pull/271))
+- fix: Do not retry streaming POST requests. ([#268](https://github.com/googleapis/nodejs-common/pull/268))
+- Don't publish sourcemaps ([#256](https://github.com/googleapis/nodejs-common/pull/256))
+
+### Dependencies
+- chore: Remove 'is' dependency ([#270](https://github.com/googleapis/nodejs-common/pull/270))
+- chore(deps): update dependency sinon to v7 ([#267](https://github.com/googleapis/nodejs-common/pull/267))
+- chore(deps): update dependency typescript to ~3.1.0 ([#259](https://github.com/googleapis/nodejs-common/pull/259))
+
+### Internal / Testing Changes
+- chores(build): run codecov on continuous builds ([#276](https://github.com/googleapis/nodejs-common/pull/276))
+- chore: update new issue template ([#274](https://github.com/googleapis/nodejs-common/pull/274))
+- chore: re-enable codecov ([#266](https://github.com/googleapis/nodejs-common/pull/266))
+- test: move install to system tests, and other tsconfig cleanup ([#269](https://github.com/googleapis/nodejs-common/pull/269))
+- Update kokoro config ([#264](https://github.com/googleapis/nodejs-common/pull/264))
+- docs: Remove appveyor badge from readme ([#262](https://github.com/googleapis/nodejs-common/pull/262))
+- Update CI config ([#258](https://github.com/googleapis/nodejs-common/pull/258))
+- build: prevent system/sample-test from leaking credentials
+- Update the kokoro config ([#254](https://github.com/googleapis/nodejs-common/pull/254))
+- test: remove appveyor config ([#253](https://github.com/googleapis/nodejs-common/pull/253))
+- Update CI config ([#252](https://github.com/googleapis/nodejs-common/pull/252))
+
 ## v0.25.3
 
 ### Bug fixes
