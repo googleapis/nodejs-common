@@ -4,6 +4,17 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.26.1
+
+### Dependencies
+- chore(deps): upgrade @google-cloud/projectify to ^0.3.1 ([#289](https://github.com/googleapis/nodejs-common/pull/289))
+
+### Internal / Testing Changes
+- chore: include build in eslintignore ([#288](https://github.com/googleapis/nodejs-common/pull/288))
+- chore: update issue templates ([#284](https://github.com/googleapis/nodejs-common/pull/284))
+- chore: remove old issue template ([#282](https://github.com/googleapis/nodejs-common/pull/282))
+- build: run tests on node11 ([#280](https://github.com/googleapis/nodejs-common/pull/280))
+
 ## v0.26.0
 
 ### Implementation Changes
