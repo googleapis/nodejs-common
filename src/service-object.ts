@@ -90,8 +90,6 @@ export interface Methods {
   [methodName: string]: {reqOpts?: r.CoreOptions}|boolean;
 }
 
-export interface CreateOptions {}
-
 export interface InstanceResponseCallback {
   (err: ApiError|null, instance?: ServiceObject|null,
    apiResponse?: r.Response): void;
@@ -127,7 +125,7 @@ export type GetResponse = [ServiceObject, r.Response];
  * shared behaviors. Note that any method can be overridden when the service
  * object requires specific behavior.
  */
-class ServiceObject extends EventEmitter {
+class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
   metadata: Metadata;
   baseUrl?: string;
   parent: ServiceObjectParent;
@@ -292,19 +290,22 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(config?: GetConfig): Promise<GetResponse>;
+  get(config?: GetConfig&CreateOptions): Promise<GetResponse>;
   get(callback: InstanceResponseCallback): void;
-  get(config: GetConfig, callback: InstanceResponseCallback): void;
-  get(configOrCallback?: GetConfig|InstanceResponseCallback,
-      callback?: InstanceResponseCallback): void|Promise<GetResponse> {
+  get(config: GetConfig&CreateOptions,
+      callback: InstanceResponseCallback): void;
+  get(arg0?: (GetConfig&CreateOptions)|InstanceResponseCallback,
+      arg1?: InstanceResponseCallback): void|Promise<GetResponse> {
     const self = this;
-    let config: GetConfig = {};
-    if (typeof configOrCallback === 'function') {
-      callback = configOrCallback;
+
+    let callback: InstanceResponseCallback = arg1 as InstanceResponseCallback;
+    if (typeof arg0 === 'function') {
+      callback = arg0 as InstanceResponseCallback;
     }
 
-    if (typeof configOrCallback === 'object') {
-      config = configOrCallback;
+    let config: GetConfig&CreateOptions = {} as GetConfig & CreateOptions;
+    if (typeof arg0 === 'object') {
+      config = arg0;
     }
 
     const autoCreate = config.autoCreate && typeof this.create === 'function';
@@ -317,18 +318,18 @@ class ServiceObject extends EventEmitter {
           self.get(config, callback!);
           return;
         }
-        callback!(err, null, apiResponse);
+        callback(err, null, apiResponse);
         return;
       }
 
-      callback!(null, instance, apiResponse);
+      callback(null, instance, apiResponse);
     }
 
     this.getMetadata((e, metadata) => {
       const err = e as ApiError;
       if (err) {
         if (err.code === 404 && autoCreate) {
-          const args: Array<Function|GetConfig> = [];
+          const args: Array<Function|GetConfig&CreateOptions> = [];
           if (Object.keys(config).length > 0) {
             args.push(config);
           }
@@ -336,10 +337,10 @@ class ServiceObject extends EventEmitter {
           self.create.apply(self, args);
           return;
         }
-        callback!(err, null, metadata as r.Response);
+        callback(err, null, metadata as r.Response);
         return;
       }
-      callback!(null, self, metadata as r.Response);
+      callback(null, self, metadata as r.Response);
     });
   }
 
