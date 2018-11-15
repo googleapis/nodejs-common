@@ -4,6 +4,25 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.26.2
+
+This patch release also brings in a patch dependency update of @google-cloud/projectify which contains a fix for OOM issue.
+
+### Implementation Changes
+- ts: genericize CreateOptions in ServiceObject ([#275](https://github.com/googleapis/nodejs-common/pull/275))
+
+### Dependencies
+- chore(deps): upgrade @google-cloud/projectify to v0.3.2 ([#301](https://github.com/googleapis/nodejs-common/pull/301))
+- chore(deps): update dependency gts to ^0.9.0 ([#300](https://github.com/googleapis/nodejs-common/pull/300))
+- chore(deps): update dependency @google-cloud/nodejs-repo-tools to v3 ([#298](https://github.com/googleapis/nodejs-common/pull/298))
+- fix(deps): update dependency through2 to v3 ([#295](https://github.com/googleapis/nodejs-common/pull/295))
+
+### Internal / Testing Changes
+- chore: update eslintignore config ([#299](https://github.com/googleapis/nodejs-common/pull/299))
+- chore: drop contributors from multiple places ([#297](https://github.com/googleapis/nodejs-common/pull/297))
+- chore: use latest npm on Windows ([#296](https://github.com/googleapis/nodejs-common/pull/296))
+- chore: update CircleCI config ([#294](https://github.com/googleapis/nodejs-common/pull/294))
+
 ## v0.26.1
 
 ### Dependencies
