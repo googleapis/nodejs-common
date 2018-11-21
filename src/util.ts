@@ -26,7 +26,7 @@ import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
 import * as r from 'request';
 import * as retryRequest from 'retry-request';
-import * as through from 'through2';
+import {PassThrough} from 'stream';
 
 import {Interceptor} from './service-object';
 
@@ -375,7 +375,7 @@ export class Util {
       onComplete?: Function) {
     onComplete = onComplete || util.noop;
 
-    const writeStream = through();
+    const writeStream = new PassThrough();
     dup.setWritable(writeStream);
 
     const defaultReqOpts = {

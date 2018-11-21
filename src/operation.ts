@@ -18,7 +18,6 @@
  * @module common/operation
  */
 
-import * as extend from 'extend';
 import * as pify from 'pify';
 
 import {GetMetadataCallback, ServiceObject, ServiceObjectConfig} from './service-object';
@@ -59,7 +58,7 @@ export class Operation extends ServiceObject {
       },
     };
 
-    config = extend(
+    config = Object.assign(
         {
           baseUrl: '',
         },
