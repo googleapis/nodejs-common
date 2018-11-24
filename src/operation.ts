@@ -23,7 +23,7 @@ import * as pify from 'pify';
 import {GetMetadataCallback, ServiceObject, ServiceObjectConfig} from './service-object';
 
 // tslint:disable-next-line no-any
-export class Operation<T=any> extends ServiceObject<T> {
+export class Operation<T = any> extends ServiceObject<T> {
   completeListeners: number;
   hasActiveListeners: boolean;
 

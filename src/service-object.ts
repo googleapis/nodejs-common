@@ -25,7 +25,6 @@ import * as extend from 'extend';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {StreamRequestOptions} from '.';
-import {Operation} from './operation';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
 
 export type CreateOptions = {};
