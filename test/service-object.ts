@@ -26,7 +26,7 @@ import {ServiceObject} from '../src/service-object';
 import {ApiError, DecorateRequestOptions, util} from '../src/util';
 
 describe('ServiceObject', () => {
-  let serviceObject: ServiceObject;
+  let serviceObject: ServiceObject<FakeServiceObject>;
   // tslint:disable-next-line:no-any
   type FakeServiceObject = any;
   let sandbox: sinon.SinonSandbox;
@@ -55,20 +55,12 @@ describe('ServiceObject', () => {
   });
 
   describe('instantiation', () => {
-    it('should promisify all the things', (done) => {
-      // tslint:disable-next-line:no-any
-      serviceObject.request = async (reqOpts: any) => {
-        return {statusCode: 123, body: 'sunny'} as r.Response;
-      };
-
-      // tslint:disable-next-line:no-any
-      (serviceObject.delete() as any)
-          // tslint:disable-next-line:no-any
-          .then((r: any) => {
-            assert.equal(r[0].body, 'sunny');
-            assert.equal(r[0].statusCode, 123);
-            done();
-          });
+    it('should promisify all the things', async () => {
+      const response = {statusCode: 123, body: 'sunny'};
+      sandbox.stub(serviceObject, 'request').resolves(response);
+      const [r] = await serviceObject.delete();
+      assert.equal(r.body, 'sunny');
+      assert.equal(r.statusCode, 123);
     });
 
     it('should create an empty metadata object', () => {
@@ -108,9 +100,7 @@ describe('ServiceObject', () => {
           create: true,
         },
       });
-
       const serviceObject = new ServiceObject(config);
-
       assert.strictEqual(typeof serviceObject.create, 'function');
       assert.strictEqual(serviceObject.delete, undefined);
     });
@@ -164,68 +154,55 @@ describe('ServiceObject', () => {
     });
 
     it('should pass error to callback', (done) => {
-      const config = extend({}, CONFIG, {
-        createMethod,
-      });
+      const config = extend({}, CONFIG, {createMethod});
       const options = {};
-
       const error = new Error('Error.');
       const apiResponse = {};
-
       function createMethod(id: string, options_: {}, callback: Function) {
         callback(error, null, apiResponse);
       }
 
       const serviceObject = new ServiceObject(config);
-      serviceObject.create(options, (err, instance, apiResponse_) => {
-        assert.strictEqual(err, error);
-        assert.strictEqual(instance, null);
-        assert.strictEqual(apiResponse_, apiResponse);
-        done();
-      });
+      serviceObject.create(
+          // tslint:disable-next-line no-any
+          options, (err: Error|null, instance: any, apiResponse_: any) => {
+            assert.strictEqual(err, error);
+            assert.strictEqual(instance, null);
+            assert.strictEqual(apiResponse_, apiResponse);
+            done();
+          });
     });
 
-    it('should return instance and apiResponse to callback', (done) => {
+    it('should return instance and apiResponse to callback', async () => {
       const config = extend({}, CONFIG, {
         createMethod,
       });
       const options = {};
-
       const apiResponse = {};
-
       function createMethod(id: string, options_: {}, callback: Function) {
         callback(null, {}, apiResponse);
       }
 
       const serviceObject = new ServiceObject(config);
-      serviceObject.create(options, (err, instance_, apiResponse_) => {
-        assert.ifError(err);
-        assert.strictEqual(instance_, serviceObject);
-        assert.strictEqual(apiResponse_, apiResponse);
-        done();
-      });
+      const [instance_, apiResponse_] = await serviceObject.create(options);
+      assert.strictEqual(instance_, serviceObject);
+      assert.strictEqual(apiResponse_, apiResponse);
     });
 
-    it('should assign metadata', (done) => {
+    it('should assign metadata', async () => {
       const config = extend({}, CONFIG, {
         createMethod,
       });
       const options = {};
-
       const instance = {
         metadata: {},
       };
-
       function createMethod(id: string, options_: {}, callback: Function) {
         callback(null, instance, {});
       }
-
       const serviceObject = new ServiceObject(config);
-      serviceObject.create(options, (err, instance_) => {
-        assert.ifError(err);
-        assert.strictEqual(instance_!.metadata, instance.metadata);
-        done();
-      });
+      const [instance_] = await serviceObject.create(options);
+      assert.strictEqual(instance_.metadata, instance.metadata);
     });
 
     it('should execute callback with any amount of arguments', (done) => {
@@ -313,22 +290,14 @@ describe('ServiceObject', () => {
 
   describe('exists', () => {
     it('should call get', (done) => {
-      // tslint:disable-next-line:no-any
-      (serviceObject as any).get = () => {
-        done();
-      };
-
+      sandbox.stub(serviceObject, 'get').callsFake(() => done());
       serviceObject.exists(() => {});
     });
 
     it('should execute callback with false if 404', (done) => {
       const error = new ApiError('');
       error.code = 404;
-      // tslint:disable-next-line:no-any
-      (serviceObject as any).get = (callback: SO.InstanceResponseCallback) => {
-        callback(error);
-      };
-
+      sandbox.stub(serviceObject, 'get').callsArgWith(0, error);
       serviceObject.exists((err, exists) => {
         assert.ifError(err);
         assert.strictEqual(exists, false);
@@ -339,11 +308,7 @@ describe('ServiceObject', () => {
     it('should execute callback with error if not 404', (done) => {
       const error = new ApiError('');
       error.code = 500;
-      // tslint:disable-next-line:no-any
-      (serviceObject as any).get = (callback: SO.InstanceResponseCallback) => {
-        callback(error);
-      };
-
+      sandbox.stub(serviceObject, 'get').callsArgWith(0, error);
       serviceObject.exists((err, exists) => {
         assert.strictEqual(err, error);
         assert.strictEqual(exists, undefined);
@@ -352,11 +317,7 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with true if no error', (done) => {
-      // tslint:disable-next-line:no-any
-      (serviceObject as any).get = (callback: SO.InstanceResponseCallback) => {
-        callback(null);
-      };
-
+      sandbox.stub(serviceObject, 'get').callsArgWith(0, null);
       serviceObject.exists((err, exists) => {
         assert.ifError(err);
         assert.strictEqual(exists, true);
@@ -450,21 +411,15 @@ describe('ServiceObject', () => {
         const config = extend({}, AUTO_CREATE_CONFIG, {
                          maxResults: 5,
                        }) as SO.GetConfig;
-
-        sandbox.stub(serviceObject, 'create')
-            .callsFake((config_: SO.InstanceResponseCallback) => {
-              assert.strictEqual(config_, config);
-              done();
-            });
-
+        sandbox.stub(serviceObject, 'create').callsFake(config_ => {
+          assert.strictEqual(config_, config);
+          done();
+        });
         serviceObject.get(config, assert.ifError);
       });
 
       it('should pass only a callback to create if no config', (done) => {
-        sandbox.stub(serviceObject, 'create')
-            .callsFake((callback: SO.InstanceResponseCallback) => {
-              callback(null);  // done()
-            });
+        sandbox.stub(serviceObject, 'create').callsArgWith(0, null);
         serviceObject.get(AUTO_CREATE_CONFIG, done);
       });
 
@@ -473,24 +428,14 @@ describe('ServiceObject', () => {
           const error = new Error('Error.');
           const apiResponse = {} as r.Response;
 
-          sandbox.stub(serviceObject, 'create')
-              .callsFake(
-                  (optionsOrCallback?: {}|SO.InstanceResponseCallback,
-                   callback?: SO.InstanceResponseCallback) => {
-                    callback = typeof optionsOrCallback === 'function' ?
-                        optionsOrCallback as SO.InstanceResponseCallback :
-                        callback;
-                    sandbox.stub(serviceObject, 'get')
-                        .callsFake(
-                            (configOrCallback: SO.GetConfig|
-                             SO.InstanceResponseCallback,
-                             callback?: SO.InstanceResponseCallback) => {
-                              const config = configOrCallback as SO.GetConfig;
-                              assert.deepStrictEqual(config, {});
-                              callback!(null);  // done()
-                            });
-                    callback!(error, null, apiResponse);
-                  });
+          sandbox.stub(serviceObject, 'create').callsFake((optsOrCb, cb) => {
+            const callback = typeof optsOrCb === 'function' ? optsOrCb : cb;
+            sandbox.stub(serviceObject, 'get').callsFake((cfg, callback) => {
+              assert.deepStrictEqual(cfg, {});
+              callback!(null);  // done()
+            });
+            callback!(error, null, apiResponse);
+          });
 
           serviceObject.get(AUTO_CREATE_CONFIG, (err, instance, resp) => {
             assert.strictEqual(err, error);
@@ -503,24 +448,15 @@ describe('ServiceObject', () => {
         it('should refresh the metadata after a 409', (done) => {
           const error = new ApiError('errrr');
           error.code = 409;
-          sandbox.stub(serviceObject, 'create')
-              .callsFake((callback: SO.InstanceResponseCallback) => {
-                sandbox.stub(serviceObject, 'get')
-                    .callsFake(
-                        (configOrCallback: SO.GetConfig|
-                         SO.InstanceResponseCallback,
-                         callback?: SO.InstanceResponseCallback) => {
-                          const config = typeof configOrCallback === 'object' ?
-                              configOrCallback :
-                              {};
-                          callback = typeof configOrCallback === 'function' ?
-                              configOrCallback :
-                              callback;
-                          assert.deepStrictEqual(config, {});
-                          callback!(null, null, {} as r.Response);  // done()
-                        });
-                callback(error, null, undefined);
-              });
+          sandbox.stub(serviceObject, 'create').callsFake(callback => {
+            sandbox.stub(serviceObject, 'get').callsFake((cfgOrCb, cb) => {
+              const config = typeof cfgOrCb === 'object' ? cfgOrCb : {};
+              const callback = typeof cfgOrCb === 'function' ? cfgOrCb : cb;
+              assert.deepStrictEqual(config, {});
+              callback!(null, null, {} as r.Response);  // done()
+            });
+            callback(error, null, undefined);
+          });
           serviceObject.get(AUTO_CREATE_CONFIG, done);
         });
       });
@@ -564,12 +500,7 @@ describe('ServiceObject', () => {
 
     it('should execute callback with error & apiResponse', (done) => {
       const error = new Error('ಠ_ಠ');
-
-      sandbox.stub(ServiceObject.prototype, 'request')
-          .callsFake(async (reqOpts) => {
-            throw error;
-          });
-
+      sandbox.stub(ServiceObject.prototype, 'request').rejects(error);
       serviceObject.getMetadata((err, metadata, apiResponse_) => {
         assert.strictEqual(err, error);
         assert.strictEqual(metadata, undefined);
@@ -629,7 +560,6 @@ describe('ServiceObject', () => {
     it('should extend the request options with defaults', (done) => {
       const metadataDefault = {a: 'b'};
       const metadata = {c: 'd'};
-
       const method = {
         reqOpts: {
           method: 'override',
@@ -856,29 +786,18 @@ describe('ServiceObject', () => {
   });
 
   describe('request', () => {
-    it('should call through to request_', (done) => {
+    it('should call through to request_', async () => {
       const fakeOptions = {} as DecorateRequestOptions;
       sandbox.stub(serviceObject, 'request_').callsFake(reqOpts => {
         assert.strictEqual(reqOpts, fakeOptions);
-        return Promise.resolve({} as r.Response);
+        return Promise.resolve({});
       });
-      serviceObject.request(fakeOptions)
-          .then(
-              r => {
-                done();
-              },
-              err => {
-                console.error(err);
-              });
+      await serviceObject.request(fakeOptions);
     });
 
     it('should accept a callback', (done) => {
       const response = {body: {abc: '123'}, statusCode: 200} as r.Response;
-
-      sandbox.stub(serviceObject, 'request_').callsFake(reqOpts => {
-        return Promise.resolve(response);
-      });
-
+      sandbox.stub(serviceObject, 'request_').resolves(response);
       serviceObject.request({} as DecorateRequestOptions, (err, body, res) => {
         assert.ifError(err);
         assert.deepStrictEqual(res, response);
@@ -910,7 +829,7 @@ describe('ServiceObject', () => {
       const serviceObject = new ServiceObject(CONFIG);
       sandbox.stub(serviceObject, 'request_').callsFake(async (reqOpts) => {
         assert.deepStrictEqual(reqOpts, {shouldReturnStream: true});
-        return {} as r.Request;
+        return {};
       });
       await serviceObject.requestStream(fakeOptions);
     });

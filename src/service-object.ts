@@ -27,6 +27,8 @@ import * as r from 'request';  // Only needed for type declarations.
 import {StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
 
+export type CreateOptions = {};
+
 export interface ServiceObjectParent {
   // tslint:disable-next-line:variable-name
   Promise?: PromiseConstructor;
@@ -90,9 +92,15 @@ export interface Methods {
   [methodName: string]: {reqOpts?: r.CoreOptions}|boolean;
 }
 
-export interface InstanceResponseCallback {
-  (err: ApiError|null, instance?: ServiceObject|null,
-   apiResponse?: r.Response): void;
+export interface InstanceResponseCallback<T> {
+  (err: ApiError|null, instance?: T|null, apiResponse?: r.Response): void;
+}
+
+// tslint:disable-next-line no-any
+export type CreateResponse<T> = [T, ...any[]];
+export interface CreateCallback<T> {
+  // tslint:disable-next-line no-any
+  (err: ApiError|null, instance?: T|null, ...args: any[]): void;
 }
 
 export interface DeleteCallback {
@@ -111,8 +119,7 @@ export interface ResponseCallback {
 }
 
 export type SetMetadataResponse = [r.Response];
-
-export type GetResponse = [ServiceObject, r.Response];
+export type GetResponse<T> = [T, r.Response];
 
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
@@ -125,7 +132,8 @@ export type GetResponse = [ServiceObject, r.Response];
  * shared behaviors. Note that any method can be overridden when the service
  * object requires specific behavior.
  */
-class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
+// tslint:disable-next-line no-any
+class ServiceObject<T = any> extends EventEmitter {
   metadata: Metadata;
   baseUrl?: string;
   parent: ServiceObjectParent;
@@ -135,8 +143,6 @@ class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
   protected interceptors: Interceptor[];
   // tslint:disable-next-line:variable-name
   Promise?: PromiseConstructor;
-  // tslint:disable-next-line:no-any
-  [index: string]: any;
   requestModule: typeof r;
 
   /*
@@ -178,12 +184,16 @@ class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
                 !/^request/.test(methodName) &&
                 // clang-format on
                 // The ServiceObject didn't redefine the method.
-                this[methodName] === ServiceObject.prototype[methodName] &&
+                // tslint:disable-next-line no-any
+                (this as any)[methodName] ===
+                    // tslint:disable-next-line no-any
+                    (ServiceObject.prototype as any)[methodName] &&
                 // This method isn't wanted.
                 !config.methods![methodName]);
           })
           .forEach(methodName => {
-            this[methodName] = undefined;
+            // tslint:disable-next-line no-any
+            (this as any)[methodName] = undefined;
           });
     }
   }
@@ -197,18 +207,17 @@ class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  create(options?: CreateOptions): Promise<[ServiceObject, r.Response]>;
-  create(options: CreateOptions, callback: InstanceResponseCallback): void;
-  create(callback: InstanceResponseCallback): void;
+  create(options?: CreateOptions): Promise<CreateResponse<T>>;
+  create(options: CreateOptions, callback: CreateCallback<T>): void;
+  create(callback: CreateCallback<T>): void;
   create(
-      optionsOrCallback?: CreateOptions|InstanceResponseCallback,
-      callback?: InstanceResponseCallback):
-      void|Promise<[ServiceObject, r.Response]> {
+      optionsOrCallback?: CreateOptions|CreateCallback<T>,
+      callback?: CreateCallback<T>): void|Promise<CreateResponse<T>> {
     const self = this;
     const args = [this.id] as Array<{}>;
 
     if (typeof optionsOrCallback === 'function') {
-      callback = optionsOrCallback as InstanceResponseCallback;
+      callback = optionsOrCallback as CreateCallback<T>;
     }
 
     if (typeof optionsOrCallback === 'object') {
@@ -217,10 +226,10 @@ class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
 
     // Wrap the callback to return *this* instance of the object, not the
     // newly-created one.
-    function onCreate(err: Error, instance: ServiceObject) {
+    function onCreate(err: Error, instance: T) {
       const args = [].slice.call(arguments);
       if (!err) {
-        self.metadata = instance.metadata;
+        self.metadata = (instance as {} as ServiceObject<T>).metadata;
         args[1] = self;  // replace the created `instance` with this one.
       }
       callback!.apply(null, args);
@@ -228,6 +237,7 @@ class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
     args.push(onCreate);
     this.createMethod!.apply(null, args);
   }
+
 
   /**
    * Delete the object.
@@ -290,17 +300,17 @@ class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(config?: GetConfig&CreateOptions): Promise<GetResponse>;
-  get(callback: InstanceResponseCallback): void;
+  get(config?: GetConfig&CreateOptions): Promise<GetResponse<T>>;
+  get(callback: InstanceResponseCallback<T>): void;
   get(config: GetConfig&CreateOptions,
-      callback: InstanceResponseCallback): void;
-  get(arg0?: (GetConfig&CreateOptions)|InstanceResponseCallback,
-      arg1?: InstanceResponseCallback): void|Promise<GetResponse> {
+      callback: InstanceResponseCallback<T>): void;
+  get(arg0?: (GetConfig&CreateOptions)|InstanceResponseCallback<T>,
+      arg1?: InstanceResponseCallback<T>): void|Promise<GetResponse<T>> {
     const self = this;
 
-    let callback: InstanceResponseCallback = arg1 as InstanceResponseCallback;
+    let callback = arg1;
     if (typeof arg0 === 'function') {
-      callback = arg0 as InstanceResponseCallback;
+      callback = arg0;
     }
 
     let config: GetConfig&CreateOptions = {} as GetConfig & CreateOptions;
@@ -312,17 +322,16 @@ class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
     delete config.autoCreate;
 
     function onCreate(
-        err: ApiError|null, instance: ServiceObject, apiResponse: r.Response) {
+        err: ApiError|null, instance: T, apiResponse: r.Response) {
       if (err) {
         if (err.code === 409) {
           self.get(config, callback!);
           return;
         }
-        callback(err, null, apiResponse);
+        callback!(err, null, apiResponse);
         return;
       }
-
-      callback(null, instance, apiResponse);
+      callback!(null, instance, apiResponse);
     }
 
     this.getMetadata((e, metadata) => {
@@ -337,10 +346,10 @@ class ServiceObject<CreateOptions extends {} = {}> extends EventEmitter {
           self.create.apply(self, args);
           return;
         }
-        callback(err, null, metadata as r.Response);
+        callback!(err, null, metadata as r.Response);
         return;
       }
-      callback(null, self, metadata as r.Response);
+      callback!(null, self as {} as T, metadata as r.Response);
     });
   }
 

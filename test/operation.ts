@@ -80,12 +80,10 @@ describe('Operation', () => {
     });
 
     it('should call listenForEvents_', () => {
-      let called = false;
-      sandbox.stub(Operation.prototype, 'listenForEvents_').callsFake(() => {
-        called = true;
-      });
+      // tslint:disable-next-line no-any
+      const stub = sandbox.stub(Operation.prototype as any, 'listenForEvents_');
       const op = new Operation({} as ServiceObjectConfig);
-      assert.strictEqual(called, true);
+      assert.ok(stub.called);
     });
   });
 
@@ -245,8 +243,8 @@ describe('Operation', () => {
 
   describe('startPolling_', () => {
     beforeEach(() => {
-      sandbox.stub(Operation.prototype, 'listenForEvents_')
-          .callsFake(util.noop);
+      // tslint:disable-next-line no-any
+      sandbox.stub(Operation.prototype as any, 'listenForEvents_');
       operation.hasActiveListeners = true;
     });
 
