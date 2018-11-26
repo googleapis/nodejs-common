@@ -4,6 +4,20 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.27.0
+
+11-26-2018 12:26 PST
+
+**BREAKING CHANGE**: The `ServiceObject` class now has stricter TypeScript types for property names.  This will have no runtime impact, but may cause TypeScript compilation errors until the issues are addressed.
+
+### Fixes
+- fix: improve types for service object ([#310](https://github.com/googleapis/nodejs-common/pull/310))
+- refactor: drop through2, mv, and a few others ([#306](https://github.com/googleapis/nodejs-common/pull/306))
+
+### Internal / Testing Changes
+- chore: add a synth.metadata
+- fix: Pin @types/sinon to last compatible version ([#307](https://github.com/googleapis/nodejs-common/pull/307))
+
 ## v0.26.2
 
 This patch release also brings in a patch dependency update of @google-cloud/projectify which contains a fix for OOM issue.
