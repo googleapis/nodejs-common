@@ -27,7 +27,7 @@ import * as retryRequest from 'retry-request';
 import * as sinon from 'sinon';
 import * as stream from 'stream';
 
-import {Abortable, ApiError, DecorateRequestOptions, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, Util} from '../src/util';
+import {Abortable, ApiError, DecorateRequestOptions, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, ParsedHttpRespMessage, Util} from '../src/util';
 
 nock.disableNetConnect();
 
@@ -314,7 +314,7 @@ describe('common/util', () => {
       const error = new Error('Error.');
 
       sandbox.stub(util, 'parseHttpRespMessage').callsFake(() => {
-        return {err: error};
+        return {err: error} as ParsedHttpRespMessage;
       });
 
       util.handleResp(null, fakeResponse, {}, (err) => {
