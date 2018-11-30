@@ -23,6 +23,8 @@ import * as extend from 'extend';
 import {GoogleAuth} from 'google-auth-library';
 import * as pify from 'pify';
 import * as r from 'request';  // Only needed for type declarations.
+
+import {Interceptor} from './service-object';
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
@@ -48,7 +50,7 @@ export interface ServiceConfig {
 }
 
 export interface ServiceOptions {
-  interceptors_?: {};
+  interceptors_?: Interceptor[];
   projectId?: string;
   promise?: PromiseConstructor;
   credentials?: {};
@@ -59,8 +61,8 @@ export interface ServiceOptions {
 
 export class Service {
   baseUrl: string;
-  private globalInterceptors: {};
-  private interceptors: Array<{request(opts: r.Options): r.Options}>;
+  private globalInterceptors: Interceptor[];
+  private interceptors: Interceptor[];
   private packageJson: PackageJson;
   projectId: string;
   private projectIdRequired: boolean;
@@ -117,7 +119,7 @@ export class Service {
 
     if (isCloudFunctionEnv) {
       this.interceptors.push({
-        request(reqOpts: r.Options) {
+        request(reqOpts: DecorateRequestOptions) {
           reqOpts.forever = false;
           return reqOpts;
         },
@@ -189,11 +191,13 @@ export class Service {
                       .replace(/\/:/g, ':');
 
     // Interceptors should be called in the order they were assigned.
-    const combinedInterceptors = [].slice.call(this.globalInterceptors)
-                                     .concat(this.interceptors)
-                                     .concat(arrify(reqOpts.interceptors_));
+    const combinedInterceptors: Interceptor[] =
+        ([] as Interceptor[])
+            .slice.call(this.globalInterceptors)
+            .concat(this.interceptors)
+            .concat(arrify(reqOpts.interceptors_));
 
-    let interceptor;
+    let interceptor: Interceptor|undefined;
     // tslint:disable-next-line:no-conditional-assignment
     while ((interceptor = combinedInterceptors.shift()) &&
            interceptor.request) {

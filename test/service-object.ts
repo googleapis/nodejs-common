@@ -730,12 +730,14 @@ describe('ServiceObject', () => {
       });
 
       parent.parent.request = async (reqOpts: DecorateRequestOptions) => {
-        assert.deepStrictEqual(reqOpts.interceptors_![0].request({}), {
-          child: true,
-        });
-        assert.deepStrictEqual(reqOpts.interceptors_![1].request({}), {
-          parent: true,
-        });
+        assert.deepStrictEqual(
+            reqOpts.interceptors_![0].request({} as DecorateRequestOptions), {
+              child: true,
+            });
+        assert.deepStrictEqual(
+            reqOpts.interceptors_![1].request({} as DecorateRequestOptions), {
+              parent: true,
+            });
         return {} as r.Response;
       };
 
