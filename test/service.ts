@@ -19,6 +19,7 @@ import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
 import {Request, RequestResponse} from 'request';
 
+import {Interceptor} from '../src';
 import {Service, ServiceConfig, ServiceOptions} from '../src/service';
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
 
@@ -138,7 +139,7 @@ describe('Service', () => {
     });
 
     it('should preserve the original global interceptors', () => {
-      const globalInterceptors: Array<{}> = [];
+      const globalInterceptors: Interceptor[] = [];
       const options = extend({}, OPTIONS);
       options.interceptors_ = globalInterceptors;
       const service = new Service(fakeCfg, options);

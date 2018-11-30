@@ -39,8 +39,7 @@ export interface ServiceObjectParent {
 }
 
 export interface Interceptor {
-  // tslint:disable-next-line:no-any
-  [index: string]: any;
+  request(opts: r.Options): DecorateRequestOptions;
 }
 
 // tslint:disable-next-line:no-any
@@ -226,13 +225,14 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // Wrap the callback to return *this* instance of the object, not the
     // newly-created one.
-    function onCreate(err: Error, instance: T) {
-      const args = [].slice.call(arguments);
+    // tslint: disable-next-line no-any
+    function onCreate(...args: [Error, ServiceObject<T>]) {
+      const [err, instance] = args;
       if (!err) {
-        self.metadata = (instance as {} as ServiceObject<T>).metadata;
+        self.metadata = instance.metadata;
         args[1] = self;  // replace the created `instance` with this one.
       }
-      callback!.apply(null, args);
+      callback!(...args as {} as [Error, T]);
     }
     args.push(onCreate);
     this.createMethod!.apply(null, args);
@@ -343,7 +343,7 @@ class ServiceObject<T = any> extends EventEmitter {
             args.push(config);
           }
           args.push(onCreate);
-          self.create.apply(self, args);
+          self.create(...args);
           return;
         }
         callback!(err, null, metadata as r.Response);
