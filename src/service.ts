@@ -20,7 +20,7 @@
 
 import * as arrify from 'arrify';
 import * as extend from 'extend';
-import {GoogleAuth} from 'google-auth-library';
+import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as pify from 'pify';
 import * as r from 'request';  // Only needed for type declarations.
 
@@ -47,14 +47,16 @@ export interface ServiceConfig {
   projectIdRequired?: boolean;
   packageJson: PackageJson;
   requestModule: typeof r;
+
+  /**
+   * Reuse an existing GoogleAuth client instead of creating a new one.
+   */
+  authClient?: GoogleAuth;
 }
 
-export interface ServiceOptions {
+export interface ServiceOptions extends GoogleAuthOptions {
   interceptors_?: Interceptor[];
-  projectId?: string;
   promise?: PromiseConstructor;
-  credentials?: {};
-  keyFilename?: string;
   email?: string;
   token?: string;
 }

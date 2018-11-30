@@ -100,6 +100,12 @@ export interface MakeAuthenticatedRequestFactoryConfig extends
   stream?: duplexify.Duplexify;
 
   request: typeof r;
+
+  /**
+   * A pre-instantiated GoogleAuth client that should be used.
+   * A new will be created if this is not set.
+   */
+  authClient?: GoogleAuth;
 }
 
 export interface MakeAuthenticatedRequestOptions {
@@ -472,12 +478,11 @@ export class Util {
   makeAuthenticatedRequestFactory(config:
                                       MakeAuthenticatedRequestFactoryConfig) {
     const googleAutoAuthConfig = extend({}, config);
-
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
       delete googleAutoAuthConfig.projectId;
     }
-
-    const authClient = new GoogleAuth(googleAutoAuthConfig);
+    const authClient =
+        googleAutoAuthConfig.authClient || new GoogleAuth(googleAutoAuthConfig);
 
     /**
      * The returned function that will make an authenticated request.
