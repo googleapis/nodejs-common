@@ -23,16 +23,15 @@ import {Operation} from '../src/operation';
 import {Metadata, ServiceObject, ServiceObjectConfig} from '../src/service-object';
 import {util} from '../src/util';
 
+// tslint:disable-next-line no-any
+const asAny = (o: {}) => o as any;
+
 describe('Operation', () => {
   const FAKE_SERVICE = {} as Service;
   const OPERATION_ID = '/a/b/c/d';
-
-  // tslint:disable-next-line:no-any
-  let operation: any;
-  let sandbox: sinon.SinonSandbox;
-
+  const sandbox = sinon.createSandbox();
+  let operation: Operation;
   beforeEach(() => {
-    sandbox = sinon.createSandbox();
     operation = new Operation({
       parent: FAKE_SERVICE,
       id: OPERATION_ID,
@@ -57,7 +56,7 @@ describe('Operation', () => {
       assert.strictEqual(operation.baseUrl, '');
       assert.strictEqual(operation.parent, FAKE_SERVICE);
       assert.strictEqual(operation.id, OPERATION_ID);
-      assert.deepStrictEqual(operation.methods, {
+      assert.deepStrictEqual(asAny(operation).methods, {
         exists: true,
         get: true,
         getMetadata: {
@@ -89,7 +88,7 @@ describe('Operation', () => {
 
   describe('promise', () => {
     beforeEach(() => {
-      operation.startPolling_ = util.noop;
+      asAny(operation).startPolling_ = () => Promise.resolve();
     });
 
     it('should return an instance of the localized Promise', () => {
@@ -101,11 +100,9 @@ describe('Operation', () => {
 
     it('should reject the promise if an error occurs', () => {
       const error = new Error('err');
-
       setImmediate(() => {
         operation.emit('error', error);
       });
-
       return operation.promise().then(
           () => {
             throw new Error('Promise should have been rejected.');
@@ -130,36 +127,27 @@ describe('Operation', () => {
 
   describe('listenForEvents_', () => {
     beforeEach(() => {
-      operation.startPolling_ = util.noop;
+      asAny(operation).startPolling_ = util.noop;
     });
 
     it('should start polling when complete listener is bound', (done) => {
-      operation.startPolling_ = () => {
-        done();
-      };
+      asAny(operation).startPolling_ = () => done();
       operation.on('complete', util.noop);
     });
 
     it('should track the number of listeners', () => {
       assert.strictEqual(operation.completeListeners, 0);
-
       operation.on('complete', util.noop);
       assert.strictEqual(operation.completeListeners, 1);
-
       operation.removeListener('complete', util.noop);
       assert.strictEqual(operation.completeListeners, 0);
     });
 
     it('should only run a single pulling loop', () => {
       let startPollingCallCount = 0;
-
-      operation.startPolling_ = () => {
-        startPollingCallCount++;
-      };
-
+      asAny(operation).startPolling_ = () => startPollingCallCount++;
       operation.on('complete', util.noop);
       operation.on('complete', util.noop);
-
       assert.strictEqual(startPollingCallCount, 1);
     });
 
@@ -167,10 +155,8 @@ describe('Operation', () => {
       operation.on('complete', util.noop);
       operation.on('complete', util.noop);
       assert.strictEqual(operation.hasActiveListeners, true);
-
       operation.removeListener('complete', util.noop);
       assert.strictEqual(operation.hasActiveListeners, true);
-
       operation.removeListener('complete', util.noop);
       assert.strictEqual(operation.hasActiveListeners, false);
     });
@@ -178,18 +164,15 @@ describe('Operation', () => {
 
   describe('poll_', () => {
     it('should call getMetdata', (done) => {
-      operation.getMetadata = () => {
-        done();
-      };
-
-      operation.poll_(assert.ifError);
+      asAny(operation).getMetadata = () => done();
+      asAny(operation).poll_(assert.ifError);
     });
 
     describe('could not get metadata', () => {
       it('should callback with an error', done => {
         const error = new Error('Error.');
         sandbox.stub(operation, 'getMetadata').callsArgWith(0, error);
-        operation.poll_((err: Error) => {
+        asAny(operation).poll_((err: Error) => {
           assert.strictEqual(err, error);
           done();
         });
@@ -201,7 +184,7 @@ describe('Operation', () => {
         } as Metadata;
         sandbox.stub(operation, 'getMetadata')
             .callsArgWith(0, null, apiResponse);
-        operation.poll_((err: Error) => {
+        asAny(operation).poll_((err: Error) => {
           assert.strictEqual(err, apiResponse.error);
           done();
         });
@@ -217,7 +200,7 @@ describe('Operation', () => {
       });
 
       it('should callback with no arguments', done => {
-        operation.poll_((err: Error, resp: {}) => {
+        asAny(operation).poll_((err: Error, resp: {}) => {
           assert.strictEqual(resp, undefined);
           done();
         });
@@ -226,14 +209,13 @@ describe('Operation', () => {
 
     describe('operation complete', () => {
       const apiResponse = {done: true};
-
       beforeEach(() => {
         sandbox.stub(operation, 'getMetadata')
             .callsArgWith(0, null, apiResponse);
       });
 
       it('should emit complete with metadata', done => {
-        operation.poll_((err: Error, resp: {}) => {
+        asAny(operation).poll_((err: Error, resp: {}) => {
           assert.strictEqual(resp, apiResponse);
           done();
         });
@@ -243,8 +225,7 @@ describe('Operation', () => {
 
   describe('startPolling_', () => {
     beforeEach(() => {
-      // tslint:disable-next-line no-any
-      sandbox.stub(Operation.prototype as any, 'listenForEvents_');
+      sandbox.stub(asAny(Operation).prototype, 'listenForEvents_');
       operation.hasActiveListeners = true;
     });
 
@@ -252,19 +233,18 @@ describe('Operation', () => {
       operation.hasActiveListeners = false;
       sandbox.stub(operation, 'getMetadata')
           .callsFake(done);  // if called, test will fail.
-      operation.startPolling_();
+      asAny(operation).startPolling_();
       done();
     });
 
     it('should call getMetadata if listeners are registered', (done) => {
       operation.hasActiveListeners = true;
       sandbox.stub(operation, 'getMetadata').callsFake(() => done());
-      operation.startPolling_();
+      asAny(operation).startPolling_();
     });
 
     describe('API error', () => {
       const error = new Error('Error.');
-
       beforeEach(() => {
         sandbox.stub(operation, 'getMetadata').callsArgWith(0, error);
       });
@@ -274,7 +254,7 @@ describe('Operation', () => {
           assert.strictEqual(err, error);
           done();
         });
-        operation.startPolling_();
+        asAny(operation).startPolling_();
       });
     });
 
@@ -287,28 +267,28 @@ describe('Operation', () => {
       });
 
       it('should call startPolling_ after 500 ms', (done) => {
-        const startPolling_ = operation.startPolling_;
+        const startPolling_ = asAny(operation).startPolling_;
         let startPollingCalled = false;
 
         sandbox.stub(global, 'setTimeout').callsFake((fn, timeoutMs) => {
           fn();  // should call startPolling_
           assert.strictEqual(timeoutMs, 500);
+          return asAny({});
         });
 
-        operation.startPolling_ = function() {
+        asAny(operation).startPolling_ = function() {
           if (!startPollingCalled) {
             // Call #1.
             startPollingCalled = true;
             startPolling_.apply(this, arguments);
             return;
           }
-
           // This is from the setTimeout call.
           assert.strictEqual(this, operation);
           done();
         };
 
-        operation.startPolling_();
+        asAny(operation).startPolling_();
       });
     });
 
@@ -324,7 +304,7 @@ describe('Operation', () => {
         operation.on('complete', (metadata: {}) => {
           assert.strictEqual(metadata, apiResponse);
         });
-        await operation.startPolling_();
+        await asAny(operation).startPolling_();
       });
     });
   });

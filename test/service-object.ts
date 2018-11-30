@@ -428,14 +428,17 @@ describe('ServiceObject', () => {
           const error = new Error('Error.');
           const apiResponse = {} as r.Response;
 
-          sandbox.stub(serviceObject, 'create').callsFake((optsOrCb, cb) => {
-            const callback = typeof optsOrCb === 'function' ? optsOrCb : cb;
-            sandbox.stub(serviceObject, 'get').callsFake((cfg, callback) => {
-              assert.deepStrictEqual(cfg, {});
-              callback!(null);  // done()
-            });
-            callback!(error, null, apiResponse);
-          });
+          // tslint:disable-next-line no-any
+          (sandbox.stub(serviceObject, 'create') as any)
+              .callsFake((optsOrCb: {}, cb: Function) => {
+                const callback = typeof optsOrCb === 'function' ? optsOrCb : cb;
+                sandbox.stub(serviceObject, 'get')
+                    .callsFake((cfg, callback) => {
+                      assert.deepStrictEqual(cfg, {});
+                      callback!(null);  // done()
+                    });
+                callback!(error, null, apiResponse);
+              });
 
           serviceObject.get(AUTO_CREATE_CONFIG, (err, instance, resp) => {
             assert.strictEqual(err, error);
@@ -792,7 +795,7 @@ describe('ServiceObject', () => {
       const fakeOptions = {} as DecorateRequestOptions;
       sandbox.stub(serviceObject, 'request_').callsFake(reqOpts => {
         assert.strictEqual(reqOpts, fakeOptions);
-        return Promise.resolve({});
+        return Promise.resolve({} as r.Response);
       });
       await serviceObject.request(fakeOptions);
     });
@@ -831,7 +834,7 @@ describe('ServiceObject', () => {
       const serviceObject = new ServiceObject(CONFIG);
       sandbox.stub(serviceObject, 'request_').callsFake(async (reqOpts) => {
         assert.deepStrictEqual(reqOpts, {shouldReturnStream: true});
-        return {};
+        return {} as r.Response;
       });
       await serviceObject.requestStream(fakeOptions);
     });
