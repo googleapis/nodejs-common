@@ -3,7 +3,7 @@
 # [Google Cloud Common Module: Node.js Client](https://github.com/googlecloudplatform/google-cloud-node)
 
 [![release level](https://img.shields.io/badge/release%20level-alpha-orange.svg?style&#x3D;flat)](https://cloud.google.com/terms/launch-stages)
-[![CircleCI](https://img.shields.io/circleci/project/github/googleapis/nodejs-common.svg?style=flat)](https://circleci.com/gh/googleapis/nodejs-common)
+[![npm version](https://img.shields.io/npm/v/@google-cloud/common.svg)](https://www.npmjs.org/package/@google-cloud/common)
 [![codecov](https://img.shields.io/codecov/c/github/googleapis/nodejs-common/master.svg?style=flat)](https://codecov.io/gh/googleapis/nodejs-common)
 
 > Node.js Common package
@@ -76,3 +76,4 @@ Apache Version 2.0
 See [LICENSE](https://github.com/googlecloudplatform/google-cloud-node/blob/master/LICENSE)
 
 [shell_img]: http://gstatic.com/cloudssh/images/open-btn.png
+
