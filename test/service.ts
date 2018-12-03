@@ -20,7 +20,7 @@ import * as proxyquire from 'proxyquire';
 import {Request, RequestResponse} from 'request';
 
 import {Interceptor} from '../src';
-import {Service, ServiceConfig, ServiceOptions} from '../src/service';
+import {ServiceConfig, ServiceOptions} from '../src/service';
 import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
 
 proxyquire.noPreserveCache();

@@ -54,7 +54,7 @@ function fakeRequest() {
   return (requestOverride || request).apply(null, arguments);
 }
 
-fakeRequest.defaults = (defaultConfiguration: {}) => {
+fakeRequest.defaults = () => {
   // Ignore the default values, so we don't have to test for them in every API
   // call.
   return fakeRequest;
@@ -1503,6 +1503,24 @@ describe('common/util', () => {
       });
 
       assert.strictEqual(userAgent, 'gcloud-node-storage/0.1.0');
+    });
+  });
+
+  describe('maybeOptionsOrCallback', () => {
+    it('should allow passing just a callback', () => {
+      const optionsOrCallback = () => {};
+      const [opts, cb] = util.maybeOptionsOrCallback(optionsOrCallback);
+      assert.strictEqual(optionsOrCallback, cb);
+      assert.deepStrictEqual(opts, {});
+    });
+
+    it('should allow passing both opts and callback', () => {
+      const optionsOrCallback = {};
+      const callback = () => {};
+      const [opts, cb] =
+          util.maybeOptionsOrCallback(optionsOrCallback, callback);
+      assert.strictEqual(opts, optionsOrCallback);
+      assert.strictEqual(cb, callback);
     });
   });
 });
