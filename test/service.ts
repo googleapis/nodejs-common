@@ -16,6 +16,7 @@
 
 import * as assert from 'assert';
 import * as extend from 'extend';
+import {GoogleAuth} from 'google-auth-library';
 import * as proxyquire from 'proxyquire';
 import {Request, RequestResponse} from 'request';
 
@@ -111,6 +112,13 @@ describe('Service', () => {
           };
 
       const service = new Service(CONFIG, OPTIONS);
+      assert.strictEqual(service.authClient, authClient);
+    });
+
+    it('should allow passing a custom GoogleAuth client', () => {
+      const authClient = {getCredentials: () => {}};
+      const cfg = Object.assign({}, {authClient}, CONFIG);
+      const service = new Service(cfg);
       assert.strictEqual(service.authClient, authClient);
     });
 
