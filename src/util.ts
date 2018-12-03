@@ -740,6 +740,20 @@ export class Util {
 
     return hyphenatedPackageName + '/' + packageJson.version;
   }
+
+  /**
+   * Given two parameters, figure out if this is either:
+   *  - Just a callback function
+   *  - An options object, and then a callback function
+   * @param optionsOrCallback An options object or callback.
+   * @param cb A potentially undefined callback.
+   */
+  maybeOptionsOrCallback<T = {}, C = (err?: Error) => void>(
+      optionsOrCallback?: T|C, cb?: C): [T, C] {
+    return typeof optionsOrCallback === 'function' ?
+        [{} as T, optionsOrCallback as C] :
+        [optionsOrCallback as T, cb as C];
+  }
 }
 
 const util = new Util();
