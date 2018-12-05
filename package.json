@@ -18,7 +18,6 @@
     "generate-scaffolding": "repo-tools generate all",
     "docs": "echo no docs 👻",
     "cover": "nyc --reporter=lcov mocha build/test && nyc report",
-    "test-no-cover": "mocha build/test",
     "test": "npm run test-only",
     "test-only": "npm run cover",
     "posttest": "npm run lint && npm run license-check",
