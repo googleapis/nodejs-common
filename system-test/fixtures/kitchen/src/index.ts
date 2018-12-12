@@ -1,5 +1,5 @@
 import {GoogleAuthOptions, Operation,Service, ServiceConfig, ServiceOptions,
-  DeleteCallback, ExistsCallback, GetConfig, GetMetadataCallback,
+  DeleteCallback, ExistsCallback, GetConfig, MetadataCallback,
   InstanceResponseCallback, Interceptor, Metadata, Methods, ServiceObject,
   ServiceObjectConfig, StreamRequestOptions, Abortable, AbortableDuplex,
   ApiError, util} from '@google-cloud/common';
