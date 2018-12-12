@@ -41,7 +41,6 @@ const requestDefaults = {
 
 // tslint:disable-next-line:no-any
 export type ResponseBody = any;
-export type RequestResponse = [ResponseBody, r.Response];
 
 export interface ParsedHttpRespMessage {
   resp: r.Response;

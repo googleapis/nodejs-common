@@ -25,9 +25,10 @@ import * as extend from 'extend';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {StreamRequestOptions} from '.';
-import {ApiError, BodyResponseCallback, DecorateRequestOptions, RequestResponse, util} from './util';
+import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
 
 export type CreateOptions = {};
+export type RequestResponse = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
   // tslint:disable-next-line:variable-name
@@ -44,8 +45,7 @@ export interface Interceptor {
 // tslint:disable-next-line:no-any
 export type Metadata = any;
 export type MetadataResponse = [Metadata];
-export type MetadataCallback = (err: Error|null, metadata?: Metadata|null) =>
-    void;
+export type MetadataCallback = (err: Error|null, metadata?: Metadata) => void;
 
 export interface ExistsCallback {
   (err: Error|null, exists?: boolean): void;

@@ -499,21 +499,18 @@ describe('Service', () => {
       });
     });
     describe('error handling', () => {
-      it.skip(
-          'should re-throw any makeAuthenticatedRequest callback error',
-          (done) => {
-            const err = new Error('🥓');
-            const res = {body: undefined};
-            service.makeAuthenticatedRequest =
-                (_: void, callback: Function) => {
-                  callback(err, res.body, res);
-                };
-            service.request_({uri: ''}, (e: Error) => {
-              assert.strictEqual(e, err);
-              assert.strictEqual(res.body, err);
-              done();
-            });
-          });
+      it('should re-throw any makeAuthenticatedRequest callback error',
+         done => {
+           const err = new Error('🥓');
+           const res = {body: undefined};
+           service.makeAuthenticatedRequest = (_: void, callback: Function) => {
+             callback(err, res.body, res);
+           };
+           service.request_({uri: ''}, (e: Error) => {
+             assert.strictEqual(e, err);
+             done();
+           });
+         });
     });
   });
 
