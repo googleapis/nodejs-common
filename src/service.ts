@@ -21,7 +21,6 @@
 import * as arrify from 'arrify';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import * as pify from 'pify';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {Interceptor} from './service-object';
@@ -161,11 +160,12 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: StreamRequestOptions): r.Request;
-  request_(reqOpts: DecorateRequestOptions): Promise<r.Response>;
-  request_(reqOpts: DecorateRequestOptions|
-           StreamRequestOptions): Promise<r.Response>|r.Request {
-    // TODO: fix the tests so this can be private
+  private request_(reqOpts: StreamRequestOptions): r.Request;
+  private request_(
+      reqOpts: DecorateRequestOptions, callback: BodyResponseCallback): void;
+  private request_(
+      reqOpts: DecorateRequestOptions|StreamRequestOptions,
+      callback?: BodyResponseCallback): void|r.Request {
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
     const uriComponents = [this.baseUrl];
@@ -216,30 +216,9 @@ export class Service {
     });
 
     if (reqOpts.shouldReturnStream) {
-      // tslint:disable-next-line:no-any
-      return this.makeAuthenticatedRequest(reqOpts) as any as r.Request;
+      return this.makeAuthenticatedRequest(reqOpts) as {} as r.Request;
     } else {
-      return pify(this.makeAuthenticatedRequest, {multiArgs: true})(reqOpts)
-          .then(
-              args => {
-                /**
-                 * Note: this returns an array of results in the form of a
-                 * BodyResponseCallback, which means: [body, response].  Return
-                 * the response object in the promise result.
-                 */
-                return args.length > 1 ? args[1] : null;
-              },
-              e => {
-                if (Array.isArray(e) && e.length > 0) {
-                  const [err, body, res] = e;
-                  if (res) {
-                    res.body = err;
-                    err.response = res;
-                  }
-                  throw err;
-                }
-                throw e;
-              });
+      this.makeAuthenticatedRequest(reqOpts, callback);
     }
   }
 
@@ -252,18 +231,9 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: DecorateRequestOptions): Promise<r.Response>;
   request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
-      void;
-  request(reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback):
-      void|Promise<r.Response> {
-    if (!callback) {
-      return this.request_(reqOpts) as Promise<r.Response>;
-    }
-    this.request_(reqOpts).then(
-        res => callback(null, res.body, res as r.Response),
-        err => callback(
-            err, err.response ? err.response.body : undefined, err.response));
+      void {
+    this.request_(reqOpts, callback);
   }
 
   /**

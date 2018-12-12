@@ -20,7 +20,7 @@
 
 import * as pify from 'pify';
 
-import {GetMetadataCallback, ServiceObject, ServiceObjectConfig} from './service-object';
+import {MetadataCallback, ServiceObject, ServiceObjectConfig} from './service-object';
 
 // tslint:disable-next-line no-any
 export class Operation<T = any> extends ServiceObject<T> {
@@ -121,7 +121,7 @@ export class Operation<T = any> extends ServiceObject<T> {
    *
    * @private
    */
-  protected poll_(callback: GetMetadataCallback): void {
+  protected poll_(callback: MetadataCallback): void {
     this.getMetadata((err, body) => {
       if (err || body!.error) {
         callback(err || body!.error as Error);
