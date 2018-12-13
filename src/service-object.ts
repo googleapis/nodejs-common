@@ -44,8 +44,9 @@ export interface Interceptor {
 
 // tslint:disable-next-line:no-any
 export type Metadata = any;
-export type MetadataResponse = [Metadata];
-export type MetadataCallback = (err: Error|null, metadata?: Metadata) => void;
+export type MetadataResponse = [Metadata, r.Response];
+export type MetadataCallback =
+    (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
 
 export interface ExistsCallback {
   (err: Error|null, exists?: boolean): void;
@@ -369,9 +370,9 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err, body) => {
+    this.request(reqOpts, (err, body, res) => {
       this.metadata = body;
-      callback!(err, this.metadata);
+      callback!(err, this.metadata, res);
     });
   }
 
@@ -402,9 +403,9 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err, body) => {
+    this.request(reqOpts, (err, body, res) => {
       this.metadata = body;
-      callback!(err, this.metadata);
+      callback!(err, this.metadata, res);
     });
   }
 
