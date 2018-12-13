@@ -28,12 +28,12 @@ import {StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
 
 export type CreateOptions = {};
+export type RequestResponse = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
   // tslint:disable-next-line:variable-name
   Promise?: PromiseConstructor;
   requestStream(reqOpts: DecorateRequestOptions): r.Request;
-  request(reqOpts: DecorateRequestOptions): Promise<r.Response>;
   request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
       void;
 }
@@ -44,10 +44,9 @@ export interface Interceptor {
 
 // tslint:disable-next-line:no-any
 export type Metadata = any;
-
-export type GetMetadataCallback =
-    (err: Error|null, metadata?: Metadata|null, apiResponse?: r.Response) =>
-        void;
+export type MetadataResponse = [Metadata, r.Response];
+export type MetadataCallback =
+    (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
 
 export interface ExistsCallback {
   (err: Error|null, exists?: boolean): void;
@@ -117,7 +116,7 @@ export interface ResponseCallback {
   (err?: Error|null, apiResponse?: r.Response): void;
 }
 
-export type SetMetadataResponse = [r.Response];
+export type SetMetadataResponse = [Metadata];
 export type GetResponse<T> = [T, r.Response];
 
 /**
@@ -262,7 +261,7 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts).then(res => callback!(null, res), callback);
+    this.request(reqOpts, callback);
   }
 
   /**
@@ -361,24 +360,20 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.metadata - The metadata for this object.
    * @param {object} callback.apiResponse - The full API response.
    */
-  getMetadata(): Promise<Metadata>;
-  getMetadata(callback: GetMetadataCallback): void;
-  getMetadata(callback?: GetMetadataCallback): Promise<Metadata>|void {
+  getMetadata(): Promise<MetadataResponse>;
+  getMetadata(callback: MetadataCallback): void;
+  getMetadata(callback?: MetadataCallback): Promise<MetadataResponse>|void {
     const methodConfig = (typeof this.methods.getMetadata === 'object' &&
                           this.methods.getMetadata) ||
         {};
-    const reqOpts = extend(
-        {
-          uri: '',
-        },
-        methodConfig.reqOpts);
+    const reqOpts = extend({uri: ''}, methodConfig.reqOpts);
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts).then(resp => {
-      this.metadata = resp.body;
-      callback!(null, this.metadata, resp);
-    }, callback);
+    this.request(reqOpts, (err, body, res) => {
+      this.metadata = body;
+      callback!(err, this.metadata, res);
+    });
   }
 
   /**
@@ -390,10 +385,9 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
-  setMetadata(metadata: Metadata, callback: ResponseCallback): void;
-  setMetadata(metadata: Metadata, callback?: ResponseCallback):
+  setMetadata(metadata: Metadata, callback: MetadataCallback): void;
+  setMetadata(metadata: Metadata, callback?: MetadataCallback):
       Promise<SetMetadataResponse>|void {
-    const self = this;
     callback = callback || util.noop;
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
                           this.methods.setMetadata) ||
@@ -409,10 +403,10 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts).then((resp: r.Response) => {
-      self.metadata = resp;
-      callback!(null, resp);
-    }, callback);
+    this.request(reqOpts, (err, body, res) => {
+      this.metadata = body;
+      callback!(err, this.metadata, res);
+    });
   }
 
   /**
@@ -424,14 +418,15 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request_(reqOpts: StreamRequestOptions): r.Request;
-  request_(reqOpts: DecorateRequestOptions): Promise<r.Response>;
-  request_(reqOpts: DecorateRequestOptions|
-           StreamRequestOptions): Promise<r.Response>|r.Request {
+  private request_(reqOpts: StreamRequestOptions): r.Request;
+  private request_(
+      reqOpts: DecorateRequestOptions, callback: BodyResponseCallback): void;
+  private request_(
+      reqOpts: DecorateRequestOptions|StreamRequestOptions,
+      callback?: BodyResponseCallback): void|r.Request {
     reqOpts = extend(true, {}, reqOpts);
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
-
     const uriComponents = [this.baseUrl, this.id || '', reqOpts.uri];
 
     if (isAbsoluteUrl) {
@@ -455,7 +450,7 @@ class ServiceObject<T = any> extends EventEmitter {
       return this.parent.requestStream(reqOpts);
     }
 
-    return this.parent.request(reqOpts);
+    this.parent.request(reqOpts, callback!);
   }
 
   /**
@@ -467,18 +462,12 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: DecorateRequestOptions): Promise<r.Response>;
+  request(reqOpts: DecorateRequestOptions): Promise<RequestResponse>;
   request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
       void;
   request(reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback):
-      void|Promise<r.Response> {
-    if (!callback) {
-      return this.request_(reqOpts) as Promise<r.Response>;
-    }
-    this.request_(reqOpts).then(
-        res => callback(null, res.body, res as r.Response),
-        err => callback(
-            err, err.response ? err.response.body : null, err.response));
+      void|Promise<RequestResponse> {
+    this.request_(reqOpts, callback!);
   }
 
   /**
@@ -495,7 +484,6 @@ class ServiceObject<T = any> extends EventEmitter {
   }
 }
 
-promisifyAll(
-    ServiceObject, {exclude: ['requestStream', 'request', 'request_']});
+promisifyAll(ServiceObject);
 
 export {ServiceObject};

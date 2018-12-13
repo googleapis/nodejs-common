@@ -29,7 +29,7 @@ export {Service, ServiceConfig, ServiceOptions, StreamRequestOptions} from './se
  * @type {module:common/serviceObject}
  * @private
  */
-export {DeleteCallback, ExistsCallback, GetConfig, GetMetadataCallback, InstanceResponseCallback, Interceptor, Metadata, Methods, ResponseCallback, ServiceObject, ServiceObjectConfig, ServiceObjectParent, SetMetadataResponse} from './service-object';
+export {DeleteCallback, ExistsCallback, GetConfig, InstanceResponseCallback, Interceptor, Metadata, MetadataCallback, MetadataResponse, Methods, ResponseCallback, ServiceObject, ServiceObjectConfig, ServiceObjectParent, SetMetadataResponse} from './service-object';
 /**
  * @type {module:common/util}
  * @private

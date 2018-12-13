@@ -263,9 +263,8 @@ describe('Service', () => {
       };
     });
 
-    it('should compose the correct request', async () => {
+    it('should compose the correct request', done => {
       const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
-
       service.makeAuthenticatedRequest =
           (reqOpts_: DecorateRequestOptions,
            callback: BodyResponseCallback) => {
@@ -274,8 +273,7 @@ describe('Service', () => {
             assert.strictEqual(reqOpts.interceptors_, undefined);
             callback(null);  // done()
           };
-
-      await service.request_(reqOpts);
+      service.request_(reqOpts, () => done());
     });
 
     it('should support absolute uris', (done) => {
@@ -310,12 +308,10 @@ describe('Service', () => {
       };
 
       const expectedUri = service.baseUrl + reqOpts.uri;
-
       service.makeAuthenticatedRequest = (reqOpts_: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts_.uri, expectedUri);
         done();
       };
-
       service.request_(reqOpts, assert.ifError);
     });
 
@@ -504,24 +500,16 @@ describe('Service', () => {
     });
     describe('error handling', () => {
       it('should re-throw any makeAuthenticatedRequest callback error',
-         async () => {
-           type Response = {body?: {}};
-           type Callback = (err: Error, body: void, res: Response) => void;
-           const err =
-               new Error('An error returned by makeAuthenticatedRequest');
-           const body = undefined;
-           const res: Response = {};
-           service.makeAuthenticatedRequest =
-               (reqOpts: void, callback: Callback) => {
-                 callback(err, body, res);
-               };
-           try {
-             await service.request_({uri: ''});
-             throw new Error('The previous line ^^ should have thrown');
-           } catch (e) {
+         done => {
+           const err = new Error('🥓');
+           const res = {body: undefined};
+           service.makeAuthenticatedRequest = (_: void, callback: Function) => {
+             callback(err, res.body, res);
+           };
+           service.request_({uri: ''}, (e: Error) => {
              assert.strictEqual(e, err);
-             assert.strictEqual(res.body, err);
-           }
+             done();
+           });
          });
     });
   });
@@ -548,12 +536,12 @@ describe('Service', () => {
 
     it('should accept a callback', (done) => {
       const fakeOpts = {};
-      const response = {body: {abc: '123'}, statusCode: 200} as RequestResponse;
-
-      Service.prototype.request_ = async (reqOpts: DecorateRequestOptions) => {
-        assert.strictEqual(reqOpts, fakeOpts);
-        return Promise.resolve(response);
-      };
+      const response = {body: {abc: '123'}, statusCode: 200};
+      Service.prototype.request_ =
+          (reqOpts: DecorateRequestOptions, callback: Function) => {
+            assert.strictEqual(reqOpts, fakeOpts);
+            callback(null, response.body, response);
+          };
 
       service.request(
           fakeOpts, (err: Error, body: {}, res: RequestResponse) => {
