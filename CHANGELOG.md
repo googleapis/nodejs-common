@@ -4,6 +4,37 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.28.0
+
+12-13-2018 14:34 PST
+
+**This release has breaking changes**.  The signature of the protected `request` method on `ServiceObject` has been changed.  The method now resolves with an array of `[Body, Response]`, making it consistent with all other promisified methods.  This change was made to fix several breaking changes that occurred in the `0.18.0` release.
+
+### New Features
+- feat: allow passing GoogleAuth client to Service ([#314](https://github.com/googleapis/nodejs-common/pull/314))
+- feat: add maybeOptionsOrCallback util method ([#315](https://github.com/googleapis/nodejs-common/pull/315))
+
+### Bug Fixes
+- fix: revert async behavior of request ([#331](https://github.com/googleapis/nodejs-common/pull/331))
+
+### Documentation
+- docs: update readme badges ([#316](https://github.com/googleapis/nodejs-common/pull/316))
+
+### Internal / Testing Changes
+- chore(deps): update dependency @types/sinon to v7 ([#332](https://github.com/googleapis/nodejs-common/pull/332))
+- chore(build): inject yoshi automation key ([#330](https://github.com/googleapis/nodejs-common/pull/330))
+- chore: update nyc and eslint configs ([#329](https://github.com/googleapis/nodejs-common/pull/329))
+- chore: fix publish.sh permission +x ([#327](https://github.com/googleapis/nodejs-common/pull/327))
+- fix(build): fix Kokoro release script ([#326](https://github.com/googleapis/nodejs-common/pull/326))
+- build: add Kokoro configs for autorelease ([#325](https://github.com/googleapis/nodejs-common/pull/325))
+- chore: always nyc report before calling codecov ([#322](https://github.com/googleapis/nodejs-common/pull/322))
+- chore: nyc ignore build/test by default ([#321](https://github.com/googleapis/nodejs-common/pull/321))
+- chore(build): update the prettier config ([#319](https://github.com/googleapis/nodejs-common/pull/319))
+- chore: update license file ([#318](https://github.com/googleapis/nodejs-common/pull/318))
+- fix(build): fix system key decryption ([#313](https://github.com/googleapis/nodejs-common/pull/313))
+- chore(deps): update dependency @types/sinon to v5.0.7 ([#308](https://github.com/googleapis/nodejs-common/pull/308))
+- chore(deps): update dependency typescript to ~3.2.0 ([#312](https://github.com/googleapis/nodejs-common/pull/312))
+
 ## v0.27.0
 
 11-26-2018 12:26 PST
