@@ -413,13 +413,13 @@ export class Util {
 
         const request = options.requestModule.defaults(requestDefaults);
         request(authenticatedReqOpts!, (err, resp, body) => {
-          util.handleResp(err, resp, body, (err, data) => {
+          util.handleResp(err, resp, body, (err, parsedResp, body) => {
             if (err) {
               dup.destroy(err);
               return;
             }
             dup.emit('response', resp);
-            onComplete!(data);
+            onComplete!(body);
           });
         });
       },

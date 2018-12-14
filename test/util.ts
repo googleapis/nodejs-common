@@ -525,23 +525,15 @@ describe('common/util', () => {
 
     it('should emit the response', (done) => {
       const dup = duplexify();
-      // tslint:disable-next-line:no-any
-      const fakeStream: any = new stream.Writable();
-
-      fakeStream.write = () => {};
-
       sandbox.stub(util, 'handleResp').callsArg(3);
-      requestOverride =
-          (reqOpts: DecorateRequestOptions,
-           callback: (err: Error|null, res: request.Response) => void) => {
-            callback(null, fakeResponse);
-          };
-
+      requestOverride = (_: {}, callback: request.RequestCallback) => {
+        callback(null, fakeResponse, fakeResponse.body);
+      };
       requestOverride.defaults = () => requestOverride;
 
       const options = {
         // tslint:disable-next-line:no-any
-        makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
+        makeAuthenticatedRequest(_: {}, opts: any) {
           opts.onAuthenticated();
         },
         requestModule: requestOverride,
@@ -557,15 +549,12 @@ describe('common/util', () => {
 
     it('should pass back the response data to the callback', (done) => {
       const dup = duplexify();
-      // tslint:disable-next-line:no-any
-      const fakeStream: any = new stream.Writable();
-      const fakeResponse = {};
+      const fakeStream = new stream.Writable({write: () => {}});
 
-      fakeStream.write = () => {};
+      sandbox.stub(util, 'handleResp')
+          .callsArgWith(3, null, fakeResponse, fakeResponse.body);
 
-      sandbox.stub(util, 'handleResp').callsArgWith(3, null, fakeResponse);
-
-      requestOverride = (reqOpts: {}, callback: () => void) => {
+      requestOverride = (_: {}, callback: () => void) => {
         callback();
       };
 
@@ -580,12 +569,12 @@ describe('common/util', () => {
       };
 
       util.makeWritableStream(dup, options, (data: {}) => {
-        assert.strictEqual(data, fakeResponse);
+        assert.strictEqual(data, fakeResponse.body);
         done();
       });
 
       setImmediate(() => {
-        fakeStream.emit('complete', {});
+        fakeStream.emit('complete', fakeResponse.body);
       });
     });
   });
