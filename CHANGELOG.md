@@ -4,6 +4,12 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.29.0
+
+12-14-2018 11:26 PST
+
+- fix: reverse order of request callback params ([#335](https://github.com/googleapis/nodejs-common/pull/335))
+
 ## v0.28.0
 
 12-13-2018 14:34 PST
