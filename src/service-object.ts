@@ -25,17 +25,16 @@ import * as extend from 'extend';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {StreamRequestOptions} from '.';
-import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
+import {ApiError, DecorateRequestOptions, ResponseBody, util} from './util';
 
 export type CreateOptions = {};
-export type RequestResponse = [Metadata, r.Response];
+export type RequestResponse = [r.Response, ResponseBody];
 
 export interface ServiceObjectParent {
   // tslint:disable-next-line:variable-name
   Promise?: PromiseConstructor;
   requestStream(reqOpts: DecorateRequestOptions): r.Request;
-  request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
-      void;
+  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void;
 }
 
 export interface Interceptor {
@@ -420,10 +419,10 @@ class ServiceObject<T = any> extends EventEmitter {
    */
   private request_(reqOpts: StreamRequestOptions): r.Request;
   private request_(
-      reqOpts: DecorateRequestOptions, callback: BodyResponseCallback): void;
+      reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void;
   private request_(
       reqOpts: DecorateRequestOptions|StreamRequestOptions,
-      callback?: BodyResponseCallback): void|r.Request {
+      callback?: r.RequestCallback): void|r.Request {
     reqOpts = extend(true, {}, reqOpts);
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -463,9 +462,8 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {function} callback - The callback function passed to `request`.
    */
   request(reqOpts: DecorateRequestOptions): Promise<RequestResponse>;
-  request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
-      void;
-  request(reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback):
+  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void;
+  request(reqOpts: DecorateRequestOptions, callback?: r.RequestCallback):
       void|Promise<RequestResponse> {
     this.request_(reqOpts, callback!);
   }
