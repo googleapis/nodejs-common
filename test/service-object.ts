@@ -23,14 +23,13 @@ import * as sinon from 'sinon';
 import {Service} from '../src';
 import * as SO from '../src/service-object';
 import {ServiceObject} from '../src/service-object';
-import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from '../src/util';
+import {ApiError, DecorateRequestOptions, util} from '../src/util';
 
 // tslint:disable-next-line:no-any
 type FakeServiceObject = any;
 type InternalServiceObject = {
-  request_:
-      (reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback) =>
-          void|r.Request;
+  request_: (reqOpts: DecorateRequestOptions, callback?: r.RequestCallback) =>
+      void|r.Request;
   createMethod?: Function; methods: SO.Methods; interceptors: SO.Interceptor[];
 };
 
@@ -63,7 +62,7 @@ describe('ServiceObject', () => {
       const res = {statusCode: 123, body: 'sunny'} as r.Response;
       // tslint:disable-next-line no-any
       (serviceObject as any).request =
-          (opts: {}, callback: BodyResponseCallback) => {
+          (opts: {}, callback: r.RequestCallback) => {
             callback(null, res.body, res);
           };
       const [r] = await serviceObject.delete();
@@ -240,7 +239,7 @@ describe('ServiceObject', () => {
         assert.strictEqual(reqOpts.method, 'DELETE');
         assert.strictEqual(reqOpts.uri, '');
         done();
-        callback(null, null, {} as r.Response);
+        callback(null, {} as r.Response, null);
       });
       serviceObject.delete(assert.ifError);
     });
@@ -260,7 +259,7 @@ describe('ServiceObject', () => {
             assert.strictEqual(reqOpts_.method, method.reqOpts.method);
             assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
             done();
-            callback(null, null, null!);
+            callback(null, null!, null);
           });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
@@ -270,7 +269,7 @@ describe('ServiceObject', () => {
 
     it('should not require a callback', () => {
       sandbox.stub(serviceObject, 'request').callsFake((_, callback) => {
-        callback(null, null, {} as r.Response);
+        callback(null, {} as r.Response, null);
       });
       assert.doesNotThrow(() => {
         serviceObject.delete();
@@ -472,7 +471,7 @@ describe('ServiceObject', () => {
             assert.strictEqual(this, serviceObject);
             assert.strictEqual(reqOpts.uri, '');
             done();
-            callback(null, null, {} as r.Response);
+            callback(null, {} as r.Response, null);
           });
       serviceObject.getMetadata(() => {});
     });
@@ -492,7 +491,7 @@ describe('ServiceObject', () => {
             assert.strictEqual(reqOpts_.method, method.reqOpts.method);
             assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
             done();
-            callback(null, undefined, {} as r.Response);
+            callback(null, {} as r.Response, null);
           });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
@@ -544,7 +543,7 @@ describe('ServiceObject', () => {
             assert.strictEqual(reqOpts.uri, '');
             assert.strictEqual(reqOpts.json, metadata);
             done();
-            callback(null, null, {} as r.Response);
+            callback(null, {} as r.Response, null);
           });
       serviceObject.setMetadata(metadata);
     });
@@ -570,7 +569,7 @@ describe('ServiceObject', () => {
         assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
         assert.deepStrictEqual(reqOpts_.json, expectedJson);
         done();
-        callback(null, null, null!);
+        callback(null, null!, null);
       });
       serviceObject.setMetadata(metadata);
     });
@@ -628,7 +627,7 @@ describe('ServiceObject', () => {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
         assert.deepStrictEqual(reqOpts_.interceptors_, []);
-        callback(null, null, {} as r.Response);
+        callback(null, {} as r.Response, null);
       };
       asInternal(serviceObject).request_(reqOpts, () => done());
     });
@@ -637,7 +636,7 @@ describe('ServiceObject', () => {
       const expectedUri = [serviceObject.baseUrl, reqOpts.uri].join('/');
       serviceObject.parent.request = (reqOpts, callback) => {
         assert.strictEqual(reqOpts.uri, expectedUri);
-        callback(null, null, {} as r.Response);
+        callback(null, {} as r.Response, null);
       };
       serviceObject.id = undefined;
       asInternal(serviceObject).request_(reqOpts, () => done());
@@ -647,7 +646,7 @@ describe('ServiceObject', () => {
       const expectedUri = 'http://www.google.com';
       serviceObject.parent.request = (reqOpts, callback) => {
         assert.strictEqual(reqOpts.uri, expectedUri);
-        callback(null, null, {} as r.Response);
+        callback(null, {} as r.Response, null);
       };
       asInternal(serviceObject).request_({uri: expectedUri}, () => {
         done();
@@ -662,7 +661,7 @@ describe('ServiceObject', () => {
       ].join('/');
       serviceObject.parent.request = (reqOpts_, callback) => {
         assert.strictEqual(reqOpts_.uri, expectedUri);
-        callback(null, null, {} as r.Response);
+        callback(null, {} as r.Response, null);
       };
       asInternal(serviceObject).request_(reqOpts, () => done());
     });
@@ -675,7 +674,7 @@ describe('ServiceObject', () => {
           [serviceObject.baseUrl, serviceObject.id, '1/2'].join('/');
       serviceObject.parent.request = (reqOpts_, callback) => {
         assert.strictEqual(reqOpts_.uri, expectedUri);
-        callback(null, null, {} as r.Response);
+        callback(null, {} as r.Response, null);
       };
       asInternal(serviceObject).request_(reqOpts, () => {
         done();
@@ -714,7 +713,7 @@ describe('ServiceObject', () => {
                 {
                   parent: true,
                 });
-            callback(null, null, {} as r.Response);
+            callback(null, {} as r.Response, null);
           });
 
       const res = await child.request_({uri: ''});
@@ -735,7 +734,7 @@ describe('ServiceObject', () => {
         assert.deepStrictEqual(
             reqOpts.interceptors_, serviceObjectInterceptors);
         assert.notStrictEqual(reqOpts.interceptors_, serviceObjectInterceptors);
-        callback(null, null, {} as r.Response);
+        callback(null, {} as r.Response, null);
         done();
       };
       asInternal(serviceObject).request_({uri: ''}, () => {});
@@ -768,7 +767,7 @@ describe('ServiceObject', () => {
       sandbox.stub(asInternal(serviceObject), 'request_')
           .callsFake((reqOpts, callback) => {
             assert.strictEqual(reqOpts, fakeOptions);
-            callback!(null, null, {} as r.Response);
+            callback!(null, {} as r.Response, null);
           });
       await serviceObject.request(fakeOptions);
     });
