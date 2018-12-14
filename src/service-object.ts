@@ -43,8 +43,11 @@ export interface Interceptor {
 
 // tslint:disable-next-line:no-any
 export type Metadata = any;
-export type MetadataResponse = [Metadata, r.Response];
-export type MetadataCallback =
+export type GetMetadataResponse = [Metadata, r.Response];
+export type GetMetadataCallback =
+    (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
+export type SetMetadataResponse = [r.Response];
+export type SetMetadataCallback =
     (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
 
 export interface ExistsCallback {
@@ -115,7 +118,6 @@ export interface ResponseCallback {
   (err?: Error|null, apiResponse?: r.Response): void;
 }
 
-export type SetMetadataResponse = [Metadata];
 export type GetResponse<T> = [T, r.Response];
 
 /**
@@ -359,9 +361,10 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.metadata - The metadata for this object.
    * @param {object} callback.apiResponse - The full API response.
    */
-  getMetadata(): Promise<MetadataResponse>;
-  getMetadata(callback: MetadataCallback): void;
-  getMetadata(callback?: MetadataCallback): Promise<MetadataResponse>|void {
+  getMetadata(): Promise<GetMetadataResponse>;
+  getMetadata(callback: GetMetadataCallback): void;
+  getMetadata(callback?: GetMetadataCallback): Promise<GetMetadataResponse>|
+      void {
     const methodConfig = (typeof this.methods.getMetadata === 'object' &&
                           this.methods.getMetadata) ||
         {};
@@ -369,7 +372,7 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err, body, res) => {
+    this.request(reqOpts, (err, res, body) => {
       this.metadata = body;
       callback!(err, this.metadata, res);
     });
@@ -384,8 +387,8 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
-  setMetadata(metadata: Metadata, callback: MetadataCallback): void;
-  setMetadata(metadata: Metadata, callback?: MetadataCallback):
+  setMetadata(metadata: Metadata, callback: SetMetadataCallback): void;
+  setMetadata(metadata: Metadata, callback?: SetMetadataCallback):
       Promise<SetMetadataResponse>|void {
     callback = callback || util.noop;
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
@@ -402,9 +405,9 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err, body, res) => {
+    this.request(reqOpts, (err, res, body) => {
       this.metadata = body;
-      callback!(err, this.metadata, res);
+      callback!(err, res);
     });
   }
 

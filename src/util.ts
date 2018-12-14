@@ -298,7 +298,7 @@ export class Util {
       parsedResp.resp.body = parsedResp.body;
     }
 
-    callback(parsedResp.err, parsedResp.body, parsedResp.resp);
+    callback(parsedResp.err, parsedResp.resp, parsedResp.body);
   }
 
   /**
