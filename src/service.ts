@@ -233,7 +233,7 @@ export class Service {
    */
   request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
       void {
-    this.request_(reqOpts, callback);
+    Service.prototype.request_.call(true, reqOpts, callback);
   }
 
   /**
@@ -246,6 +246,6 @@ export class Service {
    */
   requestStream(reqOpts: DecorateRequestOptions): r.Request {
     const opts = extend(true, reqOpts, {shouldReturnStream: true});
-    return this.request_(opts as StreamRequestOptions);
+    return (Service.prototype.request_ as Function).call(this, opts);
   }
 }
