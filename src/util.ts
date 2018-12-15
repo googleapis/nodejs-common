@@ -28,7 +28,7 @@ import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import {PassThrough} from 'stream';
 
-import {Interceptor, Metadata} from './service-object';
+import {Interceptor} from './service-object';
 
 const requestDefaults = {
   timeout: 60000,
@@ -52,10 +52,10 @@ export interface MakeAuthenticatedRequest {
   (reqOpts: DecorateRequestOptions,
    options?: MakeAuthenticatedRequestOptions): void|Abortable;
   (reqOpts: DecorateRequestOptions,
-   callback?: r.RequestCallback): void|Abortable;
+   callback?: BodyResponseCallback): void|Abortable;
   (reqOpts: DecorateRequestOptions,
    optionsOrCallback?: MakeAuthenticatedRequestOptions|
-   r.RequestCallback): void|Abortable|duplexify.Duplexify;
+   BodyResponseCallback): void|Abortable|duplexify.Duplexify;
   getCredentials:
       (callback:
            (err?: Error|null, credentials?: CredentialBody) => void) => void;
@@ -238,6 +238,10 @@ export class PartialFailureError extends Error {
   }
 }
 
+export interface BodyResponseCallback {
+  (err: Error|null, body?: ResponseBody, res?: r.Response): void;
+}
+
 export interface MakeRequestConfig {
   /**
    * Automatically retry requests if the response is related to rate limits or
@@ -285,7 +289,7 @@ export class Util {
    */
   handleResp(
       err: Error|null, resp?: r.Response|null, body?: ResponseBody,
-      callback?: (err: Error, body: r.Response, response: r.Response) => void) {
+      callback?: BodyResponseCallback) {
     callback = callback || util.noop;
 
     const parsedResp = extend(
@@ -495,12 +499,12 @@ export class Util {
         reqOpts: DecorateRequestOptions,
         options?: MakeAuthenticatedRequestOptions): void|Abortable;
     function makeAuthenticatedRequest(
-        reqOpts: DecorateRequestOptions, callback?: r.RequestCallback): void|
+        reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback): void|
         Abortable;
     function makeAuthenticatedRequest(
         reqOpts: DecorateRequestOptions,
         optionsOrCallback?: MakeAuthenticatedRequestOptions|
-        r.RequestCallback): void|Abortable|duplexify.Duplexify {
+        BodyResponseCallback): void|Abortable|duplexify.Duplexify {
       let stream: duplexify.Duplexify;
       const reqConfig = extend({}, config);
       let activeRequest_: void|Abortable|null;
@@ -621,7 +625,7 @@ export class Util {
    */
   makeRequest(
       reqOpts: DecorateRequestOptions, config: MakeRequestConfig,
-      callback: r.RequestCallback): void|Abortable {
+      callback: BodyResponseCallback): void|Abortable {
     const options = {
       request: (config.request as typeof r).defaults(requestDefaults),
       retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,

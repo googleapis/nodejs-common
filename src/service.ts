@@ -24,7 +24,7 @@ import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {Interceptor} from './service-object';
-import {DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
+import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 
@@ -162,10 +162,10 @@ export class Service {
    */
   private request_(reqOpts: StreamRequestOptions): r.Request;
   private request_(
-      reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void;
+      reqOpts: DecorateRequestOptions, callback: BodyResponseCallback): void;
   private request_(
       reqOpts: DecorateRequestOptions|StreamRequestOptions,
-      callback?: r.RequestCallback): void|r.Request {
+      callback?: BodyResponseCallback): void|r.Request {
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
     const uriComponents = [this.baseUrl];
@@ -231,7 +231,8 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void {
+  request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
+      void {
     this.request_(reqOpts, callback);
   }
 
