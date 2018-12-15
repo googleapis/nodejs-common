@@ -22,6 +22,7 @@ import {promisifyAll} from '@google-cloud/promisify';
 import * as arrify from 'arrify';
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
+import {basename} from 'path';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {StreamRequestOptions} from '.';
@@ -260,7 +261,7 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, callback);
+    ServiceObject.prototype.request.call(this, reqOpts, callback);
   }
 
   /**
@@ -369,10 +370,11 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err, body, res) => {
-      this.metadata = body;
-      callback!(err, this.metadata, res);
-    });
+    ServiceObject.prototype.request.call(
+        this, reqOpts, (err: Error, body: ResponseBody, res: r.Response) => {
+          this.metadata = body;
+          callback!(err, this.metadata, res);
+        });
   }
 
   /**
@@ -402,10 +404,11 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    this.request(reqOpts, (err, body, res) => {
-      this.metadata = body;
-      callback!(err, this.metadata, res);
-    });
+    ServiceObject.prototype.request.call(
+        this, reqOpts, (err: Error, body: ResponseBody, res: r.Response) => {
+          this.metadata = body;
+          callback!(err, this.metadata, res);
+        });
   }
 
   /**

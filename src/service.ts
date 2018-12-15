@@ -232,7 +232,7 @@ export class Service {
    * @param {function} callback - The callback function passed to `request`.
    */
   request(reqOpts: DecorateRequestOptions, callback: r.RequestCallback): void {
-    this.request_(reqOpts, callback);
+    Service.prototype.request_.call(true, reqOpts, callback);
   }
 
   /**
@@ -245,6 +245,6 @@ export class Service {
    */
   requestStream(reqOpts: DecorateRequestOptions): r.Request {
     const opts = extend(true, reqOpts, {shouldReturnStream: true});
-    return this.request_(opts as StreamRequestOptions);
+    return (Service.prototype.request_ as Function).call(this, opts);
   }
 }
