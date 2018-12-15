@@ -26,7 +26,7 @@ import {basename} from 'path';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {StreamRequestOptions} from '.';
-import {ApiError, BodyResponseCallback, DecorateRequestOptions, util} from './util';
+import {ApiError, BodyResponseCallback, DecorateRequestOptions, ResponseBody, util} from './util';
 
 export type CreateOptions = {};
 export type RequestResponse = [Metadata, r.Response];
@@ -372,7 +372,8 @@ class ServiceObject<T = any> extends EventEmitter {
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
     ServiceObject.prototype.request.call(
-        this, reqOpts, (err: Error, body: ResponseBody, res: r.Response) => {
+        this, reqOpts,
+        (err: Error|null, body?: ResponseBody, res?: r.Response) => {
           this.metadata = body;
           callback!(err, this.metadata, res);
         });
@@ -406,7 +407,8 @@ class ServiceObject<T = any> extends EventEmitter {
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
     ServiceObject.prototype.request.call(
-        this, reqOpts, (err: Error, body: ResponseBody, res: r.Response) => {
+        this, reqOpts,
+        (err: Error|null, body?: ResponseBody, res?: r.Response) => {
           this.metadata = body;
           callback!(err, this.metadata, res);
         });
