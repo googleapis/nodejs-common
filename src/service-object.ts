@@ -22,7 +22,6 @@ import {promisifyAll} from '@google-cloud/promisify';
 import * as arrify from 'arrify';
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
-import {basename} from 'path';
 import * as r from 'request';  // Only needed for type declarations.
 
 import {StreamRequestOptions} from '.';
