@@ -16,12 +16,13 @@
 
 import * as assert from 'assert';
 import * as extend from 'extend';
+import {GoogleAuth} from 'google-auth-library';
 import * as proxyquire from 'proxyquire';
-import {Request, RequestCallback, RequestResponse} from 'request';
+import {Request, RequestResponse} from 'request';
 
 import {Interceptor} from '../src';
 import {ServiceConfig, ServiceOptions} from '../src/service';
-import {DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
+import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
 
 proxyquire.noPreserveCache();
 
@@ -265,11 +266,12 @@ describe('Service', () => {
     it('should compose the correct request', done => {
       const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
       service.makeAuthenticatedRequest =
-          (reqOpts_: DecorateRequestOptions, callback: RequestCallback) => {
+          (reqOpts_: DecorateRequestOptions,
+           callback: BodyResponseCallback) => {
             assert.notStrictEqual(reqOpts_, reqOpts);
             assert.strictEqual(reqOpts_.uri, expectedUri);
             assert.strictEqual(reqOpts.interceptors_, undefined);
-            callback(null, null!, null);  // done()
+            callback(null);  // done()
           };
       service.request_(reqOpts, () => done());
     });

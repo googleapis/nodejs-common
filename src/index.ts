@@ -34,4 +34,4 @@ export {DeleteCallback, ExistsCallback, GetConfig, InstanceResponseCallback, Int
  * @type {module:common/util}
  * @private
  */
-export {Abortable, AbortableDuplex, ApiError, DecorateRequestOptions, ResponseBody, util} from './util';
+export {Abortable, AbortableDuplex, ApiError, BodyResponseCallback, DecorateRequestOptions, ResponseBody, util} from './util';
