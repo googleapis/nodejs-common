@@ -101,10 +101,6 @@ export interface CreateCallback<T> {
   (err: ApiError|null, instance?: T|null, ...args: any[]): void;
 }
 
-export interface DeleteCallback {
-  (err: Error|null, apiResponse?: r.Response): void;
-}
-
 export interface GetConfig {
   /**
    * Create the object if it doesn't already exist.
@@ -116,7 +112,6 @@ export interface ResponseCallback {
   (err?: Error|null, apiResponse?: r.Response): void;
 }
 
-export type SetMetadataResponse = [Metadata];
 export type GetResponse<T> = [T, r.Response];
 
 /**
@@ -246,8 +241,8 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   delete(): Promise<[r.Response]>;
-  delete(callback: DeleteCallback): void;
-  delete(callback?: DeleteCallback): Promise<[r.Response]>|void {
+  delete(callback: ResponseCallback): void;
+  delete(callback?: ResponseCallback): Promise<[r.Response]>|void {
     const methodConfig =
         (typeof this.methods.delete === 'object' && this.methods.delete) || {};
     callback = callback || util.noop;
@@ -386,11 +381,16 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
-  setMetadata(metadata: Metadata, callback: MetadataCallback): void;
-  setMetadata(metadata: Metadata, callback?: MetadataCallback):
-      Promise<SetMetadataResponse>|void {
-    callback = callback || util.noop;
+  setMetadata(metadata: Metadata, options?: {}): Promise<[r.Response]>;
+  setMetadata(metadata: Metadata, options: {}, callback: ResponseCallback):
+      void;
+  setMetadata(metadata: Metadata, callback: ResponseCallback): void;
+  setMetadata(
+      metadata: Metadata, optionsOrCallback?: {}|ResponseCallback,
+      cb?: ResponseCallback): Promise<[r.Response]>|void {
+    const callback = typeof optionsOrCallback === 'function' ?
+        optionsOrCallback :
+        cb || util.noop;
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
                           this.methods.setMetadata) ||
         {};
