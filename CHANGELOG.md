@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.29.1
+
+12-19-2018 20:57 PST
+
+### Bug fixes
+- fix: bind to this instead of true ([#341](https://github.com/googleapis/nodejs-common/pull/341))
+
 ## v0.29.0
 
 12-19-2018 13:11 PST
