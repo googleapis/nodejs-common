@@ -233,7 +233,7 @@ export class Service {
    */
   request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
       void {
-    Service.prototype.request_.call(true, reqOpts, callback);
+    Service.prototype.request_.call(this, reqOpts, callback);
   }
 
   /**
