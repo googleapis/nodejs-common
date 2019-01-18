@@ -306,7 +306,7 @@ class ServiceObject<T = any> extends EventEmitter {
   get(options?:GetOrCreateOptions): Promise<GetResponse<T>>;
   get(callback:InstanceResponseCallback<T>): void;
   get(options:GetOrCreateOptions, callback:InstanceResponseCallback<T>): void;
-  get(optionsOrCallback:GetOrCreateOptions|InstanceResponseCallback<T>, cb?:InstanceResponseCallback<T>): Promise<GetResponse<T>>|void {
+  get(optionsOrCallback?:GetOrCreateOptions|InstanceResponseCallback<T>, cb?:InstanceResponseCallback<T>): Promise<GetResponse<T>>|void {
     const self = this;
     
     const [options, callback] =
