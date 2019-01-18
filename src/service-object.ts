@@ -43,7 +43,12 @@ export interface Interceptor {
 }
 
 // tslint:disable-next-line:no-any
+export type GetMetadataOptions = any;
+
+// tslint:disable-next-line:no-any
 export type Metadata = any;
+// tslint:disable-next-line:no-any
+export type SetMetadataOptions = any;
 export type MetadataResponse = [Metadata, r.Response];
 export type MetadataCallback =
     (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
@@ -333,8 +338,8 @@ class ServiceObject<T = any> extends EventEmitter {
       callback!(null, instance, apiResponse);
     }
 
-    this.getMetadata((e, metadata) => {
-      const err = e as ApiError;
+    this.getMetadata((e: ApiError, metadata: Metadata) => {
+      const err = e;
       if (err) {
         if (err.code === 404 && autoCreate) {
           const args: Array<Function|GetConfig&CreateOptions> = [];
@@ -360,13 +365,28 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.metadata - The metadata for this object.
    * @param {object} callback.apiResponse - The full API response.
    */
-  getMetadata(): Promise<MetadataResponse>;
+  getMetadata(options?: GetMetadataOptions): Promise<MetadataResponse>;
   getMetadata(callback: MetadataCallback): void;
-  getMetadata(callback?: MetadataCallback): Promise<MetadataResponse>|void {
+  getMetadata(options: GetMetadataOptions, callback: MetadataCallback): void;
+  getMetadata(
+      optionsOrCallback?: GetMetadataOptions|MetadataCallback,
+      callback?: MetadataCallback): Promise<MetadataResponse>|void {
+    let options: GetMetadataOptions = {};
+    if (typeof optionsOrCallback === 'function') {
+      callback = optionsOrCallback;
+    } else if (optionsOrCallback) {
+      options = optionsOrCallback;
+    }
+
     const methodConfig = (typeof this.methods.getMetadata === 'object' &&
                           this.methods.getMetadata) ||
         {};
-    const reqOpts = extend({uri: ''}, methodConfig.reqOpts);
+    const reqOpts = extend(
+        {
+          uri: '',
+          qs: options,
+        },
+        methodConfig.reqOpts);
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
@@ -382,14 +402,25 @@ class ServiceObject<T = any> extends EventEmitter {
    * Set the metadata for this object.
    *
    * @param {object} metadata - The metadata to set on this object.
+   * @param {object=} options - Configuration options.
    * @param {function=} callback - The callback function.
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
+  setMetadata(metadata: Metadata, options?: SetMetadataOptions):
+      Promise<SetMetadataResponse>;
+  setMetadata(
+      metadata: Metadata, options: SetMetadataOptions,
+      callback: MetadataCallback): void;
   setMetadata(metadata: Metadata, callback: MetadataCallback): void;
-  setMetadata(metadata: Metadata, callback?: MetadataCallback):
-      Promise<SetMetadataResponse>|void {
+  setMetadata(
+      metadata: Metadata,
+      optionsOrCallback?: SetMetadataOptions|MetadataCallback,
+      callback?: MetadataCallback): Promise<SetMetadataResponse>|void {
+    const options =
+        typeof optionsOrCallback === 'object' ? optionsOrCallback : {};
+    callback =
+        typeof optionsOrCallback === 'function' ? optionsOrCallback : callback;
     callback = callback || util.noop;
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
                           this.methods.setMetadata) ||
@@ -400,6 +431,7 @@ class ServiceObject<T = any> extends EventEmitter {
           method: 'PATCH',
           uri: '',
           json: metadata,
+          qs: options,
         },
         methodConfig.reqOpts);
 
