@@ -43,12 +43,12 @@ export interface Interceptor {
 }
 
 // tslint:disable-next-line:no-any
-export type GetMetadataOptions = any;
+export type GetMetadataOptions = object;
 
 // tslint:disable-next-line:no-any
 export type Metadata = any;
 // tslint:disable-next-line:no-any
-export type SetMetadataOptions = any;
+export type SetMetadataOptions = object;
 export type MetadataResponse = [Metadata, r.Response];
 export type MetadataCallback =
     (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
@@ -365,18 +365,10 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.metadata - The metadata for this object.
    * @param {object} callback.apiResponse - The full API response.
    */
-  getMetadata(options?: GetMetadataOptions): Promise<MetadataResponse>;
-  getMetadata(callback: MetadataCallback): void;
-  getMetadata(options: GetMetadataOptions, callback: MetadataCallback): void;
-  getMetadata(
-      optionsOrCallback?: GetMetadataOptions|MetadataCallback,
-      callback?: MetadataCallback): Promise<MetadataResponse>|void {
-    let options: GetMetadataOptions = {};
-    if (typeof optionsOrCallback === 'function') {
-      callback = optionsOrCallback;
-    } else if (optionsOrCallback) {
-      options = optionsOrCallback;
-    }
+  getMetadata(options?:GetMetadataOptions): Promise<MetadataResponse>;
+  getMetadata(callback:MetadataCallback): void;
+  getMetadata(optionsOrCallback:GetMetadataOptions|MetadataCallback, cb?: MetadataCallback):Promise<MetadataResponse>|void {
+    const [options, callback] = util.maybeOptionsOrCallback<GetMetadataOptions, MetadataCallback>(optionsOrCallback, cb);
 
     const methodConfig = (typeof this.methods.getMetadata === 'object' &&
                           this.methods.getMetadata) ||
@@ -407,21 +399,11 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(metadata: Metadata, options?: SetMetadataOptions):
-      Promise<SetMetadataResponse>;
-  setMetadata(
-      metadata: Metadata, options: SetMetadataOptions,
-      callback: MetadataCallback): void;
+  setMetadata(metadata: Metadata, options?: SetMetadataOptions): Promise<SetMetadataResponse>;
   setMetadata(metadata: Metadata, callback: MetadataCallback): void;
-  setMetadata(
-      metadata: Metadata,
-      optionsOrCallback?: SetMetadataOptions|MetadataCallback,
-      callback?: MetadataCallback): Promise<SetMetadataResponse>|void {
-    const options =
-        typeof optionsOrCallback === 'object' ? optionsOrCallback : {};
-    callback =
-        typeof optionsOrCallback === 'function' ? optionsOrCallback : callback;
-    callback = callback || util.noop;
+  setMetadata(metadata: Metadata, options: SetMetadataOptions, callback: MetadataCallback): void;
+  setMetadata(metadata: Metadata, optionsOrCallback:SetMetadataOptions|MetadataCallback, cb?: MetadataCallback): Promise<SetMetadataResponse>|void {
+    const [options, callback] = util.maybeOptionsOrCallback<SetMetadataOptions, MetadataCallback>(optionsOrCallback, cb);
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
                           this.methods.setMetadata) ||
         {};
