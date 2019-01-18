@@ -27,7 +27,6 @@ import * as r from 'request';  // Only needed for type declarations.
 import {StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, ResponseBody, util} from './util';
 
-export type CreateOptions = {};
 export type RequestResponse = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
@@ -42,13 +41,10 @@ export interface Interceptor {
   request(opts: r.Options): DecorateRequestOptions;
 }
 
-// tslint:disable-next-line:no-any
 export type GetMetadataOptions = object;
 
 // tslint:disable-next-line:no-any
 export type Metadata = any;
-// tslint:disable-next-line:no-any
-export type SetMetadataOptions = object;
 export type MetadataResponse = [Metadata, r.Response];
 export type MetadataCallback =
     (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
@@ -99,6 +95,7 @@ export interface InstanceResponseCallback<T> {
   (err: ApiError|null, instance?: T|null, apiResponse?: r.Response): void;
 }
 
+export type CreateOptions = {};
 // tslint:disable-next-line no-any
 export type CreateResponse<T> = [T, ...any[]];
 export interface CreateCallback<T> {
@@ -116,13 +113,15 @@ export interface GetConfig {
    */
   autoCreate?: boolean;
 }
+type GetOrCreateOptions = GetConfig & CreateOptions;
+export type GetResponse<T> = [T, r.Response];
 
 export interface ResponseCallback {
   (err?: Error|null, apiResponse?: r.Response): void;
 }
 
 export type SetMetadataResponse = [Metadata];
-export type GetResponse<T> = [T, r.Response];
+export type SetMetadataOptions = object;
 
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
@@ -296,40 +295,32 @@ class ServiceObject<T = any> extends EventEmitter {
    * Get the object if it exists. Optionally have the object created if an
    * options object is provided with `autoCreate: true`.
    *
-   * @param {object=} config - The configuration object that will be used to
+   * @param {object=} options - The configuration object that will be used to
    *     create the object if necessary.
-   * @param {boolean} config.autoCreate - Create the object if it doesn't already exist.
+   * @param {boolean} options.autoCreate - Create the object if it doesn't already exist.
    * @param {function} callback - The callback function.
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(config?: GetConfig&CreateOptions): Promise<GetResponse<T>>;
-  get(callback: InstanceResponseCallback<T>): void;
-  get(config: GetConfig&CreateOptions,
-      callback: InstanceResponseCallback<T>): void;
-  get(arg0?: (GetConfig&CreateOptions)|InstanceResponseCallback<T>,
-      arg1?: InstanceResponseCallback<T>): void|Promise<GetResponse<T>> {
+  get(options?:GetOrCreateOptions): Promise<GetResponse<T>>;
+  get(callback:InstanceResponseCallback<T>): void;
+  get(options:GetOrCreateOptions, callback:InstanceResponseCallback<T>): void;
+  get(optionsOrCallback:GetOrCreateOptions|InstanceResponseCallback<T>, cb?:InstanceResponseCallback<T>): Promise<GetResponse<T>>|void {
     const self = this;
+    
+    const [options, callback] =
+        util.maybeOptionsOrCallback<GetOrCreateOptions, InstanceResponseCallback<T>>(
+            optionsOrCallback, cb);
 
-    let callback = arg1;
-    if (typeof arg0 === 'function') {
-      callback = arg0;
-    }
-
-    let config: GetConfig&CreateOptions = {} as GetConfig & CreateOptions;
-    if (typeof arg0 === 'object') {
-      config = arg0;
-    }
-
-    const autoCreate = config.autoCreate && typeof this.create === 'function';
-    delete config.autoCreate;
+    const autoCreate = options.autoCreate && typeof this.create === 'function';
+    delete options.autoCreate;
 
     function onCreate(
         err: ApiError|null, instance: T, apiResponse: r.Response) {
       if (err) {
         if (err.code === 409) {
-          self.get(config, callback!);
+          self.get(options, callback!);
           return;
         }
         callback!(err, null, apiResponse);
@@ -342,9 +333,9 @@ class ServiceObject<T = any> extends EventEmitter {
       const err = e;
       if (err) {
         if (err.code === 404 && autoCreate) {
-          const args: Array<Function|GetConfig&CreateOptions> = [];
-          if (Object.keys(config).length > 0) {
-            args.push(config);
+          const args: Array<Function|GetOrCreateOptions> = [];
+          if (Object.keys(options).length > 0) {
+            args.push(options);
           }
           args.push(onCreate);
           self.create(...args);
