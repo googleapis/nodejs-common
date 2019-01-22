@@ -620,7 +620,7 @@ export class Util {
    * (default: true)
    * @param {number=} config.maxRetries - Maximum number of automatic retries
    *     attempted before returning the error. (default: 3)
-   * @param {typeof r=} config.request - HTTP module for request calls.
+   * @param {object=} config.request - HTTP module for request calls.
    * @param {function} callback - The callback function.
    */
   makeRequest(
