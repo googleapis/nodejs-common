@@ -95,7 +95,7 @@ export interface InstanceResponseCallback<T> {
 }
 
 // tslint:disable-next-line no-any
-export type CreateResponse<T> = [T, ...any[]];
+export type CreateResponse<T> = any[];
 export interface CreateCallback<T> {
   // tslint:disable-next-line no-any
   (err: ApiError|null, instance?: T|null, ...args: any[]): void;
