@@ -33,6 +33,7 @@ export type RequestResponse = [Metadata, r.Response];
 export interface ServiceObjectParent {
   // tslint:disable-next-line:variable-name
   Promise?: PromiseConstructor;
+  requestModule?: typeof r;
   requestStream(reqOpts: DecorateRequestOptions): r.Request;
   request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
       void;
@@ -83,7 +84,7 @@ export interface ServiceObjectConfig {
   /**
    * Dependency for HTTP calls.
    */
-  requestModule: typeof r;
+  requestModule?: typeof r;
 }
 
 export interface Methods {
@@ -171,7 +172,8 @@ class ServiceObject<T = any> extends EventEmitter {
     this.methods = config.methods || {};
     this.interceptors = [];
     this.Promise = this.parent ? this.parent.Promise : undefined;
-    this.requestModule = config.requestModule;
+    this.requestModule =
+        (config.requestModule || (this.parent && this.parent.requestModule))!;
 
     if (config.methods) {
       Object.getOwnPropertyNames(ServiceObject.prototype)

@@ -45,6 +45,8 @@ describe('Operation', () => {
   });
 
   describe('instantiation', () => {
+    const parent = {requestModule: {}};
+
     it('should extend ServiceObject and EventEmitter', () => {
       const svcObj = ServiceObject;
       assert(operation instanceof Operation);
@@ -69,7 +71,7 @@ describe('Operation', () => {
 
     it('should allow overriding baseUrl', () => {
       const baseUrl = 'baseUrl';
-      const operation = new Operation({baseUrl} as ServiceObjectConfig);
+      const operation = new Operation({baseUrl, parent} as ServiceObjectConfig);
       assert.strictEqual(operation.baseUrl, baseUrl);
     });
 
@@ -81,7 +83,7 @@ describe('Operation', () => {
     it('should call listenForEvents_', () => {
       // tslint:disable-next-line no-any
       const stub = sandbox.stub(Operation.prototype as any, 'listenForEvents_');
-      const op = new Operation({} as ServiceObjectConfig);
+      const op = new Operation({parent} as ServiceObjectConfig);
       assert.ok(stub.called);
     });
   });

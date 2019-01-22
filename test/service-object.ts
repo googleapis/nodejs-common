@@ -44,10 +44,11 @@ describe('ServiceObject', () => {
 
   const CONFIG = {
     baseUrl: 'base-url',
-    parent: {} as Service,
+    parent: {
+      requestModule: {},
+    } as Service,
     id: 'id',
-    createMethod: util.noop,
-    requestModule: {} as typeof r,
+    createMethod: util.noop
   };
 
   beforeEach(() => {
@@ -114,12 +115,16 @@ describe('ServiceObject', () => {
       // tslint:disable-next-line:variable-name
       const FakePromise = () => {};
       const config = extend({}, CONFIG, {
-        parent: {
-          Promise: FakePromise,
-        },
+        parent: {Promise: FakePromise, requestModule: {}},
       });
       const serviceObject = new ServiceObject(config) as FakeServiceObject;
       assert.strictEqual(serviceObject.Promise, FakePromise);
+    });
+
+    it('should inherit the parents requestModule', () => {
+      const serviceObject = new ServiceObject(CONFIG);
+      assert.strictEqual(
+          serviceObject.requestModule, CONFIG.parent.requestModule);
     });
   });
 
