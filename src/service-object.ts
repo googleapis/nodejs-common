@@ -49,6 +49,7 @@ export type MetadataResponse = [Metadata, r.Response];
 export type MetadataCallback =
     (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
 
+export type ExistsOptions = object;
 export interface ExistsCallback {
   (err: Error|null, exists?: boolean): void;
 }
@@ -280,10 +281,14 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {boolean} callback.exists - Whether the object exists or not.
    */
-  exists(): Promise<[boolean]>;
+  exists(options?: ExistsOptions): Promise<[boolean]>;
+  exists(options: ExistsOptions, callback: ExistsCallback): void;
   exists(callback: ExistsCallback): void;
-  exists(callback?: ExistsCallback): void|Promise<[boolean]> {
-    this.get(err => {
+  exists(optionsOrCallback?: ExistsOptions|ExistsCallback, cb?:ExistsCallback): void|Promise<[boolean]> {
+    const [options, callback] = util.maybeOptionsOrCallback<ExistsOptions, ExistsCallback>(
+      optionsOrCallback, cb);
+
+    this.get(options, err => {
       if (err) {
         if (err.code === 404) {
           callback!(null, false);
