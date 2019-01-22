@@ -115,7 +115,7 @@ export interface GetConfig {
    */
   autoCreate?: boolean;
 }
-type GetOrCreateOptions = GetConfig & CreateOptions;
+type GetOrCreateOptions = GetConfig&CreateOptions;
 export type GetResponse<T> = [T, r.Response];
 
 export interface ResponseCallback {
@@ -254,9 +254,11 @@ class ServiceObject<T = any> extends EventEmitter {
   delete(options?: DeleteOptions): Promise<[r.Response]>;
   delete(options: DeleteOptions, callback: DeleteCallback): void;
   delete(callback: DeleteCallback): void;
-  delete(optionsOrCallback: DeleteOptions|DeleteCallback, cb?: DeleteCallback): Promise<[r.Response]>|void {
-    const [options, callback] = util.maybeOptionsOrCallback<DeleteOptions, DeleteCallback>(
-        optionsOrCallback, cb);
+  delete(optionsOrCallback: DeleteOptions|DeleteCallback, cb?: DeleteCallback):
+      Promise<[r.Response]>|void {
+    const [options, callback] =
+        util.maybeOptionsOrCallback<DeleteOptions, DeleteCallback>(
+            optionsOrCallback, cb);
 
     const methodConfig =
         (typeof this.methods.delete === 'object' && this.methods.delete) || {};
@@ -284,9 +286,11 @@ class ServiceObject<T = any> extends EventEmitter {
   exists(options?: ExistsOptions): Promise<[boolean]>;
   exists(options: ExistsOptions, callback: ExistsCallback): void;
   exists(callback: ExistsCallback): void;
-  exists(optionsOrCallback?: ExistsOptions|ExistsCallback, cb?:ExistsCallback): void|Promise<[boolean]> {
-    const [options, callback] = util.maybeOptionsOrCallback<ExistsOptions, ExistsCallback>(
-      optionsOrCallback, cb);
+  exists(optionsOrCallback?: ExistsOptions|ExistsCallback, cb?: ExistsCallback):
+      void|Promise<[boolean]> {
+    const [options, callback] =
+        util.maybeOptionsOrCallback<ExistsOptions, ExistsCallback>(
+            optionsOrCallback, cb);
 
     this.get(options, err => {
       if (err) {
@@ -313,15 +317,15 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(options?:GetOrCreateOptions): Promise<GetResponse<T>>;
-  get(callback:InstanceResponseCallback<T>): void;
-  get(options:GetOrCreateOptions, callback:InstanceResponseCallback<T>): void;
-  get(optionsOrCallback?:GetOrCreateOptions|InstanceResponseCallback<T>, cb?:InstanceResponseCallback<T>): Promise<GetResponse<T>>|void {
+  get(options?: GetOrCreateOptions): Promise<GetResponse<T>>;
+  get(callback: InstanceResponseCallback<T>): void;
+  get(options: GetOrCreateOptions, callback: InstanceResponseCallback<T>): void;
+  get(optionsOrCallback?: GetOrCreateOptions|InstanceResponseCallback<T>,
+      cb?: InstanceResponseCallback<T>): Promise<GetResponse<T>>|void {
     const self = this;
-    
-    const [options, callback] =
-        util.maybeOptionsOrCallback<GetOrCreateOptions, InstanceResponseCallback<T>>(
-            optionsOrCallback, cb);
+
+    const [options, callback] = util.maybeOptionsOrCallback<
+        GetOrCreateOptions, InstanceResponseCallback<T>>(optionsOrCallback, cb);
 
     const autoCreate = options.autoCreate && typeof this.create === 'function';
     delete options.autoCreate;
