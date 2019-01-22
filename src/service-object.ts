@@ -103,6 +103,7 @@ export interface CreateCallback<T> {
   (err: ApiError|null, instance?: T|null, ...args: any[]): void;
 }
 
+export type DeleteOptions = object;
 export interface DeleteCallback {
   (err: Error|null, apiResponse?: r.Response): void;
 }
@@ -249,17 +250,21 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  delete(): Promise<[r.Response]>;
+  delete(options?: DeleteOptions): Promise<[r.Response]>;
+  delete(options: DeleteOptions, callback: DeleteCallback): void;
   delete(callback: DeleteCallback): void;
-  delete(callback?: DeleteCallback): Promise<[r.Response]>|void {
+  delete(optionsOrCallback: DeleteOptions|DeleteCallback, cb?: DeleteCallback): Promise<[r.Response]>|void {
+    const [options, callback] = util.maybeOptionsOrCallback<DeleteOptions, DeleteCallback>(
+        optionsOrCallback, cb);
+
     const methodConfig =
         (typeof this.methods.delete === 'object' && this.methods.delete) || {};
-    callback = callback || util.noop;
 
     const reqOpts = extend(
         {
           method: 'DELETE',
           uri: '',
+          qs: options,
         },
         methodConfig.reqOpts);
 
@@ -329,8 +334,7 @@ class ServiceObject<T = any> extends EventEmitter {
       callback!(null, instance, apiResponse);
     }
 
-    this.getMetadata((e: ApiError, metadata: Metadata) => {
-      const err = e;
+    this.getMetadata(options, (err: ApiError|null, metadata) => {
       if (err) {
         if (err.code === 404 && autoCreate) {
           const args: Array<Function|GetOrCreateOptions> = [];
@@ -357,6 +361,7 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   getMetadata(options?: GetMetadataOptions): Promise<MetadataResponse>;
+  getMetadata(options: GetMetadataOptions, callback: MetadataCallback): void;
   getMetadata(callback: MetadataCallback): void;
   getMetadata(
       optionsOrCallback: GetMetadataOptions|MetadataCallback,
