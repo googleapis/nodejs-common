@@ -283,7 +283,7 @@ describe('ServiceObject', () => {
       const error = new Error('🦃');
       sandbox.stub(ServiceObject.prototype, 'request').callsArgWith(1, error);
       const serviceObject = new ServiceObject(CONFIG);
-      serviceObject.delete((err, apiResponse_) => {
+      serviceObject.delete((err: Error, apiResponse_: {}) => {
         assert.strictEqual(err, error);
         assert.strictEqual(apiResponse_, undefined);
         done();
@@ -300,8 +300,8 @@ describe('ServiceObject', () => {
     it('should execute callback with false if 404', (done) => {
       const error = new ApiError('');
       error.code = 404;
-      sandbox.stub(serviceObject, 'get').callsArgWith(0, error);
-      serviceObject.exists((err, exists) => {
+      sandbox.stub(serviceObject, 'get').callsArgWith(1, error);
+      serviceObject.exists((err: Error, exists: boolean) => {
         assert.ifError(err);
         assert.strictEqual(exists, false);
         done();
@@ -311,8 +311,8 @@ describe('ServiceObject', () => {
     it('should execute callback with error if not 404', (done) => {
       const error = new ApiError('');
       error.code = 500;
-      sandbox.stub(serviceObject, 'get').callsArgWith(0, error);
-      serviceObject.exists((err, exists) => {
+      sandbox.stub(serviceObject, 'get').callsArgWith(1, error);
+      serviceObject.exists((err: Error, exists: boolean) => {
         assert.strictEqual(err, error);
         assert.strictEqual(exists, undefined);
         done();
@@ -320,8 +320,8 @@ describe('ServiceObject', () => {
     });
 
     it('should execute callback with true if no error', (done) => {
-      sandbox.stub(serviceObject, 'get').callsArgWith(0, null);
-      serviceObject.exists((err, exists) => {
+      sandbox.stub(serviceObject, 'get').callsArgWith(1, null);
+      serviceObject.exists((err: Error, exists: boolean) => {
         assert.ifError(err);
         assert.strictEqual(exists, true);
         done();
@@ -344,16 +344,17 @@ describe('ServiceObject', () => {
           promisify((_callback: SO.MetadataCallback): void => {
             done();
           });
-      (serviceObject as FakeServiceObject).get(undefined, assert.ifError);
+      (serviceObject as FakeServiceObject).get(assert.ifError);
     });
 
     it('should execute callback with error & metadata', (done) => {
       const error = new Error('Error.');
       const metadata = {} as SO.Metadata;
 
-      serviceObject.getMetadata = promisify((callback: SO.MetadataCallback) => {
-        callback(error, metadata);
-      });
+      serviceObject.getMetadata = promisify(
+          (options: SO.GetMetadataOptions, callback: SO.MetadataCallback) => {
+            callback(error, metadata);
+          });
 
       serviceObject.get((err, instance, metadata_) => {
         assert.strictEqual(err, error);
@@ -367,9 +368,10 @@ describe('ServiceObject', () => {
     it('should execute callback with instance & metadata', (done) => {
       const metadata = {} as SO.Metadata;
 
-      serviceObject.getMetadata = promisify((callback: SO.MetadataCallback) => {
-        callback(null, metadata);
-      });
+      serviceObject.getMetadata = promisify(
+          (options: SO.GetMetadataOptions, callback: SO.MetadataCallback) => {
+            callback(null, metadata);
+          });
 
       serviceObject.get((err, instance, metadata_) => {
         assert.ifError(err);
@@ -393,8 +395,8 @@ describe('ServiceObject', () => {
           autoCreate: true,
         };
 
-        serviceObject.getMetadata =
-            promisify((callback: SO.MetadataCallback) => {
+        serviceObject.getMetadata = promisify(
+            (options: SO.GetMetadataOptions, callback: SO.MetadataCallback) => {
               callback(ERROR, METADATA);
             });
       });
@@ -505,7 +507,7 @@ describe('ServiceObject', () => {
     it('should execute callback with error & apiResponse', (done) => {
       const error = new Error('ಠ_ಠ');
       sandbox.stub(ServiceObject.prototype, 'request').callsArgWith(1, error);
-      serviceObject.getMetadata((err, metadata) => {
+      serviceObject.getMetadata((err: Error, metadata: {}) => {
         assert.strictEqual(err, error);
         assert.strictEqual(metadata, undefined);
         done();
@@ -516,7 +518,7 @@ describe('ServiceObject', () => {
       const apiResponse = {};
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsArgWith(1, null, {}, apiResponse);
-      serviceObject.getMetadata(err => {
+      serviceObject.getMetadata((err: Error) => {
         assert.ifError(err);
         assert.deepStrictEqual(serviceObject.metadata, apiResponse);
         done();
@@ -528,7 +530,7 @@ describe('ServiceObject', () => {
       const requestResponse = {body: apiResponse};
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsArgWith(1, null, apiResponse, requestResponse);
-      serviceObject.getMetadata((err, metadata) => {
+      serviceObject.getMetadata((err: Error, metadata: {}) => {
         assert.ifError(err);
         assert.strictEqual(metadata, apiResponse);
         done();
@@ -581,7 +583,7 @@ describe('ServiceObject', () => {
     it('should execute callback with error & apiResponse', (done) => {
       const error = new Error('Error.');
       sandbox.stub(ServiceObject.prototype, 'request').callsArgWith(1, error);
-      serviceObject.setMetadata({}, (err, apiResponse_) => {
+      serviceObject.setMetadata({}, (err: Error, apiResponse_: {}) => {
         assert.strictEqual(err, error);
         assert.strictEqual(apiResponse_, undefined);
         done();
@@ -592,7 +594,7 @@ describe('ServiceObject', () => {
       const apiResponse = {};
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsArgWith(1, undefined, apiResponse);
-      serviceObject.setMetadata({}, (err) => {
+      serviceObject.setMetadata({}, (err: Error) => {
         assert.ifError(err);
         assert.strictEqual(serviceObject.metadata, apiResponse);
         done();
@@ -604,7 +606,7 @@ describe('ServiceObject', () => {
       const apiResponse = {body};
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsArgWith(1, null, body, apiResponse);
-      serviceObject.setMetadata({}, (err, metadata) => {
+      serviceObject.setMetadata({}, (err: Error, metadata: {}) => {
         assert.ifError(err);
         assert.strictEqual(metadata, body);
         done();
