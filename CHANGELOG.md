@@ -11,6 +11,7 @@
 ### New Features
 
 - fix: inherit requestModule from parent ([#344](https://github.com/googleapis/nodejs-common/pull/344))
+- feat: allow options to ServiceObject methods ([#349](https://github.com/googleapis/nodejs-common/pull/349))
 
 ### Dependencies
 
