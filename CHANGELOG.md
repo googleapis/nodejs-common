@@ -4,6 +4,25 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.30.0
+
+01-23-2019 06:21 PST
+
+### New Features
+
+- fix: inherit requestModule from parent ([#344](https://github.com/googleapis/nodejs-common/pull/344))
+- feat: allow options to ServiceObject methods ([#349](https://github.com/googleapis/nodejs-common/pull/349))
+
+### Dependencies
+
+- chore(deps): update dependency google-auth-library to v3.0.0 ([#348](https://github.com/googleapis/nodejs-common/pull/348))
+- chore(deps): update dependency @types/sinon to v7.0.3 ([#346](https://github.com/googleapis/nodejs-common/pull/346))
+- chore(deps): update dependency @types/sinon to v7.0.2 ([#343](https://github.com/googleapis/nodejs-common/pull/343))
+
+### Internal / Testing Changes
+
+- build: check for 404s in the docs ([#347](https://github.com/googleapis/nodejs-common/pull/347))
+
 ## v0.29.1
 
 12-19-2018 20:57 PST
