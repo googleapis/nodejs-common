@@ -27,7 +27,6 @@ import * as r from 'request';  // Only needed for type declarations.
 import {StreamRequestOptions} from '.';
 import {ApiError, BodyResponseCallback, DecorateRequestOptions, ResponseBody, util} from './util';
 
-export type CreateOptions = {};
 export type RequestResponse = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
@@ -43,12 +42,15 @@ export interface Interceptor {
   request(opts: r.Options): DecorateRequestOptions;
 }
 
+export type GetMetadataOptions = object;
+
 // tslint:disable-next-line:no-any
 export type Metadata = any;
 export type MetadataResponse = [Metadata, r.Response];
 export type MetadataCallback =
     (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
 
+export type ExistsOptions = object;
 export interface ExistsCallback {
   (err: Error|null, exists?: boolean): void;
 }
@@ -95,6 +97,7 @@ export interface InstanceResponseCallback<T> {
   (err: ApiError|null, instance?: T|null, apiResponse?: r.Response): void;
 }
 
+export type CreateOptions = {};
 // tslint:disable-next-line no-any
 export type CreateResponse<T> = any[];
 export interface CreateCallback<T> {
@@ -102,6 +105,7 @@ export interface CreateCallback<T> {
   (err: ApiError|null, instance?: T|null, ...args: any[]): void;
 }
 
+export type DeleteOptions = object;
 export interface DeleteCallback {
   (err: Error|null, apiResponse?: r.Response): void;
 }
@@ -112,13 +116,15 @@ export interface GetConfig {
    */
   autoCreate?: boolean;
 }
+type GetOrCreateOptions = GetConfig&CreateOptions;
+export type GetResponse<T> = [T, r.Response];
 
 export interface ResponseCallback {
   (err?: Error|null, apiResponse?: r.Response): void;
 }
 
 export type SetMetadataResponse = [Metadata];
-export type GetResponse<T> = [T, r.Response];
+export type SetMetadataOptions = object;
 
 /**
  * ServiceObject is a base class, meant to be inherited from by a "service
@@ -247,17 +253,23 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  delete(): Promise<[r.Response]>;
+  delete(options?: DeleteOptions): Promise<[r.Response]>;
+  delete(options: DeleteOptions, callback: DeleteCallback): void;
   delete(callback: DeleteCallback): void;
-  delete(callback?: DeleteCallback): Promise<[r.Response]>|void {
+  delete(optionsOrCallback: DeleteOptions|DeleteCallback, cb?: DeleteCallback):
+      Promise<[r.Response]>|void {
+    const [options, callback] =
+        util.maybeOptionsOrCallback<DeleteOptions, DeleteCallback>(
+            optionsOrCallback, cb);
+
     const methodConfig =
         (typeof this.methods.delete === 'object' && this.methods.delete) || {};
-    callback = callback || util.noop;
 
     const reqOpts = extend(
         {
           method: 'DELETE',
           uri: '',
+          qs: options,
         },
         methodConfig.reqOpts);
 
@@ -273,10 +285,16 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {boolean} callback.exists - Whether the object exists or not.
    */
-  exists(): Promise<[boolean]>;
+  exists(options?: ExistsOptions): Promise<[boolean]>;
+  exists(options: ExistsOptions, callback: ExistsCallback): void;
   exists(callback: ExistsCallback): void;
-  exists(callback?: ExistsCallback): void|Promise<[boolean]> {
-    this.get(err => {
+  exists(optionsOrCallback?: ExistsOptions|ExistsCallback, cb?: ExistsCallback):
+      void|Promise<[boolean]> {
+    const [options, callback] =
+        util.maybeOptionsOrCallback<ExistsOptions, ExistsCallback>(
+            optionsOrCallback, cb);
+
+    this.get(options, err => {
       if (err) {
         if (err.code === 404) {
           callback!(null, false);
@@ -293,40 +311,32 @@ class ServiceObject<T = any> extends EventEmitter {
    * Get the object if it exists. Optionally have the object created if an
    * options object is provided with `autoCreate: true`.
    *
-   * @param {object=} config - The configuration object that will be used to
+   * @param {object=} options - The configuration object that will be used to
    *     create the object if necessary.
-   * @param {boolean} config.autoCreate - Create the object if it doesn't already exist.
+   * @param {boolean} options.autoCreate - Create the object if it doesn't already exist.
    * @param {function} callback - The callback function.
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(config?: GetConfig&CreateOptions): Promise<GetResponse<T>>;
+  get(options?: GetOrCreateOptions): Promise<GetResponse<T>>;
   get(callback: InstanceResponseCallback<T>): void;
-  get(config: GetConfig&CreateOptions,
-      callback: InstanceResponseCallback<T>): void;
-  get(arg0?: (GetConfig&CreateOptions)|InstanceResponseCallback<T>,
-      arg1?: InstanceResponseCallback<T>): void|Promise<GetResponse<T>> {
+  get(options: GetOrCreateOptions, callback: InstanceResponseCallback<T>): void;
+  get(optionsOrCallback?: GetOrCreateOptions|InstanceResponseCallback<T>,
+      cb?: InstanceResponseCallback<T>): Promise<GetResponse<T>>|void {
     const self = this;
 
-    let callback = arg1;
-    if (typeof arg0 === 'function') {
-      callback = arg0;
-    }
+    const [options, callback] = util.maybeOptionsOrCallback<
+        GetOrCreateOptions, InstanceResponseCallback<T>>(optionsOrCallback, cb);
 
-    let config: GetConfig&CreateOptions = {} as GetConfig & CreateOptions;
-    if (typeof arg0 === 'object') {
-      config = arg0;
-    }
-
-    const autoCreate = config.autoCreate && typeof this.create === 'function';
-    delete config.autoCreate;
+    const autoCreate = options.autoCreate && typeof this.create === 'function';
+    delete options.autoCreate;
 
     function onCreate(
         err: ApiError|null, instance: T, apiResponse: r.Response) {
       if (err) {
         if (err.code === 409) {
-          self.get(config, callback!);
+          self.get(options, callback!);
           return;
         }
         callback!(err, null, apiResponse);
@@ -335,13 +345,12 @@ class ServiceObject<T = any> extends EventEmitter {
       callback!(null, instance, apiResponse);
     }
 
-    this.getMetadata((e, metadata) => {
-      const err = e as ApiError;
+    this.getMetadata(options, (err: ApiError|null, metadata) => {
       if (err) {
         if (err.code === 404 && autoCreate) {
-          const args: Array<Function|GetConfig&CreateOptions> = [];
-          if (Object.keys(config).length > 0) {
-            args.push(config);
+          const args: Array<Function|GetOrCreateOptions> = [];
+          if (Object.keys(options).length > 0) {
+            args.push(options);
           }
           args.push(onCreate);
           self.create(...args);
@@ -362,13 +371,25 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.metadata - The metadata for this object.
    * @param {object} callback.apiResponse - The full API response.
    */
-  getMetadata(): Promise<MetadataResponse>;
+  getMetadata(options?: GetMetadataOptions): Promise<MetadataResponse>;
+  getMetadata(options: GetMetadataOptions, callback: MetadataCallback): void;
   getMetadata(callback: MetadataCallback): void;
-  getMetadata(callback?: MetadataCallback): Promise<MetadataResponse>|void {
+  getMetadata(
+      optionsOrCallback: GetMetadataOptions|MetadataCallback,
+      cb?: MetadataCallback): Promise<MetadataResponse>|void {
+    const [options, callback] =
+        util.maybeOptionsOrCallback<GetMetadataOptions, MetadataCallback>(
+            optionsOrCallback, cb);
+
     const methodConfig = (typeof this.methods.getMetadata === 'object' &&
                           this.methods.getMetadata) ||
         {};
-    const reqOpts = extend({uri: ''}, methodConfig.reqOpts);
+    const reqOpts = extend(
+        {
+          uri: '',
+          qs: options,
+        },
+        methodConfig.reqOpts);
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
@@ -384,15 +405,24 @@ class ServiceObject<T = any> extends EventEmitter {
    * Set the metadata for this object.
    *
    * @param {object} metadata - The metadata to set on this object.
+   * @param {object=} options - Configuration options.
    * @param {function=} callback - The callback function.
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(metadata: Metadata): Promise<SetMetadataResponse>;
+  setMetadata(metadata: Metadata, options?: SetMetadataOptions):
+      Promise<SetMetadataResponse>;
   setMetadata(metadata: Metadata, callback: MetadataCallback): void;
-  setMetadata(metadata: Metadata, callback?: MetadataCallback):
-      Promise<SetMetadataResponse>|void {
-    callback = callback || util.noop;
+  setMetadata(
+      metadata: Metadata, options: SetMetadataOptions,
+      callback: MetadataCallback): void;
+  setMetadata(
+      metadata: Metadata,
+      optionsOrCallback: SetMetadataOptions|MetadataCallback,
+      cb?: MetadataCallback): Promise<SetMetadataResponse>|void {
+    const [options, callback] =
+        util.maybeOptionsOrCallback<SetMetadataOptions, MetadataCallback>(
+            optionsOrCallback, cb);
     const methodConfig = (typeof this.methods.setMetadata === 'object' &&
                           this.methods.setMetadata) ||
         {};
@@ -402,6 +432,7 @@ class ServiceObject<T = any> extends EventEmitter {
           method: 'PATCH',
           uri: '',
           json: metadata,
+          qs: options,
         },
         methodConfig.reqOpts);
 
