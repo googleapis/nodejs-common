@@ -248,6 +248,17 @@ describe('ServiceObject', () => {
       serviceObject.delete(assert.ifError);
     });
 
+    it('should accept options', (done) => {
+      const options = {};
+      sandbox.stub(ServiceObject.prototype, 'request')
+          .callsFake((reqOpts, callback) => {
+            assert.strictEqual(reqOpts.qs, options);
+            done();
+            callback(null, null, {} as r.Response);
+          });
+      serviceObject.delete(options, assert.ifError);
+    });
+
     it('should extend the request options with defaults', (done) => {
       const method = {
         reqOpts: {
@@ -297,6 +308,17 @@ describe('ServiceObject', () => {
       serviceObject.exists(() => {});
     });
 
+    it('should accept options', (done) => {
+      const options = {};
+      sandbox.stub(ServiceObject.prototype, 'get')
+          .callsFake((options_, callback) => {
+            assert.strictEqual(options_, options);
+            done();
+            callback(null, null, {} as r.Response);
+          });
+      serviceObject.exists(options, assert.ifError);
+    });
+
     it('should execute callback with false if 404', (done) => {
       const error = new ApiError('');
       error.code = 404;
@@ -337,6 +359,16 @@ describe('ServiceObject', () => {
           });
 
       serviceObject.get(assert.ifError);
+    });
+
+    it('should accept options', (done) => {
+      const options = {};
+      serviceObject.getMetadata =
+          promisify((options_: SO.GetMetadataOptions): void => {
+            assert.strictEqual(options, options_);
+            done();
+          });
+      serviceObject.exists(options, assert.ifError);
     });
 
     it('handles not getting a config', (done) => {
@@ -481,6 +513,17 @@ describe('ServiceObject', () => {
       serviceObject.getMetadata(() => {});
     });
 
+    it('should accept options', (done) => {
+      const options = {};
+      sandbox.stub(ServiceObject.prototype, 'request')
+          .callsFake(function(this: ServiceObject, reqOpts, callback) {
+            assert.strictEqual(reqOpts.qs, options);
+            done();
+            callback(null, null, {} as r.Response);
+          });
+      serviceObject.getMetadata(options, assert.ifError);
+    });
+
     it('should extend the request options with defaults', (done) => {
       const method = {
         reqOpts: {
@@ -551,6 +594,18 @@ describe('ServiceObject', () => {
             callback(null, null, {} as r.Response);
           });
       serviceObject.setMetadata(metadata, () => {});
+    });
+
+    it('should accept options', (done) => {
+      const metadata = {};
+      const options = {};
+      sandbox.stub(ServiceObject.prototype, 'request')
+          .callsFake(function(this: ServiceObject, reqOpts, callback) {
+            assert.strictEqual(reqOpts.qs, options);
+            done();
+            callback(null, null, {} as r.Response);
+          });
+      serviceObject.setMetadata(metadata, options, () => {});
     });
 
     it('should extend the request options with defaults', (done) => {
