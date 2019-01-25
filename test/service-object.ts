@@ -249,10 +249,10 @@ describe('ServiceObject', () => {
     });
 
     it('should accept options', (done) => {
-      const options = {};
+      const options = {queryOptionProperty: true};
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake((reqOpts, callback) => {
-            assert.strictEqual(reqOpts.qs, options);
+            assert.deepStrictEqual(reqOpts.qs, options);
             done();
             callback(null, null, {} as r.Response);
           });
@@ -315,10 +315,10 @@ describe('ServiceObject', () => {
     });
 
     it('should accept options', (done) => {
-      const options = {};
+      const options = {queryOptionProperty: true};
       sandbox.stub(ServiceObject.prototype, 'get')
           .callsFake((options_, callback) => {
-            assert.strictEqual(options_, options);
+            assert.deepStrictEqual(options_, options);
             done();
             callback(null, null, {} as r.Response);
           });
@@ -520,10 +520,10 @@ describe('ServiceObject', () => {
     });
 
     it('should accept options', (done) => {
-      const options = {};
+      const options = {queryOptionProperty: true};
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake(function(this: ServiceObject, reqOpts, callback) {
-            assert.strictEqual(reqOpts.qs, options);
+            assert.deepStrictEqual(reqOpts.qs, options);
             done();
             callback(null, null, {} as r.Response);
           });
@@ -595,13 +595,13 @@ describe('ServiceObject', () => {
 
   describe('setMetadata', () => {
     it('should make the correct request', (done) => {
-      const metadata = {};
+      const metadata = {metadataProperty: true};
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake(function(this: ServiceObject, reqOpts, callback) {
             assert.strictEqual(this, serviceObject);
             assert.strictEqual(reqOpts.method, 'PATCH');
             assert.strictEqual(reqOpts.uri, '');
-            assert.strictEqual(reqOpts.json, metadata);
+            assert.deepStrictEqual(reqOpts.json, metadata);
             done();
             callback(null, null, {} as r.Response);
           });
@@ -610,10 +610,10 @@ describe('ServiceObject', () => {
 
     it('should accept options', (done) => {
       const metadata = {};
-      const options = {};
+      const options = {queryOptionProperty: true};
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake(function(this: ServiceObject, reqOpts, callback) {
-            assert.strictEqual(reqOpts.qs, options);
+            assert.deepStrictEqual(reqOpts.qs, options);
             done();
             callback(null, null, {} as r.Response);
           });
