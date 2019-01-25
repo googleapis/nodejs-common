@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.30.2
+
+01-25-2019 12:06 PST
+
+### New Features
+- fix: clone default request configuration object ([#356](https://github.com/googleapis/nodejs-common/pull/356))
+
 ## v0.30.1
 
 01-25-2019 11:06 PST
