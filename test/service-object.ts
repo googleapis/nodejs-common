@@ -269,8 +269,12 @@ describe('ServiceObject', () => {
         },
       };
 
+      const cachedMethodConfig = extend(true, {}, methodConfig);
+
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake((reqOpts_, callback) => {
+            assert.deepStrictEqual(
+                serviceObject.methods.delete, cachedMethodConfig);
             assert.deepStrictEqual(reqOpts_.qs, {
               defaultProperty: true,
               optionalProperty: true,
@@ -540,8 +544,12 @@ describe('ServiceObject', () => {
         },
       };
 
+      const cachedMethodConfig = extend(true, {}, methodConfig);
+
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake((reqOpts_, callback) => {
+            assert.deepStrictEqual(
+                serviceObject.methods.getMetadata, cachedMethodConfig);
             assert.deepStrictEqual(reqOpts_.qs, {
               defaultProperty: true,
               optionalProperty: true,
@@ -629,9 +637,12 @@ describe('ServiceObject', () => {
           },
         },
       };
+      const cachedMethodConfig = extend(true, {}, methodConfig);
 
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake((reqOpts_, callback) => {
+            assert.deepStrictEqual(
+                serviceObject.methods.setMetadata, cachedMethodConfig);
             assert.deepStrictEqual(reqOpts_.qs, {
               defaultProperty: true,
               optionalProperty: true,
