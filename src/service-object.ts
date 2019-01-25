@@ -265,7 +265,7 @@ class ServiceObject<T = any> extends EventEmitter {
     const methodConfig =
         (typeof this.methods.delete === 'object' && this.methods.delete) || {};
 
-    const reqOpts = extend(true, methodConfig.reqOpts, {
+    const reqOpts = extend(true, {}, methodConfig.reqOpts, {
       method: 'DELETE',
       uri: '',
       qs: options,
@@ -382,7 +382,7 @@ class ServiceObject<T = any> extends EventEmitter {
     const methodConfig = (typeof this.methods.getMetadata === 'object' &&
                           this.methods.getMetadata) ||
         {};
-    const reqOpts = extend(true, methodConfig.reqOpts, {
+    const reqOpts = extend(true, {}, methodConfig.reqOpts, {
       uri: '',
       qs: options,
     });
@@ -423,7 +423,7 @@ class ServiceObject<T = any> extends EventEmitter {
                           this.methods.setMetadata) ||
         {};
 
-    const reqOpts = extend(true, methodConfig.reqOpts, {
+    const reqOpts = extend(true, {}, methodConfig.reqOpts, {
       method: 'PATCH',
       uri: '',
       json: metadata,
