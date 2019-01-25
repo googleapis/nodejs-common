@@ -4,6 +4,22 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.30.1
+
+01-25-2019 11:06 PST
+
+### New Features
+
+- fix: favor user options over defaults ([#353](https://github.com/googleapis/nodejs-common/pull/353))
+
+### Documentation
+
+- build: ignore googleapis.com in doc link check ([#351](https://github.com/googleapis/nodejs-common/pull/351))
+
+### Internal / Testing Changes
+
+- add tests ([#352](https://github.com/googleapis/nodejs-common/pull/352))
+
 ## v0.30.0
 
 01-23-2019 06:21 PST
