@@ -259,27 +259,33 @@ describe('ServiceObject', () => {
       serviceObject.delete(options, assert.ifError);
     });
 
-    it('should extend the request options with defaults', (done) => {
-      const method = {
+    it('should extend the defaults with request options', (done) => {
+      const methodConfig = {
         reqOpts: {
-          method: 'override',
           qs: {
-            custom: true,
+            defaultProperty: true,
+            thisPropertyWasOverridden: false,
           },
         },
       };
 
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake((reqOpts_, callback) => {
-            assert.strictEqual(reqOpts_.method, method.reqOpts.method);
-            assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
+            assert.deepStrictEqual(reqOpts_.qs, {
+              defaultProperty: true,
+              optionalProperty: true,
+              thisPropertyWasOverridden: true,
+            });
             done();
             callback(null, null, null!);
           });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
-      serviceObject.methods.delete = method;
-      serviceObject.delete();
+      serviceObject.methods.delete = methodConfig;
+      serviceObject.delete({
+        optionalProperty: true,
+        thisPropertyWasOverridden: true,
+      });
     });
 
     it('should not require a callback', () => {
@@ -524,27 +530,33 @@ describe('ServiceObject', () => {
       serviceObject.getMetadata(options, assert.ifError);
     });
 
-    it('should extend the request options with defaults', (done) => {
-      const method = {
+    it('should extend the defaults with request options', (done) => {
+      const methodConfig = {
         reqOpts: {
-          method: 'override',
           qs: {
-            custom: true,
+            defaultProperty: true,
+            thisPropertyWasOverridden: false,
           },
         },
       };
 
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake((reqOpts_, callback) => {
-            assert.strictEqual(reqOpts_.method, method.reqOpts.method);
-            assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
+            assert.deepStrictEqual(reqOpts_.qs, {
+              defaultProperty: true,
+              optionalProperty: true,
+              thisPropertyWasOverridden: true,
+            });
             done();
-            callback(null, undefined, {} as r.Response);
+            callback(null, null, null!);
           });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
-      serviceObject.methods.getMetadata = method;
-      serviceObject.getMetadata(() => {});
+      serviceObject.methods.getMetadata = methodConfig;
+      serviceObject.getMetadata({
+        optionalProperty: true,
+        thisPropertyWasOverridden: true,
+      });
     });
 
     it('should execute callback with error & apiResponse', (done) => {
@@ -608,31 +620,33 @@ describe('ServiceObject', () => {
       serviceObject.setMetadata(metadata, options, () => {});
     });
 
-    it('should extend the request options with defaults', (done) => {
-      const metadataDefault = {a: 'b'};
-      const metadata = {c: 'd'};
-      const method = {
+    it('should extend the defaults with request options', (done) => {
+      const methodConfig = {
         reqOpts: {
-          method: 'override',
           qs: {
-            custom: true,
+            defaultProperty: true,
+            thisPropertyWasOverridden: false,
           },
-          json: metadataDefault,
         },
       };
 
-      const expectedJson = extend(true, {}, metadataDefault, metadata);
-      const serviceObject = new ServiceObject(CONFIG);
-      asInternal(serviceObject).methods.setMetadata = method;
       sandbox.stub(ServiceObject.prototype, 'request')
           .callsFake((reqOpts_, callback) => {
-            assert.deepStrictEqual(reqOpts_.method, method.reqOpts.method);
-            assert.deepStrictEqual(reqOpts_.qs, method.reqOpts.qs);
-            assert.deepStrictEqual(reqOpts_.json, expectedJson);
+            assert.deepStrictEqual(reqOpts_.qs, {
+              defaultProperty: true,
+              optionalProperty: true,
+              thisPropertyWasOverridden: true,
+            });
             done();
             callback(null, null, null!);
           });
-      serviceObject.setMetadata(metadata);
+
+      const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
+      serviceObject.methods.setMetadata = methodConfig;
+      serviceObject.setMetadata({}, {
+        optionalProperty: true,
+        thisPropertyWasOverridden: true,
+      });
     });
 
     it('should execute callback with error & apiResponse', (done) => {
