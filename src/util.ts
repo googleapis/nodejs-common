@@ -227,7 +227,16 @@ export class ApiError extends Error {
       messages.add('A failure occurred during this request.');
     }
 
-    return Array.from(messages).join('\n');
+    let messageArr: string[] = Array.from(messages);
+
+    if (messageArr.length > 1) {
+      messageArr = messageArr.map((message, i) => `    ${i + 1}. ${message}`);
+      messageArr.unshift(
+          'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n');
+      messageArr.push('\n');
+    }
+
+    return messageArr.join('\n');
   }
 }
 
