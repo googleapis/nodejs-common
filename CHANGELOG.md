@@ -4,6 +4,22 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.31.0
+
+02-05-2019 16:37 PST
+  
+### New Features
+
+- fix: remove timeout rule from streaming uploads ([#365](https://github.com/googleapis/nodejs-common/pull/365))
+
+### Dependencies
+
+- deps: update typescript to v3.3.0 ([#358](https://github.com/googleapis/nodejs-common/pull/358))
+
+### Documentation
+
+- docs: add lint/fix example to contributing guide ([#364](https://github.com/googleapis/nodejs-common/pull/364))
+
 ## v0.30.2
 
 01-25-2019 12:06 PST
