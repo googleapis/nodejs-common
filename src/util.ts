@@ -199,21 +199,44 @@ export class ApiError extends Error {
       this.errors = errorBody.errors;
     }
 
-    const messages: string[] = [];
+    this.message = ApiError.createMultiErrorMessage(errorBody, this.errors);
+  }
+  /**
+   * Pieces together an error message by combining all unique error messages
+   * returned from a single GoogleError
+   *
+   * @private
+   *
+   * @param {GoogleErrorBody} err The original error.
+   * @param {GoogleInnerError[]} [errors] Inner errors, if any.
+   * @returns {string}
+   */
+  static createMultiErrorMessage(
+      err: GoogleErrorBody, errors?: GoogleInnerError[]): string {
+    const messages: Set<string> = new Set();
 
-    if (errorBody.message) {
-      messages.push(errorBody.message);
+    if (err.message) {
+      messages.add(err.message);
     }
 
-    if (this.errors && this.errors.length === 1) {
-      messages.push(this.errors[0].message!);
-    } else if (this.response && this.response.body) {
-      messages.push(ent.decode(errorBody.response.body.toString()));
-    } else if (!errorBody.message) {
-      messages.push('Error during request.');
+    if (errors && errors.length) {
+      errors.forEach(({message}) => messages.add(message!));
+    } else if (err.response && err.response.body) {
+      messages.add(ent.decode(err.response.body.toString()));
+    } else if (!err.message) {
+      messages.add('A failure occurred during this request.');
     }
 
-    this.message = Array.from(new Set(messages)).join(' - ');
+    let messageArr: string[] = Array.from(messages);
+
+    if (messageArr.length > 1) {
+      messageArr = messageArr.map((message, i) => `    ${i + 1}. ${message}`);
+      messageArr.unshift(
+          'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n');
+      messageArr.push('\n');
+    }
+
+    return messageArr.join('\n');
   }
 }
 
@@ -233,8 +256,7 @@ export class PartialFailureError extends Error {
     this.name = 'PartialFailureError';
     this.response = errorObject.response;
 
-    const defaultErrorMessage = 'A failure occurred during this request.';
-    this.message = errorObject.message || defaultErrorMessage;
+    this.message = ApiError.createMultiErrorMessage(errorObject, this.errors);
   }
 }
 

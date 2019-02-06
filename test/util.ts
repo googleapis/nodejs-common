@@ -27,7 +27,7 @@ import * as retryRequest from 'retry-request';
 import * as sinon from 'sinon';
 import * as stream from 'stream';
 
-import {Abortable, ApiError, DecorateRequestOptions, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, ParsedHttpRespMessage, Util} from '../src/util';
+import {Abortable, ApiError, DecorateRequestOptions, GoogleErrorBody, GoogleInnerError, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, ParsedHttpRespMessage, Util} from '../src/util';
 
 nock.disableNetConnect();
 
@@ -79,6 +79,19 @@ describe('common/util', () => {
     return sandbox.stub(util, method).callsFake(meth);
   }
 
+  function createExpectedErrorMessage(errors: string[]): string {
+    if (errors.length < 2) {
+      return errors[0];
+    }
+
+    errors = errors.map((error, i) => `    ${i + 1}. ${error}`);
+    errors.unshift(
+        'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n');
+    errors.push('\n');
+
+    return errors.join('\n');
+  }
+
   const fakeGoogleAuth = {
     GoogleAuth: class {
       constructor(config?: GoogleAuthOptions) {
@@ -109,166 +122,160 @@ describe('common/util', () => {
   });
 
   describe('ApiError', () => {
+    it('should accept just a message', () => {
+      const expectedMessage = 'Hi, I am an error message!';
+      const apiError = new ApiError(expectedMessage);
+
+      assert.strictEqual(apiError.message, expectedMessage);
+    });
+
     it('should build correct ApiError', () => {
+      const fakeMessage = 'Formatted Error.';
       const fakeResponse = {statusCode: 200} as request.Response;
+      const errors = [{message: 'Hi'}, {message: 'Bye'}];
       const error = {
-        errors: [new Error(), new Error()],
+        errors,
         code: 100,
         message: 'Uh oh',
         response: fakeResponse,
       };
+
+      sandbox.stub(ApiError, 'createMultiErrorMessage')
+          .withArgs(error, errors)
+          .returns(fakeMessage);
+
       const apiError = new ApiError(error);
       assert.strictEqual(apiError.errors, error.errors);
       assert.strictEqual(apiError.code, error.code);
-      assert.strictEqual(apiError.message, error.message);
       assert.strictEqual(apiError.response, error.response);
-    });
-
-    it('should detect ApiError message from response body', () => {
-      const errorMessage = 'API error message';
-      const error = {
-        errors: [new Error(errorMessage)],
-        code: 100,
-        response: fakeResponse,
-      };
-      const apiError = new ApiError(error);
-      assert.strictEqual(apiError.message, errorMessage);
+      assert.strictEqual(apiError.message, fakeMessage);
     });
 
     it('should parse the response body for errors', () => {
-      const error = new Error('Error.');
+      const fakeMessage = 'Formatted Error.';
+      const error = {message: 'Error.'};
       const errors = [error, error];
-      const replaceErrors = (key: string, value: {}) => {
-        if (value instanceof Error) {
-          const error: {[index: string]: {}} = {};
-          error['message'] = value['message'];
-          return error;
-        }
-        return value;
-      };
 
       const errorBody = {
         code: 123,
         response: {
-          body: JSON.stringify(
-              {
-                error: {
-                  errors,
-                },
-              },
-              replaceErrors),
+          body: JSON.stringify({
+            error: {
+              errors,
+            },
+          }),
         } as request.Response,
       };
+
+      sandbox.stub(ApiError, 'createMultiErrorMessage')
+          .withArgs(errorBody, errors)
+          .returns(fakeMessage);
 
       const apiError = new ApiError(errorBody);
-
-      assert.deepStrictEqual(
-          apiError.errors, JSON.parse(JSON.stringify(errors, replaceErrors)));
+      assert.strictEqual(apiError.message, fakeMessage);
     });
 
-    it('should append the custom error message', () => {
-      const errorMessage = 'API error message';
-      const customErrorMessage = 'Custom error message';
-      const expectedErrorMessage =
-          [customErrorMessage, errorMessage].join(' - ');
+    describe('createMultiErrorMessage', () => {
+      it('should append the custom error message', () => {
+        const errorMessage = 'API error message';
+        const customErrorMessage = 'Custom error message';
 
-      const error = {
-        errors: [new Error(errorMessage)],
-        code: 100,
-        response: fakeResponse,
-        message: customErrorMessage,
-      };
+        const errors = [new Error(errorMessage)];
+        const error = {
+          code: 100,
+          response: {} as request.Response,
+          message: customErrorMessage,
+        };
 
-      const apiError = new ApiError(error);
+        const expectedErrorMessage =
+            createExpectedErrorMessage([customErrorMessage, errorMessage]);
+        const multiError = ApiError.createMultiErrorMessage(error, errors);
+        assert.strictEqual(multiError, expectedErrorMessage);
+      });
 
-      assert.strictEqual(apiError.message, expectedErrorMessage);
-    });
+      it('should use any inner errors', () => {
+        const messages = [
+          'Hi, I am an error!',
+          'Me too!',
+        ];
+        const errors: GoogleInnerError[] = messages.map(message => ({message}));
+        const error: GoogleErrorBody = {
+          code: 100,
+          response: {} as request.Response,
+        };
 
-    it('should parse and append the decoded response body', () => {
-      const errorMessage = 'API error message';
-      const responseBodyMsg = 'Response body message &lt;';
-      const expectedErrorMessage = [
-        errorMessage,
-        'Response body message <',
-      ].join(' - ');
+        const expectedErrorMessage = createExpectedErrorMessage(messages);
+        const multiError = ApiError.createMultiErrorMessage(error, errors);
+        assert.strictEqual(multiError, expectedErrorMessage);
+      });
 
-      const error = {
-        message: errorMessage,
-        code: 100,
-        response: {
-          body: Buffer.from(responseBodyMsg),
-        } as request.Response,
-      };
-      const apiError = new ApiError(error);
-      assert.strictEqual(apiError.message, expectedErrorMessage);
-    });
+      it('should parse and append the decoded response body', () => {
+        const errorMessage = 'API error message';
+        const responseBodyMsg = 'Response body message &lt;';
 
-    it('should use default message if there are no errors', () => {
-      const fakeResponse = {statusCode: 200} as request.Response;
-      const expectedErrorMessage = 'Error during request.';
-      const error = {
-        code: 100,
-        response: fakeResponse,
-      };
-      const apiError = new ApiError(error);
-      assert.strictEqual(apiError.message, expectedErrorMessage);
-    });
+        const error = {
+          message: errorMessage,
+          code: 100,
+          response: {
+            body: Buffer.from(responseBodyMsg),
+          } as request.Response,
+        };
 
-    it('should use default message if too many errors', () => {
-      const fakeResponse = {statusCode: 200} as request.Response;
-      const expectedErrorMessage = 'Error during request.';
-      const error = {
-        errors: [new Error(), new Error()],
-        code: 100,
-        response: fakeResponse,
-      };
-      const apiError = new ApiError(error);
-      assert.strictEqual(apiError.message, expectedErrorMessage);
-    });
+        const expectedErrorMessage = createExpectedErrorMessage(
+            ['API error message', 'Response body message <']);
+        const multiError = ApiError.createMultiErrorMessage(error);
+        assert.strictEqual(multiError, expectedErrorMessage);
+      });
 
-    it('should filter out duplicate errors', () => {
-      const expectedErrorMessage = 'Error during request.';
-      const error = {
-        code: 100,
-        message: expectedErrorMessage,
-        response: {
-          body: expectedErrorMessage,
-        } as request.Response,
-      };
-      const apiError = new ApiError(error);
-      assert.strictEqual(apiError.message, expectedErrorMessage);
+      it('should use default message if there are no errors', () => {
+        const fakeResponse = {statusCode: 200} as request.Response;
+        const expectedErrorMessage = 'A failure occurred during this request.';
+        const error = {
+          code: 100,
+          response: fakeResponse,
+        };
+
+        const multiError = ApiError.createMultiErrorMessage(error);
+        assert.strictEqual(multiError, expectedErrorMessage);
+      });
+
+      it('should filter out duplicate errors', () => {
+        const expectedErrorMessage = 'Error during request.';
+        const error = {
+          code: 100,
+          message: expectedErrorMessage,
+          response: {
+            body: expectedErrorMessage,
+          } as request.Response,
+        };
+
+        const multiError = ApiError.createMultiErrorMessage(error);
+        assert.strictEqual(multiError, expectedErrorMessage);
+      });
     });
   });
 
   describe('PartialFailureError', () => {
     it('should build correct PartialFailureError', () => {
+      const fakeMessage = 'Formatted Error.';
+      const errors = [{}, {}];
       const error = {
         code: 123,
-        errors: [new Error(), new Error()],
+        errors,
         response: fakeResponse,
         message: 'Partial failure occurred',
       };
+
+      sandbox.stub(util.ApiError, 'createMultiErrorMessage')
+          .withArgs(error, errors)
+          .returns(fakeMessage);
 
       const partialFailureError = new util.PartialFailureError(error);
 
       assert.strictEqual(partialFailureError.errors, error.errors);
       assert.strictEqual(partialFailureError.name, 'PartialFailureError');
       assert.strictEqual(partialFailureError.response, error.response);
-      assert.strictEqual(partialFailureError.message, error.message);
-    });
-
-    it('should use default message', () => {
-      const expectedErrorMessage = 'A failure occurred during this request.';
-
-      const error = {
-        code: 123,
-        errors: [],
-        response: fakeResponse,
-      };
-
-      const partialFailureError = new util.PartialFailureError(error);
-
-      assert.strictEqual(partialFailureError.message, expectedErrorMessage);
+      assert.strictEqual(partialFailureError.message, fakeMessage);
     });
   });
 
@@ -371,10 +378,10 @@ describe('common/util', () => {
       };
 
       const parsedHttpRespBody = util.parseHttpRespBody({error: apiErr});
-      const expectedErrorMessage = [
+      const expectedErrorMessage = createExpectedErrorMessage([
         apiErr.message,
         apiErr.errors[0].message,
-      ].join(' - ');
+      ]);
 
       const err = parsedHttpRespBody.err as ApiError;
       assert.deepStrictEqual(err.errors, apiErr.errors);
