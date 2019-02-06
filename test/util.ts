@@ -406,6 +406,7 @@ describe('common/util', () => {
         makeAuthenticatedRequest(request: DecorateRequestOptions) {
           assert.equal(request.method, 'POST');
           assert.equal(request.qs.uploadType, 'multipart');
+          assert.strictEqual(request.timeout, 0);
           assert.strictEqual(request.maxRetries, 0);
 
           assert.strictEqual(Array.isArray(request.multipart), true);
