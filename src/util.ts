@@ -389,6 +389,7 @@ export class Util {
       qs: {
         uploadType: 'multipart',
       },
+      timeout: 0,
       maxRetries: 0,
     };
 
