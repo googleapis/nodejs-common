@@ -22,24 +22,26 @@ import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as nock from 'nock';
 import * as proxyquire from 'proxyquire';
-import * as request from 'request';
+import * as r from 'request';
 import * as retryRequest from 'retry-request';
 import * as sinon from 'sinon';
 import * as stream from 'stream';
+import {teenyRequest} from 'teeny-request';
 
 import {Abortable, ApiError, DecorateRequestOptions, GoogleErrorBody, GoogleInnerError, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, ParsedHttpRespMessage, Util} from '../src/util';
 
+const request = teenyRequest as typeof r;
 nock.disableNetConnect();
 
 const fakeResponse = {
   statusCode: 200,
   body: {star: 'trek'}
-} as request.Response;
+} as r.Response;
 
 const fakeBadResp = {
   statusCode: 400,
   statusMessage: 'Not Good'
-} as request.Response;
+} as r.Response;
 
 const fakeReqOpts: DecorateRequestOptions = {
   uri: 'http://so-fake',
@@ -51,7 +53,7 @@ const fakeError = new Error('this error is like so fake');
 // tslint:disable-next-line:no-any
 let requestOverride: any;
 function fakeRequest() {
-  return (requestOverride || request).apply(null, arguments);
+  return (requestOverride || teenyRequest).apply(null, arguments);
 }
 
 fakeRequest.defaults = () => {
@@ -131,7 +133,7 @@ describe('common/util', () => {
 
     it('should build correct ApiError', () => {
       const fakeMessage = 'Formatted Error.';
-      const fakeResponse = {statusCode: 200} as request.Response;
+      const fakeResponse = {statusCode: 200} as r.Response;
       const errors = [{message: 'Hi'}, {message: 'Bye'}];
       const error = {
         errors,
@@ -164,7 +166,7 @@ describe('common/util', () => {
               errors,
             },
           }),
-        } as request.Response,
+        } as r.Response,
       };
 
       sandbox.stub(ApiError, 'createMultiErrorMessage')
@@ -183,7 +185,7 @@ describe('common/util', () => {
         const errors = [new Error(errorMessage)];
         const error = {
           code: 100,
-          response: {} as request.Response,
+          response: {} as r.Response,
           message: customErrorMessage,
         };
 
@@ -201,7 +203,7 @@ describe('common/util', () => {
         const errors: GoogleInnerError[] = messages.map(message => ({message}));
         const error: GoogleErrorBody = {
           code: 100,
-          response: {} as request.Response,
+          response: {} as r.Response,
         };
 
         const expectedErrorMessage = createExpectedErrorMessage(messages);
@@ -218,7 +220,7 @@ describe('common/util', () => {
           code: 100,
           response: {
             body: Buffer.from(responseBodyMsg),
-          } as request.Response,
+          } as r.Response,
         };
 
         const expectedErrorMessage = createExpectedErrorMessage(
@@ -228,7 +230,7 @@ describe('common/util', () => {
       });
 
       it('should use default message if there are no errors', () => {
-        const fakeResponse = {statusCode: 200} as request.Response;
+        const fakeResponse = {statusCode: 200} as r.Response;
         const expectedErrorMessage = 'A failure occurred during this request.';
         const error = {
           code: 100,
@@ -246,7 +248,7 @@ describe('common/util', () => {
           message: expectedErrorMessage,
           response: {
             body: expectedErrorMessage,
-          } as request.Response,
+          } as r.Response,
         };
 
         const multiError = ApiError.createMultiErrorMessage(error);
@@ -418,7 +420,7 @@ describe('common/util', () => {
 
           assert.strictEqual(Array.isArray(request.multipart), true);
 
-          const mp = request.multipart as request.RequestPart[];
+          const mp = request.multipart as r.RequestPart[];
 
           assert.strictEqual(
               // tslint:disable-next-line:no-any
@@ -552,7 +554,7 @@ describe('common/util', () => {
 
       requestOverride =
           (reqOpts: DecorateRequestOptions,
-           callback: (err: Error|null, res: request.Response) => void) => {
+           callback: (err: Error|null, res: r.Response) => void) => {
             callback(null, fakeResponse);
           };
 
@@ -1275,7 +1277,7 @@ describe('common/util', () => {
 
         retryRequestOverride =
             (rOpts: DecorateRequestOptions, opts: MakeRequestConfig,
-             callback: request.RequestCallback) => {
+             callback: r.RequestCallback) => {
               callback(error, fakeResponse, body);
             };
 
