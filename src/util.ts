@@ -24,7 +24,7 @@ import * as ent from 'ent';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
-import * as r from 'request';
+import * as r from 'request';  // types only
 import * as retryRequest from 'retry-request';
 import {PassThrough} from 'stream';
 
