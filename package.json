@@ -37,7 +37,7 @@
     "@types/duplexify": "^3.5.0",
     "@types/request": "^2.47.0",
     "arrify": "^1.0.1",
-    "duplexify": "^3.6.0",
+    "duplexify": "^4.0.0",
     "ent": "^2.2.0",
     "extend": "^3.0.1",
     "google-auth-library": "^3.0.0",
