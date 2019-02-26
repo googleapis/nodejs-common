@@ -375,7 +375,7 @@ describe('ServiceObject', () => {
       const options = {};
       serviceObject.getMetadata =
           promisify((options_: SO.GetMetadataOptions): void => {
-            assert.strictEqual(options, options_);
+            assert.deepStrictEqual(options, options_);
             done();
           });
       serviceObject.exists(options, assert.ifError);
@@ -443,6 +443,12 @@ describe('ServiceObject', () => {
             });
       });
 
+      it('should keep the original options intact', () => {
+        const expectedConfig = Object.assign({}, AUTO_CREATE_CONFIG);
+        serviceObject.get(AUTO_CREATE_CONFIG, () => {});
+        assert.deepStrictEqual(AUTO_CREATE_CONFIG, expectedConfig);
+      });
+
       it('should not auto create if there is no create method', (done) => {
         (serviceObject as FakeServiceObject).create = undefined;
 
@@ -453,11 +459,11 @@ describe('ServiceObject', () => {
       });
 
       it('should pass config to create if it was provided', (done) => {
-        const config = extend({}, AUTO_CREATE_CONFIG, {
-                         maxResults: 5,
-                       }) as SO.GetConfig;
+        const expectedConfig = {maxResults: 5} as SO.GetConfig;
+        const config = extend({}, AUTO_CREATE_CONFIG, expectedConfig);
+
         sandbox.stub(serviceObject, 'create').callsFake(config_ => {
-          assert.strictEqual(config_, config);
+          assert.deepStrictEqual(config_, expectedConfig);
           done();
         });
         serviceObject.get(config, assert.ifError);
