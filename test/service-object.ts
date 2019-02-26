@@ -443,6 +443,12 @@ describe('ServiceObject', () => {
             });
       });
 
+      it('should keep the original options intact', () => {
+        const expectedConfig = Object.assign({}, AUTO_CREATE_CONFIG);
+        serviceObject.get(AUTO_CREATE_CONFIG, () => {});
+        assert.deepStrictEqual(AUTO_CREATE_CONFIG, expectedConfig);
+      });
+
       it('should not auto create if there is no create method', (done) => {
         (serviceObject as FakeServiceObject).create = undefined;
 

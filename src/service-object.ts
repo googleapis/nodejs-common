@@ -324,8 +324,9 @@ class ServiceObject<T = any> extends EventEmitter {
       cb?: InstanceResponseCallback<T>): Promise<GetResponse<T>>|void {
     const self = this;
 
-    const [options, callback] = util.maybeOptionsOrCallback<
+    const [opts, callback] = util.maybeOptionsOrCallback<
         GetOrCreateOptions, InstanceResponseCallback<T>>(optionsOrCallback, cb);
+    const options = Object.assign({}, opts);
 
     const autoCreate = options.autoCreate && typeof this.create === 'function';
     delete options.autoCreate;
