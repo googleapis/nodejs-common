@@ -4,6 +4,33 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.31.1
+
+03-13-2019 16:25 PDT
+
+### Bug Fixes
+- fix(autoCreate): leave user options intact ([#378](https://github.com/googleapis/nodejs-common/pull/378))
+
+### Dependencies
+- fix(deps): update dependency @google-cloud/promisify to ^0.4.0 ([#374](https://github.com/googleapis/nodejs-common/pull/374))
+
+### Documentation
+- docs: update links in contrib guide ([#375](https://github.com/googleapis/nodejs-common/pull/375))
+- docs: update contributing path in README ([#369](https://github.com/googleapis/nodejs-common/pull/369))
+- docs: move CONTRIBUTING.md to root ([#368](https://github.com/googleapis/nodejs-common/pull/368))
+
+### Internal / Testing Changes
+- build: Add docuploader credentials to node publish jobs ([#381](https://github.com/googleapis/nodejs-common/pull/381))
+- build: use node10 to run samples-test, system-test etc ([#380](https://github.com/googleapis/nodejs-common/pull/380))
+- build: update release configuration
+- chore(deps): update dependency mocha to v6
+- test: do not depend on request ([#376](https://github.com/googleapis/nodejs-common/pull/376))
+- build: use linkinator for docs test ([#372](https://github.com/googleapis/nodejs-common/pull/372))
+- chore(deps): update dependency @types/tmp to v0.0.34 ([#373](https://github.com/googleapis/nodejs-common/pull/373))
+- build: create docs test npm scripts ([#371](https://github.com/googleapis/nodejs-common/pull/371))
+- build: test using @grpc/grpc-js in CI ([#370](https://github.com/googleapis/nodejs-common/pull/370))
+- refactor: change error message format to multiline ([#362](https://github.com/googleapis/nodejs-common/pull/362))
+
 ## v0.31.0
 
 02-05-2019 16:37 PST
