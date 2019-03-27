@@ -17,7 +17,6 @@
 import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as assert from 'assert';
 import {AxiosRequestConfig} from 'axios';
-import * as duplexify from 'duplexify';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as nock from 'nock';
@@ -28,7 +27,9 @@ import * as sinon from 'sinon';
 import * as stream from 'stream';
 import {teenyRequest} from 'teeny-request';
 
-import {Abortable, ApiError, DecorateRequestOptions, GoogleErrorBody, GoogleInnerError, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, ParsedHttpRespMessage, Util} from '../src/util';
+import {Abortable, ApiError, DecorateRequestOptions, Duplexify, DuplexifyConstructor, GoogleErrorBody, GoogleInnerError, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, ParsedHttpRespMessage, Util} from '../src/util';
+
+const duplexify: DuplexifyConstructor = require('duplexify');
 
 const request = teenyRequest as typeof r;
 nock.disableNetConnect();
@@ -1159,7 +1160,7 @@ describe('common/util', () => {
         });
 
         it('should expose the abort method from retryRequest', (done) => {
-          const userStream = duplexify() as duplexify.Duplexify & Abortable;
+          const userStream = duplexify() as Duplexify & Abortable;
 
           retryRequestOverride = () => {
             // tslint:disable-next-line:no-any
@@ -1219,11 +1220,10 @@ describe('common/util', () => {
         });
 
         it('should expose the abort method from request', (done) => {
-          const userStream = duplexify() as duplexify.Duplexify & Abortable;
+          const userStream = duplexify() as Duplexify & Abortable;
 
           requestOverride = Object.assign(() => {
-            const requestStream =
-                duplexify() as duplexify.Duplexify & Abortable;
+            const requestStream = duplexify() as Duplexify & Abortable;
             requestStream.abort = done;
             return requestStream;
           }, {defaults: () => requestOverride});

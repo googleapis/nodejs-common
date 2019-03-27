@@ -19,16 +19,17 @@
  */
 
 import {replaceProjectIdToken} from '@google-cloud/projectify';
-import * as duplexify from 'duplexify';
 import * as ent from 'ent';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
 import * as r from 'request';  // types only
 import * as retryRequest from 'retry-request';
-import {PassThrough} from 'stream';
+import {Duplex, DuplexOptions, PassThrough, Readable, Writable} from 'stream';
 
 import {Interceptor} from './service-object';
+
+const duplexify: DuplexifyConstructor = require('duplexify');
 
 const requestDefaults = {
   timeout: 60000,
@@ -42,20 +43,41 @@ const requestDefaults = {
 // tslint:disable-next-line:no-any
 export type ResponseBody = any;
 
+// Directly copy over Duplexify interfaces
+export interface DuplexifyOptions extends DuplexOptions {
+  autoDestroy?: boolean;
+  end?: boolean;
+}
+
+export interface Duplexify extends Duplex {
+  readonly destroyed: boolean;
+  setWritable(writable: Writable|false|null): void;
+  setReadable(readable: Readable|false|null): void;
+}
+
+export interface DuplexifyConstructor {
+  obj(writable?: Writable|false|null, readable?: Readable|false|null,
+      options?: DuplexifyOptions): Duplexify;
+  new(writable?: Writable|false|null, readable?: Readable|false|null,
+      options?: DuplexifyOptions): Duplexify;
+  (writable?: Writable|false|null, readable?: Readable|false|null,
+   options?: DuplexifyOptions): Duplexify;
+}
+
 export interface ParsedHttpRespMessage {
   resp: r.Response;
   err?: ApiError;
 }
 
 export interface MakeAuthenticatedRequest {
-  (reqOpts: DecorateRequestOptions): duplexify.Duplexify;
+  (reqOpts: DecorateRequestOptions): Duplexify;
   (reqOpts: DecorateRequestOptions,
    options?: MakeAuthenticatedRequestOptions): void|Abortable;
   (reqOpts: DecorateRequestOptions,
    callback?: BodyResponseCallback): void|Abortable;
   (reqOpts: DecorateRequestOptions,
    optionsOrCallback?: MakeAuthenticatedRequestOptions|
-   BodyResponseCallback): void|Abortable|duplexify.Duplexify;
+   BodyResponseCallback): void|Abortable|Duplexify;
   getCredentials:
       (callback:
            (err?: Error|null, credentials?: CredentialBody) => void) => void;
@@ -65,7 +87,7 @@ export interface MakeAuthenticatedRequest {
 export type Abortable = {
   abort(): void
 };
-export type AbortableDuplex = duplexify.Duplexify&Abortable;
+export type AbortableDuplex = Duplexify&Abortable;
 
 export interface PackageJson {
   name: string;
@@ -97,7 +119,7 @@ export interface MakeAuthenticatedRequestFactoryConfig extends
    */
   maxRetries?: number;
 
-  stream?: duplexify.Duplexify;
+  stream?: Duplexify;
 
   request: typeof r;
 
@@ -280,7 +302,7 @@ export interface MakeRequestConfig {
 
   retries?: number;
 
-  stream?: duplexify.Duplexify;
+  stream?: Duplexify;
 
   request?: typeof r;
 
@@ -399,7 +421,7 @@ export class Util {
    * @param {function} onComplete - Callback, executed after the writable Request stream has completed.
    */
   makeWritableStream(
-      dup: duplexify.Duplexify, options: MakeWritableStreamOptions,
+      dup: Duplexify, options: MakeWritableStreamOptions,
       onComplete?: Function) {
     onComplete = onComplete || util.noop;
 
@@ -517,7 +539,7 @@ export class Util {
      * authenticated request options.
      */
     function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions):
-        duplexify.Duplexify;
+        Duplexify;
     function makeAuthenticatedRequest(
         reqOpts: DecorateRequestOptions,
         options?: MakeAuthenticatedRequestOptions): void|Abortable;
@@ -527,8 +549,8 @@ export class Util {
     function makeAuthenticatedRequest(
         reqOpts: DecorateRequestOptions,
         optionsOrCallback?: MakeAuthenticatedRequestOptions|
-        BodyResponseCallback): void|Abortable|duplexify.Duplexify {
-      let stream: duplexify.Duplexify;
+        BodyResponseCallback): void|Abortable|Duplexify {
+      let stream: Duplexify;
       const reqConfig = extend({}, config);
       let activeRequest_: void|Abortable|null;
 
