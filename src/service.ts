@@ -45,7 +45,6 @@ export interface ServiceConfig {
 
   projectIdRequired?: boolean;
   packageJson: PackageJson;
-  requestModule: typeof r;
 
   /**
    * Reuse an existing GoogleAuth client instead of creating a new one.
@@ -72,7 +71,6 @@ export class Service {
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
   authClient: GoogleAuth;
   private getCredentials: {};
-  requestModule: typeof r;
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like
@@ -99,7 +97,6 @@ export class Service {
     this.projectId = options.projectId || PROJECT_ID_TOKEN;
     this.projectIdRequired = config.projectIdRequired !== false;
     this.Promise = options.promise || Promise;
-    this.requestModule = config.requestModule;
 
     const reqCfg = extend({}, config, {
       projectIdRequired: this.projectIdRequired,
@@ -107,8 +104,7 @@ export class Service {
       credentials: options.credentials,
       keyFile: options.keyFilename,
       email: options.email,
-      token: options.token,
-      request: this.requestModule,
+      token: options.token
     });
 
     this.makeAuthenticatedRequest =

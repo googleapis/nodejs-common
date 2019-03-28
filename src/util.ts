@@ -26,6 +26,7 @@ import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
 import * as r from 'request';  // types only
 import * as retryRequest from 'retry-request';
 import {Duplex, DuplexOptions, PassThrough, Readable, Writable} from 'stream';
+import {teenyRequest} from 'teeny-request';
 
 import {Interceptor} from './service-object';
 
@@ -121,8 +122,6 @@ export interface MakeAuthenticatedRequestFactoryConfig extends
 
   stream?: Duplexify;
 
-  request: typeof r;
-
   /**
    * A pre-instantiated GoogleAuth client that should be used.
    * A new will be created if this is not set.
@@ -166,11 +165,6 @@ export interface MakeWritableStreamOptions {
    * Request object, in the format of a standard Node.js http.request() object.
    */
   request?: r.Options;
-
-  /**
-   * Dependency for HTTP calls.
-   */
-  requestModule: typeof r;
 
   makeAuthenticatedRequest(reqOpts: r.OptionsWithUri, fnobj: {
     onAuthenticated(err: Error|null, authenticatedReqOpts?: r.Options): void
@@ -303,8 +297,6 @@ export interface MakeRequestConfig {
   retries?: number;
 
   stream?: Duplexify;
-
-  request?: typeof r;
 
   shouldRetryFn?: (response?: r.Response) => boolean;
 }
@@ -460,7 +452,7 @@ export class Util {
           return;
         }
 
-        const request = options.requestModule.defaults(requestDefaults);
+        const request = teenyRequest.defaults(requestDefaults);
         request(authenticatedReqOpts!, (err, resp, body) => {
           util.handleResp(err, resp, body, (err, data) => {
             if (err) {
@@ -672,7 +664,7 @@ export class Util {
       reqOpts: DecorateRequestOptions, config: MakeRequestConfig,
       callback: BodyResponseCallback): void|Abortable {
     const options = {
-      request: (config.request as typeof r).defaults(requestDefaults),
+      request: teenyRequest.defaults(requestDefaults),
       retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
       shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;

@@ -32,11 +32,7 @@ describe('Operation', () => {
   const sandbox = sinon.createSandbox();
   let operation: Operation;
   beforeEach(() => {
-    operation = new Operation({
-      parent: FAKE_SERVICE,
-      id: OPERATION_ID,
-      requestModule: {} as typeof r,
-    });
+    operation = new Operation({parent: FAKE_SERVICE, id: OPERATION_ID});
     operation.Promise = Promise;
   });
 
@@ -45,7 +41,7 @@ describe('Operation', () => {
   });
 
   describe('instantiation', () => {
-    const parent = {requestModule: {}};
+    const parent = {};
 
     it('should extend ServiceObject and EventEmitter', () => {
       const svcObj = ServiceObject;
