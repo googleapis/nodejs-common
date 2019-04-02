@@ -4,6 +4,32 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.31.2
+
+## v0.31.2
+
+04-02-2019 14:46 PDT
+
+## Bug Fixes
+
+- fix: @types/node@11.13.0 breaks paginate/promisifyAll ([#397](https://github.com/googleapis/nodejs-common/pull/397))
+- fix(ts): do not ship @types/duplexify ([#393](https://github.com/googleapis/nodejs-common/pull/393))
+- fix(deps): bump the min version required for all deps
+
+### Implementation Changes
+
+- refactor: remove configurable request ([#394](https://github.com/googleapis/nodejs-common/pull/394))
+
+### Dependencies
+
+- chore(deps): update dependency @types/tmp to v0.1.0
+- chore(deps): update dependency typescript to ~3.4.0
+- chore(deps): update dependency tmp to v0.1.0 ([#390](https://github.com/googleapis/nodejs-common/pull/390))
+
+### Internal / Testing Changes
+
+- build: use per-repo publish token ([#384](https://github.com/googleapis/nodejs-common/pull/384))
+
 ## v0.31.1
 
 03-13-2019 16:25 PDT
