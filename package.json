@@ -47,7 +47,6 @@
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.9",
     "@google-cloud/nodejs-repo-tools": "^3.2.0",
-    "@types/arrify": "^1.0.4",
     "@types/ent": "^2.2.1",
     "@types/extend": "^3.0.1",
     "@types/mocha": "^5.2.6",

@@ -19,7 +19,7 @@
  */
 
 import {promisifyAll} from '@google-cloud/promisify';
-import * as arrify from 'arrify';
+import arrify = require('arrify');
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
 import * as r from 'request';  // Only needed for type declarations.
@@ -464,7 +464,7 @@ class ServiceObject<T = any> extends EventEmitter {
                       })
                       .join('/');
 
-    const childInterceptors = arrify(reqOpts.interceptors_);
+    const childInterceptors = arrify(reqOpts.interceptors_!);
     const localInterceptors = [].slice.call(this.interceptors);
 
     reqOpts.interceptors_ = childInterceptors.concat(localInterceptors);
