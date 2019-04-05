@@ -18,7 +18,7 @@
  * @module common/service
  */
 
-import * as arrify from 'arrify';
+import arrify = require('arrify');
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as r from 'request';  // Only needed for type declarations.
@@ -91,7 +91,7 @@ export class Service {
     options = options || {};
 
     this.baseUrl = config.baseUrl;
-    this.globalInterceptors = arrify(options.interceptors_);
+    this.globalInterceptors = arrify(options.interceptors_!);
     this.interceptors = [];
     this.packageJson = config.packageJson;
     this.projectId = options.projectId || PROJECT_ID_TOKEN;
@@ -193,7 +193,7 @@ export class Service {
         ([] as Interceptor[])
             .slice.call(this.globalInterceptors)
             .concat(this.interceptors)
-            .concat(arrify(reqOpts.interceptors_));
+            .concat(arrify(reqOpts.interceptors_!));
 
     let interceptor: Interceptor|undefined;
     // tslint:disable-next-line:no-conditional-assignment
