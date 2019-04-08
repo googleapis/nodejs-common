@@ -4,6 +4,16 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## v0.32.1
+
+04-08-2019 10:53 PDT
+
+### Dependencies
+
+- fix: teeny-request should be dependency
+- fix(deps): update dependency arrify to v2 ([#404](https://github.com/googleapis/nodejs-common/pull/404))
+- chore: unpin @types/node ([#402](https://github.com/googleapis/nodejs-common/pull/402))
+
 ## v0.32.0
 
 04-02-2019 15:11 PDT
