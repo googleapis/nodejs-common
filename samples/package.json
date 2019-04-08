@@ -11,7 +11,7 @@
     "test": "mocha system-test"
   },
   "dependencies": {
-    "@google-cloud/common": "^0.32.0"
+    "@google-cloud/common": "^0.32.1"
   },
   "devDependencies": {
     "mocha": "^6.0.0"
