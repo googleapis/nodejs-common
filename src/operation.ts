@@ -20,7 +20,12 @@
 
 import * as pify from 'pify';
 
-import {Metadata, MetadataCallback, ServiceObject, ServiceObjectConfig} from './service-object';
+import {
+  Metadata,
+  MetadataCallback,
+  ServiceObject,
+  ServiceObjectConfig,
+} from './service-object';
 import {ApiError} from './util';
 
 // tslint:disable-next-line no-any
@@ -61,10 +66,11 @@ export class Operation<T = any> extends ServiceObject<T> {
     };
 
     config = Object.assign(
-        {
-          baseUrl: '',
-        },
-        config);
+      {
+        baseUrl: '',
+      },
+      config
+    );
 
     // tslint:disable-next-line:no-any
     config.methods = (config.methods || methods) as any;
@@ -80,12 +86,13 @@ export class Operation<T = any> extends ServiceObject<T> {
    * @return {promise}
    */
   promise() {
-    return new this.Promise!
-        ((resolve: Function, reject: (err: Error) => void) => {
-          this.on('error', reject).on('complete', (metadata: {}) => {
-            resolve([metadata]);
-          });
+    return new this.Promise!(
+      (resolve: Function, reject: (err: Error) => void) => {
+        this.on('error', reject).on('complete', (metadata: {}) => {
+          resolve([metadata]);
         });
+      }
+    );
   }
 
   /**
@@ -125,7 +132,7 @@ export class Operation<T = any> extends ServiceObject<T> {
   protected poll_(callback: MetadataCallback): void {
     this.getMetadata((err: ApiError, body: Metadata) => {
       if (err || body!.error) {
-        callback(err || body!.error as Error);
+        callback(err || (body!.error as Error));
         return;
       }
 

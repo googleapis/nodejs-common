@@ -22,10 +22,16 @@ import {promisifyAll} from '@google-cloud/promisify';
 import arrify = require('arrify');
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
-import * as r from 'request';  // Only needed for type declarations.
+import * as r from 'request'; // Only needed for type declarations.
 
 import {StreamRequestOptions} from '.';
-import {ApiError, BodyResponseCallback, DecorateRequestOptions, ResponseBody, util} from './util';
+import {
+  ApiError,
+  BodyResponseCallback,
+  DecorateRequestOptions,
+  ResponseBody,
+  util,
+} from './util';
 
 export type RequestResponse = [Metadata, r.Response];
 
@@ -33,8 +39,10 @@ export interface ServiceObjectParent {
   // tslint:disable-next-line:variable-name
   Promise?: PromiseConstructor;
   requestStream(reqOpts: DecorateRequestOptions): r.Request;
-  request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
-      void;
+  request(
+    reqOpts: DecorateRequestOptions,
+    callback: BodyResponseCallback
+  ): void;
 }
 
 export interface Interceptor {
@@ -46,12 +54,15 @@ export type GetMetadataOptions = object;
 // tslint:disable-next-line:no-any
 export type Metadata = any;
 export type MetadataResponse = [Metadata, r.Response];
-export type MetadataCallback =
-    (err: Error|null, metadata?: Metadata, apiResponse?: r.Response) => void;
+export type MetadataCallback = (
+  err: Error | null,
+  metadata?: Metadata,
+  apiResponse?: r.Response
+) => void;
 
 export type ExistsOptions = object;
 export interface ExistsCallback {
-  (err: Error|null, exists?: boolean): void;
+  (err: Error | null, exists?: boolean): void;
 }
 
 export interface ServiceObjectConfig {
@@ -84,24 +95,24 @@ export interface ServiceObjectConfig {
 }
 
 export interface Methods {
-  [methodName: string]: {reqOpts?: r.CoreOptions}|boolean;
+  [methodName: string]: {reqOpts?: r.CoreOptions} | boolean;
 }
 
 export interface InstanceResponseCallback<T> {
-  (err: ApiError|null, instance?: T|null, apiResponse?: r.Response): void;
+  (err: ApiError | null, instance?: T | null, apiResponse?: r.Response): void;
 }
 
-export type CreateOptions = {};
+export interface CreateOptions {}
 // tslint:disable-next-line no-any
 export type CreateResponse<T> = any[];
 export interface CreateCallback<T> {
   // tslint:disable-next-line no-any
-  (err: ApiError|null, instance?: T|null, ...args: any[]): void;
+  (err: ApiError | null, instance?: T | null, ...args: any[]): void;
 }
 
 export type DeleteOptions = object;
 export interface DeleteCallback {
-  (err: Error|null, apiResponse?: r.Response): void;
+  (err: Error | null, apiResponse?: r.Response): void;
 }
 
 export interface GetConfig {
@@ -110,11 +121,11 @@ export interface GetConfig {
    */
   autoCreate?: boolean;
 }
-type GetOrCreateOptions = GetConfig&CreateOptions;
+type GetOrCreateOptions = GetConfig & CreateOptions;
 export type GetResponse<T> = [T, r.Response];
 
 export interface ResponseCallback {
-  (err?: Error|null, apiResponse?: r.Response): void;
+  (err?: Error | null, apiResponse?: r.Response): void;
 }
 
 export type SetMetadataResponse = [Metadata];
@@ -165,8 +176,8 @@ class ServiceObject<T = any> extends EventEmitter {
     super();
     this.metadata = {};
     this.baseUrl = config.baseUrl;
-    this.parent = config.parent;  // Parent class.
-    this.id = config.id;  // Name or ID (e.g. dataset ID, bucket name, etc).
+    this.parent = config.parent; // Parent class.
+    this.id = config.id; // Name or ID (e.g. dataset ID, bucket name, etc).
     this.createMethod = config.createMethod;
     this.methods = config.methods || {};
     this.interceptors = [];
@@ -174,24 +185,25 @@ class ServiceObject<T = any> extends EventEmitter {
 
     if (config.methods) {
       Object.getOwnPropertyNames(ServiceObject.prototype)
-          .filter(methodName => {
-            return (
-                // All ServiceObjects need `request`.
-                // clang-format off
-                !/^request/.test(methodName) &&
-                // clang-format on
-                // The ServiceObject didn't redefine the method.
-                // tslint:disable-next-line no-any
-                (this as any)[methodName] ===
-                    // tslint:disable-next-line no-any
-                    (ServiceObject.prototype as any)[methodName] &&
-                // This method isn't wanted.
-                !config.methods![methodName]);
-          })
-          .forEach(methodName => {
+        .filter(methodName => {
+          return (
+            // All ServiceObjects need `request`.
+            // clang-format off
+            !/^request/.test(methodName) &&
+            // clang-format on
+            // The ServiceObject didn't redefine the method.
             // tslint:disable-next-line no-any
-            (this as any)[methodName] = undefined;
-          });
+            (this as any)[methodName] ===
+              // tslint:disable-next-line no-any
+              (ServiceObject.prototype as any)[methodName] &&
+            // This method isn't wanted.
+            !config.methods![methodName]
+          );
+        })
+        .forEach(methodName => {
+          // tslint:disable-next-line no-any
+          (this as any)[methodName] = undefined;
+        });
     }
   }
 
@@ -208,8 +220,9 @@ class ServiceObject<T = any> extends EventEmitter {
   create(options: CreateOptions, callback: CreateCallback<T>): void;
   create(callback: CreateCallback<T>): void;
   create(
-      optionsOrCallback?: CreateOptions|CreateCallback<T>,
-      callback?: CreateCallback<T>): void|Promise<CreateResponse<T>> {
+    optionsOrCallback?: CreateOptions | CreateCallback<T>,
+    callback?: CreateCallback<T>
+  ): void | Promise<CreateResponse<T>> {
     const self = this;
     const args = [this.id] as Array<{}>;
 
@@ -228,14 +241,13 @@ class ServiceObject<T = any> extends EventEmitter {
       const [err, instance] = args;
       if (!err) {
         self.metadata = instance.metadata;
-        args[1] = self;  // replace the created `instance` with this one.
+        args[1] = self; // replace the created `instance` with this one.
       }
-      callback!(...args as {} as [Error, T]);
+      callback!(...((args as {}) as [Error, T]));
     }
     args.push(onCreate);
     this.createMethod!.apply(null, args);
   }
-
 
   /**
    * Delete the object.
@@ -247,14 +259,17 @@ class ServiceObject<T = any> extends EventEmitter {
   delete(options?: DeleteOptions): Promise<[r.Response]>;
   delete(options: DeleteOptions, callback: DeleteCallback): void;
   delete(callback: DeleteCallback): void;
-  delete(optionsOrCallback: DeleteOptions|DeleteCallback, cb?: DeleteCallback):
-      Promise<[r.Response]>|void {
-    const [options, callback] =
-        util.maybeOptionsOrCallback<DeleteOptions, DeleteCallback>(
-            optionsOrCallback, cb);
+  delete(
+    optionsOrCallback: DeleteOptions | DeleteCallback,
+    cb?: DeleteCallback
+  ): Promise<[r.Response]> | void {
+    const [options, callback] = util.maybeOptionsOrCallback<
+      DeleteOptions,
+      DeleteCallback
+    >(optionsOrCallback, cb);
 
     const methodConfig =
-        (typeof this.methods.delete === 'object' && this.methods.delete) || {};
+      (typeof this.methods.delete === 'object' && this.methods.delete) || {};
 
     const reqOpts = extend(true, {}, methodConfig.reqOpts, {
       method: 'DELETE',
@@ -277,11 +292,14 @@ class ServiceObject<T = any> extends EventEmitter {
   exists(options?: ExistsOptions): Promise<[boolean]>;
   exists(options: ExistsOptions, callback: ExistsCallback): void;
   exists(callback: ExistsCallback): void;
-  exists(optionsOrCallback?: ExistsOptions|ExistsCallback, cb?: ExistsCallback):
-      void|Promise<[boolean]> {
-    const [options, callback] =
-        util.maybeOptionsOrCallback<ExistsOptions, ExistsCallback>(
-            optionsOrCallback, cb);
+  exists(
+    optionsOrCallback?: ExistsOptions | ExistsCallback,
+    cb?: ExistsCallback
+  ): void | Promise<[boolean]> {
+    const [options, callback] = util.maybeOptionsOrCallback<
+      ExistsOptions,
+      ExistsCallback
+    >(optionsOrCallback, cb);
 
     this.get(options, err => {
       if (err) {
@@ -311,19 +329,26 @@ class ServiceObject<T = any> extends EventEmitter {
   get(options?: GetOrCreateOptions): Promise<GetResponse<T>>;
   get(callback: InstanceResponseCallback<T>): void;
   get(options: GetOrCreateOptions, callback: InstanceResponseCallback<T>): void;
-  get(optionsOrCallback?: GetOrCreateOptions|InstanceResponseCallback<T>,
-      cb?: InstanceResponseCallback<T>): Promise<GetResponse<T>>|void {
+  get(
+    optionsOrCallback?: GetOrCreateOptions | InstanceResponseCallback<T>,
+    cb?: InstanceResponseCallback<T>
+  ): Promise<GetResponse<T>> | void {
     const self = this;
 
     const [opts, callback] = util.maybeOptionsOrCallback<
-        GetOrCreateOptions, InstanceResponseCallback<T>>(optionsOrCallback, cb);
+      GetOrCreateOptions,
+      InstanceResponseCallback<T>
+    >(optionsOrCallback, cb);
     const options = Object.assign({}, opts);
 
     const autoCreate = options.autoCreate && typeof this.create === 'function';
     delete options.autoCreate;
 
     function onCreate(
-        err: ApiError|null, instance: T, apiResponse: r.Response) {
+      err: ApiError | null,
+      instance: T,
+      apiResponse: r.Response
+    ) {
       if (err) {
         if (err.code === 409) {
           self.get(options, callback!);
@@ -335,10 +360,10 @@ class ServiceObject<T = any> extends EventEmitter {
       callback!(null, instance, apiResponse);
     }
 
-    this.getMetadata(options, (err: ApiError|null, metadata) => {
+    this.getMetadata(options, (err: ApiError | null, metadata) => {
       if (err) {
         if (err.code === 404 && autoCreate) {
-          const args: Array<Function|GetOrCreateOptions> = [];
+          const args: Array<Function | GetOrCreateOptions> = [];
           if (Object.keys(options).length > 0) {
             args.push(options);
           }
@@ -349,7 +374,7 @@ class ServiceObject<T = any> extends EventEmitter {
         callback!(err, null, metadata as r.Response);
         return;
       }
-      callback!(null, self as {} as T, metadata as r.Response);
+      callback!(null, (self as {}) as T, metadata as r.Response);
     });
   }
 
@@ -365,15 +390,18 @@ class ServiceObject<T = any> extends EventEmitter {
   getMetadata(options: GetMetadataOptions, callback: MetadataCallback): void;
   getMetadata(callback: MetadataCallback): void;
   getMetadata(
-      optionsOrCallback: GetMetadataOptions|MetadataCallback,
-      cb?: MetadataCallback): Promise<MetadataResponse>|void {
-    const [options, callback] =
-        util.maybeOptionsOrCallback<GetMetadataOptions, MetadataCallback>(
-            optionsOrCallback, cb);
+    optionsOrCallback: GetMetadataOptions | MetadataCallback,
+    cb?: MetadataCallback
+  ): Promise<MetadataResponse> | void {
+    const [options, callback] = util.maybeOptionsOrCallback<
+      GetMetadataOptions,
+      MetadataCallback
+    >(optionsOrCallback, cb);
 
-    const methodConfig = (typeof this.methods.getMetadata === 'object' &&
-                          this.methods.getMetadata) ||
-        {};
+    const methodConfig =
+      (typeof this.methods.getMetadata === 'object' &&
+        this.methods.getMetadata) ||
+      {};
     const reqOpts = extend(true, {}, methodConfig.reqOpts, {
       uri: '',
       qs: options,
@@ -382,11 +410,13 @@ class ServiceObject<T = any> extends EventEmitter {
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
     ServiceObject.prototype.request.call(
-        this, reqOpts,
-        (err: Error|null, body?: ResponseBody, res?: r.Response) => {
-          this.metadata = body;
-          callback!(err, this.metadata, res);
-        });
+      this,
+      reqOpts,
+      (err: Error | null, body?: ResponseBody, res?: r.Response) => {
+        this.metadata = body;
+        callback!(err, this.metadata, res);
+      }
+    );
   }
 
   /**
@@ -398,22 +428,29 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {?error} callback.err - An error returned while making this request.
    * @param {object} callback.apiResponse - The full API response.
    */
-  setMetadata(metadata: Metadata, options?: SetMetadataOptions):
-      Promise<SetMetadataResponse>;
+  setMetadata(
+    metadata: Metadata,
+    options?: SetMetadataOptions
+  ): Promise<SetMetadataResponse>;
   setMetadata(metadata: Metadata, callback: MetadataCallback): void;
   setMetadata(
-      metadata: Metadata, options: SetMetadataOptions,
-      callback: MetadataCallback): void;
+    metadata: Metadata,
+    options: SetMetadataOptions,
+    callback: MetadataCallback
+  ): void;
   setMetadata(
-      metadata: Metadata,
-      optionsOrCallback: SetMetadataOptions|MetadataCallback,
-      cb?: MetadataCallback): Promise<SetMetadataResponse>|void {
-    const [options, callback] =
-        util.maybeOptionsOrCallback<SetMetadataOptions, MetadataCallback>(
-            optionsOrCallback, cb);
-    const methodConfig = (typeof this.methods.setMetadata === 'object' &&
-                          this.methods.setMetadata) ||
-        {};
+    metadata: Metadata,
+    optionsOrCallback: SetMetadataOptions | MetadataCallback,
+    cb?: MetadataCallback
+  ): Promise<SetMetadataResponse> | void {
+    const [options, callback] = util.maybeOptionsOrCallback<
+      SetMetadataOptions,
+      MetadataCallback
+    >(optionsOrCallback, cb);
+    const methodConfig =
+      (typeof this.methods.setMetadata === 'object' &&
+        this.methods.setMetadata) ||
+      {};
 
     const reqOpts = extend(true, {}, methodConfig.reqOpts, {
       method: 'PATCH',
@@ -425,11 +462,13 @@ class ServiceObject<T = any> extends EventEmitter {
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
     ServiceObject.prototype.request.call(
-        this, reqOpts,
-        (err: Error|null, body?: ResponseBody, res?: r.Response) => {
-          this.metadata = body;
-          callback!(err, this.metadata, res);
-        });
+      this,
+      reqOpts,
+      (err: Error | null, body?: ResponseBody, res?: r.Response) => {
+        this.metadata = body;
+        callback!(err, this.metadata, res);
+      }
+    );
   }
 
   /**
@@ -443,10 +482,13 @@ class ServiceObject<T = any> extends EventEmitter {
    */
   private request_(reqOpts: StreamRequestOptions): r.Request;
   private request_(
-      reqOpts: DecorateRequestOptions, callback: BodyResponseCallback): void;
+    reqOpts: DecorateRequestOptions,
+    callback: BodyResponseCallback
+  ): void;
   private request_(
-      reqOpts: DecorateRequestOptions|StreamRequestOptions,
-      callback?: BodyResponseCallback): void|r.Request {
+    reqOpts: DecorateRequestOptions | StreamRequestOptions,
+    callback?: BodyResponseCallback
+  ): void | r.Request {
     reqOpts = extend(true, {}, reqOpts);
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -457,12 +499,12 @@ class ServiceObject<T = any> extends EventEmitter {
     }
 
     reqOpts.uri = uriComponents
-                      .filter(x => x!.trim())  // Limit to non-empty strings.
-                      .map(uriComponent => {
-                        const trimSlashesRegex = /^\/*|\/*$/g;
-                        return uriComponent!.replace(trimSlashesRegex, '');
-                      })
-                      .join('/');
+      .filter(x => x!.trim()) // Limit to non-empty strings.
+      .map(uriComponent => {
+        const trimSlashesRegex = /^\/*|\/*$/g;
+        return uriComponent!.replace(trimSlashesRegex, '');
+      })
+      .join('/');
 
     const childInterceptors = arrify(reqOpts.interceptors_!);
     const localInterceptors = [].slice.call(this.interceptors);
@@ -486,10 +528,14 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {function} callback - The callback function passed to `request`.
    */
   request(reqOpts: DecorateRequestOptions): Promise<RequestResponse>;
-  request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
-      void;
-  request(reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback):
-      void|Promise<RequestResponse> {
+  request(
+    reqOpts: DecorateRequestOptions,
+    callback: BodyResponseCallback
+  ): void;
+  request(
+    reqOpts: DecorateRequestOptions,
+    callback?: BodyResponseCallback
+  ): void | Promise<RequestResponse> {
     this.request_(reqOpts, callback!);
   }
 
