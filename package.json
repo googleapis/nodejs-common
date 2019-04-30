@@ -15,7 +15,6 @@
     "!build/src/**/*.map"
   ],
   "scripts": {
-    "generate-scaffolding": "repo-tools generate all",
     "docs": "compodoc src/",
     "test": "nyc mocha build/test",
     "posttest": "npm run lint && npm run license-check",
@@ -46,7 +45,6 @@
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.9",
-    "@google-cloud/nodejs-repo-tools": "^3.2.0",
     "@types/ent": "^2.2.1",
     "@types/extend": "^3.0.1",
     "@types/mocha": "^5.2.6",

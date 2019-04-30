@@ -1,0 +1,8 @@
+{
+  "name": "common",
+  "name_pretty": "Google Cloud Common",
+  "release_level": "ga",
+  "language": "nodejs",
+  "repo": "googleapis/nodejs-common",
+  "distribution_name": "@google-cloud/common"
+}
