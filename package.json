@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "author": "Google Inc.",
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=8.10.0"
   },
   "repository": "googleapis/nodejs-common",
   "main": "./build/src/index.js",
@@ -15,7 +15,6 @@
     "!build/src/**/*.map"
   ],
   "scripts": {
-    "generate-scaffolding": "repo-tools generate all",
     "docs": "compodoc src/",
     "test": "nyc mocha build/test",
     "posttest": "npm run lint && npm run license-check",
@@ -32,8 +31,8 @@
     "predocs-test": "npm run docs"
   },
   "dependencies": {
-    "@google-cloud/projectify": "^0.3.3",
-    "@google-cloud/promisify": "^0.4.0",
+    "@google-cloud/projectify": "^1.0.0",
+    "@google-cloud/promisify": "^1.0.0",
     "@types/request": "^2.48.1",
     "arrify": "^2.0.0",
     "duplexify": "^3.6.0",
@@ -46,7 +45,6 @@
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.9",
-    "@google-cloud/nodejs-repo-tools": "^3.2.0",
     "@types/ent": "^2.2.1",
     "@types/extend": "^3.0.1",
     "@types/mocha": "^5.2.6",
