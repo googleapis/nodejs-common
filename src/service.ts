@@ -21,10 +21,16 @@
 import arrify = require('arrify');
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import * as r from 'request';  // Only needed for type declarations.
+import * as r from 'request'; // Only needed for type declarations.
 
 import {Interceptor} from './service-object';
-import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, PackageJson, util} from './util';
+import {
+  BodyResponseCallback,
+  DecorateRequestOptions,
+  MakeAuthenticatedRequest,
+  PackageJson,
+  util,
+} from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
 
@@ -104,11 +110,12 @@ export class Service {
       credentials: options.credentials,
       keyFile: options.keyFilename,
       email: options.email,
-      token: options.token
+      token: options.token,
     });
 
-    this.makeAuthenticatedRequest =
-        util.makeAuthenticatedRequestFactory(reqCfg);
+    this.makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+      reqCfg
+    );
     this.authClient = this.makeAuthenticatedRequest.authClient;
     this.getCredentials = this.makeAuthenticatedRequest.getCredentials;
 
@@ -130,9 +137,10 @@ export class Service {
    * @param {function} callback - The callback function.
    */
   getProjectId(): Promise<string>;
-  getProjectId(callback: (err: Error|null, projectId?: string) => void): void;
-  getProjectId(callback?: (err: Error|null, projectId?: string) => void):
-      Promise<string>|void {
+  getProjectId(callback: (err: Error | null, projectId?: string) => void): void;
+  getProjectId(
+    callback?: (err: Error | null, projectId?: string) => void
+  ): Promise<string> | void {
     if (!callback) {
       return this.getProjectIdAsync();
     }
@@ -158,10 +166,13 @@ export class Service {
    */
   private request_(reqOpts: StreamRequestOptions): r.Request;
   private request_(
-      reqOpts: DecorateRequestOptions, callback: BodyResponseCallback): void;
+    reqOpts: DecorateRequestOptions,
+    callback: BodyResponseCallback
+  ): void;
   private request_(
-      reqOpts: DecorateRequestOptions|StreamRequestOptions,
-      callback?: BodyResponseCallback): void|r.Request {
+    reqOpts: DecorateRequestOptions | StreamRequestOptions,
+    callback?: BodyResponseCallback
+  ): void | r.Request {
     reqOpts = extend(true, {}, reqOpts);
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
     const uriComponents = [this.baseUrl];
@@ -178,27 +189,28 @@ export class Service {
     }
 
     reqOpts.uri = uriComponents
-                      .map((uriComponent) => {
-                        const trimSlashesRegex = /^\/*|\/*$/g;
-                        return uriComponent.replace(trimSlashesRegex, '');
-                      })
-                      .join('/')
-                      // Some URIs have colon separators.
-                      // Bad: https://.../projects/:list
-                      // Good: https://.../projects:list
-                      .replace(/\/:/g, ':');
+      .map(uriComponent => {
+        const trimSlashesRegex = /^\/*|\/*$/g;
+        return uriComponent.replace(trimSlashesRegex, '');
+      })
+      .join('/')
+      // Some URIs have colon separators.
+      // Bad: https://.../projects/:list
+      // Good: https://.../projects:list
+      .replace(/\/:/g, ':');
 
     // Interceptors should be called in the order they were assigned.
-    const combinedInterceptors: Interceptor[] =
-        ([] as Interceptor[])
-            .slice.call(this.globalInterceptors)
-            .concat(this.interceptors)
-            .concat(arrify(reqOpts.interceptors_!));
+    const combinedInterceptors: Interceptor[] = ([] as Interceptor[]).slice
+      .call(this.globalInterceptors)
+      .concat(this.interceptors)
+      .concat(arrify(reqOpts.interceptors_!));
 
-    let interceptor: Interceptor|undefined;
-    // tslint:disable-next-line:no-conditional-assignment
-    while ((interceptor = combinedInterceptors.shift()) &&
-           interceptor.request) {
+    let interceptor: Interceptor | undefined;
+    while (
+      // tslint:disable-next-line:no-conditional-assignment
+      (interceptor = combinedInterceptors.shift()) &&
+      interceptor.request
+    ) {
       reqOpts = interceptor.request(reqOpts);
     }
 
@@ -207,12 +219,13 @@ export class Service {
     const pkg = this.packageJson;
     reqOpts.headers = extend({}, reqOpts.headers, {
       'User-Agent': util.getUserAgentFromPackageJson(pkg),
-      'x-goog-api-client':
-          `gl-node/${process.versions.node} gccl/${pkg.version}`,
+      'x-goog-api-client': `gl-node/${process.versions.node} gccl/${
+        pkg.version
+      }`,
     });
 
     if (reqOpts.shouldReturnStream) {
-      return this.makeAuthenticatedRequest(reqOpts) as {} as r.Request;
+      return (this.makeAuthenticatedRequest(reqOpts) as {}) as r.Request;
     } else {
       this.makeAuthenticatedRequest(reqOpts, callback);
     }
@@ -227,8 +240,10 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: DecorateRequestOptions, callback: BodyResponseCallback):
-      void {
+  request(
+    reqOpts: DecorateRequestOptions,
+    callback: BodyResponseCallback
+  ): void {
     Service.prototype.request_.call(this, reqOpts, callback);
   }
 

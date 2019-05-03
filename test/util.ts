@@ -27,7 +27,19 @@ import * as sinon from 'sinon';
 import * as stream from 'stream';
 import {teenyRequest} from 'teeny-request';
 
-import {Abortable, ApiError, DecorateRequestOptions, Duplexify, DuplexifyConstructor, GoogleErrorBody, GoogleInnerError, MakeAuthenticatedRequestFactoryConfig, MakeRequestConfig, ParsedHttpRespMessage, Util} from '../src/util';
+import {
+  Abortable,
+  ApiError,
+  DecorateRequestOptions,
+  Duplexify,
+  DuplexifyConstructor,
+  GoogleErrorBody,
+  GoogleInnerError,
+  MakeAuthenticatedRequestFactoryConfig,
+  MakeRequestConfig,
+  ParsedHttpRespMessage,
+  Util,
+} from '../src/util';
 
 const duplexify: DuplexifyConstructor = require('duplexify');
 
@@ -35,17 +47,17 @@ nock.disableNetConnect();
 
 const fakeResponse = {
   statusCode: 200,
-  body: {star: 'trek'}
+  body: {star: 'trek'},
 } as r.Response;
 
 const fakeBadResp = {
   statusCode: 400,
-  statusMessage: 'Not Good'
+  statusMessage: 'Not Good',
 } as r.Response;
 
 const fakeReqOpts: DecorateRequestOptions = {
   uri: 'http://so-fake',
-  method: 'GET'
+  method: 'GET',
 };
 
 const fakeError = new Error('this error is like so fake');
@@ -62,19 +74,21 @@ fakeRequest.defaults = () => {
   return fakeRequest;
 };
 
-let retryRequestOverride: Function|null;
+let retryRequestOverride: Function | null;
 function fakeRetryRequest() {
   return (retryRequestOverride || retryRequest).apply(null, arguments);
 }
 
-let replaceProjectIdTokenOverride: Function|null;
+let replaceProjectIdTokenOverride: Function | null;
 function fakeReplaceProjectIdToken() {
-  return (replaceProjectIdTokenOverride || replaceProjectIdToken)
-      .apply(null, arguments);
+  return (replaceProjectIdTokenOverride || replaceProjectIdToken).apply(
+    null,
+    arguments
+  );
 }
 
 describe('common/util', () => {
-  let util: Util&{[index: string]: Function};
+  let util: Util & {[index: string]: Function};
 
   // tslint:disable-next-line:no-any
   function stub(method: keyof Util, meth: (...args: any[]) => void) {
@@ -88,7 +102,8 @@ describe('common/util', () => {
 
     errors = errors.map((error, i) => `    ${i + 1}. ${error}`);
     errors.unshift(
-        'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n');
+      'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n'
+    );
     errors.push('\n');
 
     return errors.join('\n');
@@ -99,18 +114,18 @@ describe('common/util', () => {
       constructor(config?: GoogleAuthOptions) {
         return new GoogleAuth(config);
       }
-    }
+    },
   };
 
   before(() => {
     util = proxyquire('../src/util', {
-             'google-auth-library': fakeGoogleAuth,
-             'retry-request': fakeRetryRequest,
-             'teeny-request': {teenyRequest: fakeRequest},
-             '@google-cloud/projectify': {
-               replaceProjectIdToken: fakeReplaceProjectIdToken,
-             },
-           }).util;
+      'google-auth-library': fakeGoogleAuth,
+      'retry-request': fakeRetryRequest,
+      'teeny-request': {teenyRequest: fakeRequest},
+      '@google-cloud/projectify': {
+        replaceProjectIdToken: fakeReplaceProjectIdToken,
+      },
+    }).util;
   });
 
   let sandbox: sinon.SinonSandbox;
@@ -143,9 +158,10 @@ describe('common/util', () => {
         response: fakeResponse,
       };
 
-      sandbox.stub(ApiError, 'createMultiErrorMessage')
-          .withArgs(error, errors)
-          .returns(fakeMessage);
+      sandbox
+        .stub(ApiError, 'createMultiErrorMessage')
+        .withArgs(error, errors)
+        .returns(fakeMessage);
 
       const apiError = new ApiError(error);
       assert.strictEqual(apiError.errors, error.errors);
@@ -170,9 +186,10 @@ describe('common/util', () => {
         } as r.Response,
       };
 
-      sandbox.stub(ApiError, 'createMultiErrorMessage')
-          .withArgs(errorBody, errors)
-          .returns(fakeMessage);
+      sandbox
+        .stub(ApiError, 'createMultiErrorMessage')
+        .withArgs(errorBody, errors)
+        .returns(fakeMessage);
 
       const apiError = new ApiError(errorBody);
       assert.strictEqual(apiError.message, fakeMessage);
@@ -190,17 +207,16 @@ describe('common/util', () => {
           message: customErrorMessage,
         };
 
-        const expectedErrorMessage =
-            createExpectedErrorMessage([customErrorMessage, errorMessage]);
+        const expectedErrorMessage = createExpectedErrorMessage([
+          customErrorMessage,
+          errorMessage,
+        ]);
         const multiError = ApiError.createMultiErrorMessage(error, errors);
         assert.strictEqual(multiError, expectedErrorMessage);
       });
 
       it('should use any inner errors', () => {
-        const messages = [
-          'Hi, I am an error!',
-          'Me too!',
-        ];
+        const messages = ['Hi, I am an error!', 'Me too!'];
         const errors: GoogleInnerError[] = messages.map(message => ({message}));
         const error: GoogleErrorBody = {
           code: 100,
@@ -224,8 +240,10 @@ describe('common/util', () => {
           } as r.Response,
         };
 
-        const expectedErrorMessage = createExpectedErrorMessage(
-            ['API error message', 'Response body message <']);
+        const expectedErrorMessage = createExpectedErrorMessage([
+          'API error message',
+          'Response body message <',
+        ]);
         const multiError = ApiError.createMultiErrorMessage(error);
         assert.strictEqual(multiError, expectedErrorMessage);
       });
@@ -269,9 +287,10 @@ describe('common/util', () => {
         message: 'Partial failure occurred',
       };
 
-      sandbox.stub(util.ApiError, 'createMultiErrorMessage')
-          .withArgs(error, errors)
-          .returns(fakeMessage);
+      sandbox
+        .stub(util.ApiError, 'createMultiErrorMessage')
+        .withArgs(error, errors)
+        .returns(fakeMessage);
 
       const partialFailureError = new util.PartialFailureError(error);
 
@@ -283,10 +302,10 @@ describe('common/util', () => {
   });
 
   describe('handleResp', () => {
-    it('should handle errors', (done) => {
+    it('should handle errors', done => {
       const error = new Error('Error.');
 
-      util.handleResp(error, fakeResponse, null, (err) => {
+      util.handleResp(error, fakeResponse, null, err => {
         assert.strictEqual(err, error);
         done();
       });
@@ -296,7 +315,7 @@ describe('common/util', () => {
       util.handleResp(null, fakeResponse, '');
     });
 
-    it('should parse response', (done) => {
+    it('should parse response', done => {
       stub('parseHttpRespMessage', resp_ => {
         assert.deepStrictEqual(resp_, fakeResponse);
         return {
@@ -312,47 +331,51 @@ describe('common/util', () => {
       });
 
       util.handleResp(
-          fakeError, fakeResponse, fakeResponse.body, (err, body, resp) => {
-            assert.deepStrictEqual(err, fakeError);
-            assert.deepStrictEqual(body, fakeResponse.body);
-            assert.deepStrictEqual(resp, fakeResponse);
-            done();
-          });
+        fakeError,
+        fakeResponse,
+        fakeResponse.body,
+        (err, body, resp) => {
+          assert.deepStrictEqual(err, fakeError);
+          assert.deepStrictEqual(body, fakeResponse.body);
+          assert.deepStrictEqual(resp, fakeResponse);
+          done();
+        }
+      );
     });
 
-    it('should parse response for error', (done) => {
+    it('should parse response for error', done => {
       const error = new Error('Error.');
 
       sandbox.stub(util, 'parseHttpRespMessage').callsFake(() => {
         return {err: error} as ParsedHttpRespMessage;
       });
 
-      util.handleResp(null, fakeResponse, {}, (err) => {
+      util.handleResp(null, fakeResponse, {}, err => {
         assert.deepStrictEqual(err, error);
         done();
       });
     });
 
-    it('should parse body for error', (done) => {
+    it('should parse body for error', done => {
       const error = new Error('Error.');
 
       stub('parseHttpRespBody', () => {
         return {err: error};
       });
 
-      util.handleResp(null, fakeResponse, {}, (err) => {
+      util.handleResp(null, fakeResponse, {}, err => {
         assert.deepStrictEqual(err, error);
         done();
       });
     });
 
-    it('should not parse undefined response', (done) => {
-      stub('parseHttpRespMessage', () => done());  // Will throw.
+    it('should not parse undefined response', done => {
+      stub('parseHttpRespMessage', () => done()); // Will throw.
       util.handleResp(null, null, null, done);
     });
 
-    it('should not parse undefined body', (done) => {
-      stub('parseHttpRespBody', () => done());  // Will throw.
+    it('should not parse undefined body', done => {
+      stub('parseHttpRespBody', () => done()); // Will throw.
       util.handleResp(null, null, null, done);
     });
   });
@@ -407,15 +430,15 @@ describe('common/util', () => {
   });
 
   describe('makeWritableStream', () => {
-    it('should use defaults', (done) => {
+    it('should use defaults', done => {
       const dup = duplexify();
       // tslint:disable-next-line:no-any
       const metadata = {a: 'b', c: 'd'} as any;
       util.makeWritableStream(dup, {
         metadata,
         makeAuthenticatedRequest(request: DecorateRequestOptions) {
-          assert.equal(request.method, 'POST');
-          assert.equal(request.qs.uploadType, 'multipart');
+          assert.strictEqual(request.method, 'POST');
+          assert.strictEqual(request.qs.uploadType, 'multipart');
           assert.strictEqual(request.timeout, 0);
           assert.strictEqual(request.maxRetries, 0);
 
@@ -424,22 +447,26 @@ describe('common/util', () => {
           const mp = request.multipart as r.RequestPart[];
 
           assert.strictEqual(
-              // tslint:disable-next-line:no-any
-              (mp[0] as any)['Content-Type'], 'application/json');
+            // tslint:disable-next-line:no-any
+            (mp[0] as any)['Content-Type'],
+            'application/json'
+          );
           assert.strictEqual(mp[0].body, JSON.stringify(metadata));
 
           assert.strictEqual(
-              // tslint:disable-next-line:no-any
-              (mp[1] as any)['Content-Type'], 'application/octet-stream');
+            // tslint:disable-next-line:no-any
+            (mp[1] as any)['Content-Type'],
+            'application/octet-stream'
+          );
           // (is a writable stream:)
           assert.strictEqual(typeof mp[1].body._writableState, 'object');
 
           done();
-        }
+        },
       });
     });
 
-    it('should allow overriding defaults', (done) => {
+    it('should allow overriding defaults', done => {
       const dup = duplexify();
 
       const req = {
@@ -455,9 +482,9 @@ describe('common/util', () => {
           contentType: 'application/json',
         },
         makeAuthenticatedRequest(request) {
-          assert.equal(request.method, req.method);
+          assert.strictEqual(request.method, req.method);
           assert.deepStrictEqual(request.qs, req.qs);
-          assert.equal(request.uri, req.uri);
+          assert.strictEqual(request.uri, req.uri);
 
           // tslint:disable-next-line:no-any
           const mp = request.multipart as any[];
@@ -466,27 +493,27 @@ describe('common/util', () => {
           done();
         },
 
-        request: req
+        request: req,
       });
     });
 
-    it('should emit an error', (done) => {
+    it('should emit an error', done => {
       const error = new Error('Error.');
 
       const ws = duplexify();
-      ws.on('error', (err) => {
-        assert.equal(err, error);
+      ws.on('error', err => {
+        assert.strictEqual(err, error);
         done();
       });
 
       util.makeWritableStream(ws, {
         makeAuthenticatedRequest(request, opts) {
           opts!.onAuthenticated(error);
-        }
+        },
       });
     });
 
-    it('should set the writable stream', (done) => {
+    it('should set the writable stream', done => {
       const dup = duplexify();
 
       dup.setWritable = () => {
@@ -496,30 +523,32 @@ describe('common/util', () => {
       util.makeWritableStream(dup, {makeAuthenticatedRequest() {}});
     });
 
-    it('should emit an error if the request fails', (done) => {
+    it('should emit an error if the request fails', done => {
       const dup = duplexify();
       const fakeStream = new stream.Writable();
       const error = new Error('Error.');
 
       fakeStream.write =
-          // tslint:disable-next-line:no-any
-          (chunk: any, encoding?: string|Function, cb?: Function) => false;
+        // tslint:disable-next-line:no-any
+        (chunk: any, encoding?: string | Function, cb?: Function) => false;
       dup.end = () => {};
 
       stub('handleResp', (err, res, body, callback) => {
         callback(error);
       });
 
-      requestOverride =
-          (reqOpts: DecorateRequestOptions, callback: (err: Error) => void) => {
-            callback(error);
-          };
+      requestOverride = (
+        reqOpts: DecorateRequestOptions,
+        callback: (err: Error) => void
+      ) => {
+        callback(error);
+      };
 
       requestOverride.defaults = (opts: DecorateRequestOptions) => {
         return requestOverride;
       };
 
-      dup.on('error', (err) => {
+      dup.on('error', err => {
         assert.strictEqual(err, error);
         done();
       });
@@ -527,7 +556,7 @@ describe('common/util', () => {
       util.makeWritableStream(dup, {
         makeAuthenticatedRequest(request, opts) {
           opts.onAuthenticated(null);
-        }
+        },
       });
 
       setImmediate(() => {
@@ -535,7 +564,7 @@ describe('common/util', () => {
       });
     });
 
-    it('should emit the response', (done) => {
+    it('should emit the response', done => {
       const dup = duplexify();
       const fakeStream = new stream.Writable();
       // tslint:disable-next-line:no-any
@@ -545,22 +574,23 @@ describe('common/util', () => {
         callback();
       });
 
-      requestOverride =
-          (reqOpts: DecorateRequestOptions,
-           callback: (err: Error|null, res: r.Response) => void) => {
-            callback(null, fakeResponse);
-          };
+      requestOverride = (
+        reqOpts: DecorateRequestOptions,
+        callback: (err: Error | null, res: r.Response) => void
+      ) => {
+        callback(null, fakeResponse);
+      };
 
       requestOverride.defaults = (opts: DecorateRequestOptions) =>
-          requestOverride;
+        requestOverride;
       const options = {
         // tslint:disable-next-line:no-any
         makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
           opts.onAuthenticated();
-        }
+        },
       };
 
-      dup.on('response', (resp) => {
+      dup.on('response', resp => {
         assert.strictEqual(resp, fakeResponse);
         done();
       });
@@ -568,7 +598,7 @@ describe('common/util', () => {
       util.makeWritableStream(dup, options, util.noop);
     });
 
-    it('should pass back the response data to the callback', (done) => {
+    it('should pass back the response data to the callback', done => {
       const dup = duplexify();
       // tslint:disable-next-line:no-any
       const fakeStream: any = new stream.Writable();
@@ -580,10 +610,12 @@ describe('common/util', () => {
         callback(null, fakeResponse);
       });
 
-      requestOverride =
-          (reqOpts: DecorateRequestOptions, callback: () => void) => {
-            callback();
-          };
+      requestOverride = (
+        reqOpts: DecorateRequestOptions,
+        callback: () => void
+      ) => {
+        callback();
+      };
       requestOverride.defaults = (opts: DecorateRequestOptions) => {
         return requestOverride;
       };
@@ -592,7 +624,7 @@ describe('common/util', () => {
         // tslint:disable-next-line:no-any
         makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
           opts.onAuthenticated();
-        }
+        },
       };
 
       util.makeWritableStream(dup, options, (data: {}) => {
@@ -609,24 +641,25 @@ describe('common/util', () => {
   describe('makeAuthenticatedRequestFactory', () => {
     const authClient = {
       getCredentials() {},
-      _cachedProjectId: 'project-id'
+      _cachedProjectId: 'project-id',
       // tslint:disable-next-line:no-any
     } as any;
 
-    it('should create an authClient', (done) => {
+    it('should create an authClient', done => {
       const config = {test: true} as MakeAuthenticatedRequestFactoryConfig;
 
-      sandbox.stub(fakeGoogleAuth, 'GoogleAuth')
-          .callsFake((config_: GoogleAuthOptions) => {
-            assert.deepStrictEqual(config_, config);
-            setImmediate(done);
-            return authClient;
-          });
+      sandbox
+        .stub(fakeGoogleAuth, 'GoogleAuth')
+        .callsFake((config_: GoogleAuthOptions) => {
+          assert.deepStrictEqual(config_, config);
+          setImmediate(done);
+          return authClient;
+        });
 
       util.makeAuthenticatedRequestFactory(config);
     });
 
-    it('should not pass projectId token to google-auth-library', (done) => {
+    it('should not pass projectId token to google-auth-library', done => {
       const config = {projectId: '{{projectId}}'};
 
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth').callsFake(config_ => {
@@ -638,7 +671,7 @@ describe('common/util', () => {
       util.makeAuthenticatedRequestFactory(config);
     });
 
-    it('should not remove projectId from config object', (done) => {
+    it('should not remove projectId from config object', done => {
       const config = {projectId: '{{projectId}}'};
 
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth').callsFake(() => {
@@ -651,10 +684,13 @@ describe('common/util', () => {
     });
 
     it('should return a function', () => {
-      assert.equal(typeof util.makeAuthenticatedRequestFactory({}), 'function');
+      assert.strictEqual(
+        typeof util.makeAuthenticatedRequestFactory({}),
+        'function'
+      );
     });
 
-    it('should return a getCredentials method', (done) => {
+    it('should return a getCredentials method', done => {
       function getCredentials() {
         done();
       }
@@ -684,17 +720,19 @@ describe('common/util', () => {
         makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(config);
       });
 
-      it('should decorate the request', (done) => {
+      it('should decorate the request', done => {
         const decoratedRequest = {};
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-        stub('decorateRequest', (reqOpts_) => {
+        stub('decorateRequest', reqOpts_ => {
           assert.strictEqual(reqOpts_, fakeReqOpts);
           return decoratedRequest;
         });
 
         makeAuthenticatedRequest(fakeReqOpts, {
           onAuthenticated(
-              err: Error, authenticatedReqOpts: DecorateRequestOptions) {
+            err: Error,
+            authenticatedReqOpts: DecorateRequestOptions
+          ) {
             assert.ifError(err);
             assert.strictEqual(authenticatedReqOpts, decoratedRequest);
             done();
@@ -702,7 +740,7 @@ describe('common/util', () => {
         });
       });
 
-      it('should return an error while decorating', (done) => {
+      it('should return an error while decorating', done => {
         const error = new Error('Error.');
         stub('decorateRequest', () => {
           throw error;
@@ -715,11 +753,13 @@ describe('common/util', () => {
         });
       });
 
-      it('should pass options back to callback', (done) => {
+      it('should pass options back to callback', done => {
         const reqOpts = {a: 'b', c: 'd'};
         makeAuthenticatedRequest(reqOpts, {
           onAuthenticated(
-              err: Error, authenticatedReqOpts: DecorateRequestOptions) {
+            err: Error,
+            authenticatedReqOpts: DecorateRequestOptions
+          ) {
             assert.ifError(err);
             assert.deepStrictEqual(reqOpts, authenticatedReqOpts);
             done();
@@ -727,7 +767,7 @@ describe('common/util', () => {
         });
       });
 
-      it('should not authenticate requests with a custom API', (done) => {
+      it('should not authenticate requests with a custom API', done => {
         const reqOpts = {a: 'b', c: 'd'};
 
         stub('makeRequest', rOpts => {
@@ -740,12 +780,12 @@ describe('common/util', () => {
     });
 
     describe('needs authentication', () => {
-      it('should pass correct args to authorizeRequest', (done) => {
+      it('should pass correct args to authorizeRequest', done => {
         const fake = extend(true, authClient, {
           authorizeRequest: async (rOpts: AxiosRequestConfig) => {
             assert.deepStrictEqual(rOpts, fakeReqOpts);
             done();
-          }
+          },
         });
         retryRequestOverride = () => {
           return new stream.PassThrough();
@@ -760,7 +800,7 @@ describe('common/util', () => {
           return extend(true, authClient, {
             authorizeRequest: async (rOpts: AxiosRequestConfig) => {
               return rOpts;
-            }
+            },
           });
         });
         retryRequestOverride = () => {
@@ -774,7 +814,7 @@ describe('common/util', () => {
       describe('projectId', () => {
         const reqOpts = {} as DecorateRequestOptions;
 
-        it('should default to authClient projectId', (done) => {
+        it('should default to authClient projectId', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           authClient._cachedProjectId = 'authclient-project-id';
           stub('decorateRequest', (reqOpts, projectId) => {
@@ -782,15 +822,16 @@ describe('common/util', () => {
             setImmediate(done);
           });
 
-          const makeAuthenticatedRequest =
-              util.makeAuthenticatedRequestFactory({customEndpoint: true});
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+            {customEndpoint: true}
+          );
 
           makeAuthenticatedRequest(reqOpts, {
             onAuthenticated: assert.ifError,
           });
         });
 
-        it('should use user-provided projectId', (done) => {
+        it('should use user-provided projectId', done => {
           authClient.projectId = 'authclient-project-id';
 
           const config = {customEndpoint: true, projectId: 'project-id'};
@@ -800,8 +841,9 @@ describe('common/util', () => {
             setImmediate(done);
           });
 
-          const makeAuthenticatedRequest =
-              util.makeAuthenticatedRequestFactory(config);
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+            config
+          );
 
           makeAuthenticatedRequest(reqOpts, {
             onAuthenticated: assert.ifError,
@@ -818,10 +860,11 @@ describe('common/util', () => {
           };
         });
 
-        it('should attempt request anyway', (done) => {
+        it('should attempt request anyway', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-          const makeAuthenticatedRequest =
-              util.makeAuthenticatedRequestFactory({});
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+            {}
+          );
 
           const correctReqOpts = {} as DecorateRequestOptions;
           const incorrectReqOpts = {} as DecorateRequestOptions;
@@ -836,19 +879,20 @@ describe('common/util', () => {
               assert.strictEqual(reqOpts, correctReqOpts);
               assert.notStrictEqual(reqOpts, incorrectReqOpts);
               done();
-            }
+            },
           });
         });
 
-        it('should block decorateRequest error', (done) => {
+        it('should block decorateRequest error', done => {
           const decorateRequestError = new Error('Error.');
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           stub('decorateRequest', () => {
             throw decorateRequestError;
           });
 
-          const makeAuthenticatedRequest =
-              util.makeAuthenticatedRequestFactory({});
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+            {}
+          );
           makeAuthenticatedRequest(fakeReqOpts, {
             onAuthenticated(err) {
               assert.notStrictEqual(err, decorateRequestError);
@@ -858,7 +902,7 @@ describe('common/util', () => {
           });
         });
 
-        it('should invoke the callback with error', (done) => {
+        it('should invoke the callback with error', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const mar = util.makeAuthenticatedRequestFactory({});
           mar(fakeReqOpts, err => {
@@ -867,7 +911,7 @@ describe('common/util', () => {
           });
         });
 
-        it('should exec onAuthenticated callback with error', (done) => {
+        it('should exec onAuthenticated callback with error', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const mar = util.makeAuthenticatedRequestFactory({});
           mar(fakeReqOpts, {
@@ -878,7 +922,7 @@ describe('common/util', () => {
           });
         });
 
-        it('should emit an error and end the stream', (done) => {
+        it('should emit an error and end the stream', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const mar = util.makeAuthenticatedRequestFactory({});
           // tslint:disable-next-line:no-any
@@ -901,7 +945,7 @@ describe('common/util', () => {
           };
         });
 
-        it('should return authenticated request to callback', (done) => {
+        it('should return authenticated request to callback', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           stub('decorateRequest', reqOpts_ => {
             assert.deepStrictEqual(reqOpts_, reqOpts);
@@ -917,7 +961,7 @@ describe('common/util', () => {
           });
         });
 
-        it('should make request with correct options', (done) => {
+        it('should make request with correct options', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const config = {keyFile: 'foo'};
           stub('decorateRequest', reqOpts_ => {
@@ -933,7 +977,7 @@ describe('common/util', () => {
           mar(reqOpts, done);
         });
 
-        it('should return abort() from the active request', (done) => {
+        it('should return abort() from the active request', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const retryRequest = {
             abort: done,
@@ -944,24 +988,26 @@ describe('common/util', () => {
           req.abort();
         });
 
-        it('should only abort() once', (done) => {
+        it('should only abort() once', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const retryRequest = {
-            abort: done,  // Will throw if called more than once.
+            abort: done, // Will throw if called more than once.
           };
           stub('makeRequest', () => {
             return retryRequest;
           });
 
           const mar = util.makeAuthenticatedRequestFactory({});
-          const authenticatedRequest =
-              mar(reqOpts, assert.ifError) as Abortable;
+          const authenticatedRequest = mar(
+            reqOpts,
+            assert.ifError
+          ) as Abortable;
 
-          authenticatedRequest.abort();  // done()
-          authenticatedRequest.abort();  // done()
+          authenticatedRequest.abort(); // done()
+          authenticatedRequest.abort(); // done()
         });
 
-        it('should provide stream to makeRequest', (done) => {
+        it('should provide stream to makeRequest', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           stub('makeRequest', (authenticatedReqOpts, cfg) => {
             setImmediate(() => {
@@ -1031,7 +1077,7 @@ describe('common/util', () => {
     function testDefaultRetryRequestConfig(done: () => void) {
       return (reqOpts_: DecorateRequestOptions, config: MakeRequestConfig) => {
         assert.strictEqual(reqOpts_, reqOpts);
-        assert.equal(config.retries, 3);
+        assert.strictEqual(config.retries, 3);
 
         const error = new Error('Error.');
         stub('parseHttpRespMessage', () => {
@@ -1063,7 +1109,7 @@ describe('common/util', () => {
     }
 
     describe('stream mode', () => {
-      it('should forward the specified events to the stream', (done) => {
+      it('should forward the specified events to the stream', done => {
         const requestStream = duplexify();
         const userStream = duplexify();
 
@@ -1072,20 +1118,18 @@ describe('common/util', () => {
         const complete = {};
 
         userStream
-            .on('error',
-                (error_) => {
-                  assert.strictEqual(error_, error);
-                  requestStream.emit('response', response);
-                })
-            .on('response',
-                (response_) => {
-                  assert.strictEqual(response_, response);
-                  requestStream.emit('complete', complete);
-                })
-            .on('complete', (complete_) => {
-              assert.strictEqual(complete_, complete);
-              done();
-            });
+          .on('error', error_ => {
+            assert.strictEqual(error_, error);
+            requestStream.emit('response', response);
+          })
+          .on('response', response_ => {
+            assert.strictEqual(response_, response);
+            requestStream.emit('complete', complete);
+          })
+          .on('complete', complete_ => {
+            assert.strictEqual(complete_, complete);
+            done();
+          });
 
         retryRequestOverride = () => {
           setImmediate(() => {
@@ -1099,7 +1143,7 @@ describe('common/util', () => {
       });
 
       describe('GET requests', () => {
-        it('should use retryRequest', (done) => {
+        it('should use retryRequest', done => {
           const userStream = duplexify();
           retryRequestOverride = (reqOpts_: DecorateRequestOptions) => {
             assert.strictEqual(reqOpts_, reqOpts);
@@ -1109,20 +1153,20 @@ describe('common/util', () => {
           util.makeRequest(reqOpts, {stream: userStream}, util.noop);
         });
 
-        it('should set the readable stream', (done) => {
+        it('should set the readable stream', done => {
           const userStream = duplexify();
           const retryRequestStream = new stream.Stream();
           retryRequestOverride = () => {
             return retryRequestStream;
           };
-          userStream.setReadable = (stream) => {
+          userStream.setReadable = stream => {
             assert.strictEqual(stream, retryRequestStream);
             done();
           };
           util.makeRequest(reqOpts, {stream: userStream}, util.noop);
         });
 
-        it('should expose the abort method from retryRequest', (done) => {
+        it('should expose the abort method from retryRequest', done => {
           const userStream = duplexify() as Duplexify & Abortable;
 
           retryRequestOverride = () => {
@@ -1138,13 +1182,13 @@ describe('common/util', () => {
       });
 
       describe('non-GET requests', () => {
-        it('should not use retryRequest', (done) => {
+        it('should not use retryRequest', done => {
           const userStream = duplexify();
           const reqOpts = {
             method: 'POST',
           } as DecorateRequestOptions;
 
-          retryRequestOverride = done;  // will throw.
+          retryRequestOverride = done; // will throw.
           requestOverride = (reqOpts_: DecorateRequestOptions) => {
             assert.strictEqual(reqOpts_, reqOpts);
             setImmediate(done);
@@ -1158,7 +1202,7 @@ describe('common/util', () => {
           util.makeRequest(reqOpts, {stream: userStream}, util.noop);
         });
 
-        it('should set the writable stream', (done) => {
+        it('should set the writable stream', done => {
           const userStream = duplexify();
           const requestStream = new stream.Stream();
 
@@ -1170,24 +1214,29 @@ describe('common/util', () => {
             return requestOverride;
           };
 
-          userStream.setWritable = (stream) => {
+          userStream.setWritable = stream => {
             assert.strictEqual(stream, requestStream);
             done();
           };
 
           util.makeRequest(
-              {method: 'POST'} as DecorateRequestOptions, {stream: userStream},
-              util.noop);
+            {method: 'POST'} as DecorateRequestOptions,
+            {stream: userStream},
+            util.noop
+          );
         });
 
-        it('should expose the abort method from request', (done) => {
+        it('should expose the abort method from request', done => {
           const userStream = duplexify() as Duplexify & Abortable;
 
-          requestOverride = Object.assign(() => {
-            const requestStream = duplexify() as Duplexify & Abortable;
-            requestStream.abort = done;
-            return requestStream;
-          }, {defaults: () => requestOverride});
+          requestOverride = Object.assign(
+            () => {
+              const requestStream = duplexify() as Duplexify & Abortable;
+              requestStream.abort = done;
+              return requestStream;
+            },
+            {defaults: () => requestOverride}
+          );
 
           util.makeRequest(reqOpts, {stream: userStream}, util.noop);
           userStream.abort();
@@ -1196,29 +1245,38 @@ describe('common/util', () => {
     });
 
     describe('callback mode', () => {
-      it('should pass the default options to retryRequest', (done) => {
+      it('should pass the default options to retryRequest', done => {
         retryRequestOverride = testDefaultRetryRequestConfig(done);
         util.makeRequest(
-            // tslint:disable-next-line:no-any
-            reqOpts, {}, assert.ifError);
+          // tslint:disable-next-line:no-any
+          reqOpts,
+          {},
+          assert.ifError
+        );
       });
 
-      it('should allow turning off retries to retryRequest', (done) => {
+      it('should allow turning off retries to retryRequest', done => {
         retryRequestOverride = testNoRetryRequestConfig(done);
         util.makeRequest(reqOpts, noRetryRequestConfig, assert.ifError);
       });
 
-      it('should override number of retries to retryRequest', (done) => {
+      it('should override number of retries to retryRequest', done => {
         retryRequestOverride = testCustomRetryRequestConfig(done);
         util.makeRequest(reqOpts, customRetryRequestConfig, assert.ifError);
       });
 
-      it('should allow request options to control retry setting', (done) => {
+      it('should allow request options to control retry setting', done => {
         retryRequestOverride = testCustomRetryRequestConfig(done);
-        const reqOptsWithRetrySettings =
-            extend({}, reqOpts, customRetryRequestConfig);
+        const reqOptsWithRetrySettings = extend(
+          {},
+          reqOpts,
+          customRetryRequestConfig
+        );
         util.makeRequest(
-            reqOptsWithRetrySettings, noRetryRequestConfig, assert.ifError);
+          reqOptsWithRetrySettings,
+          noRetryRequestConfig,
+          assert.ifError
+        );
       });
 
       it('should return the instance of retryRequest', () => {
@@ -1230,15 +1288,17 @@ describe('common/util', () => {
         assert.strictEqual(res, requestInstance);
       });
 
-      it('should let handleResp handle the response', (done) => {
+      it('should let handleResp handle the response', done => {
         const error = new Error('Error.');
         const body = fakeResponse.body;
 
-        retryRequestOverride =
-            (rOpts: DecorateRequestOptions, opts: MakeRequestConfig,
-             callback: r.RequestCallback) => {
-              callback(error, fakeResponse, body);
-            };
+        retryRequestOverride = (
+          rOpts: DecorateRequestOptions,
+          opts: MakeRequestConfig,
+          callback: r.RequestCallback
+        ) => {
+          callback(error, fakeResponse, body);
+        };
 
         stub('handleResp', (err, resp, body_) => {
           assert.strictEqual(err, error);
@@ -1256,78 +1316,85 @@ describe('common/util', () => {
     const projectId = 'not-a-project-id';
     it('should delete qs.autoPaginate', () => {
       const decoratedReqOpts = util.decorateRequest(
-          {
-            autoPaginate: true,
-          } as DecorateRequestOptions,
-          projectId);
+        {
+          autoPaginate: true,
+        } as DecorateRequestOptions,
+        projectId
+      );
 
       assert.strictEqual(decoratedReqOpts.autoPaginate, undefined);
     });
 
     it('should delete qs.autoPaginateVal', () => {
       const decoratedReqOpts = util.decorateRequest(
-          {
-            autoPaginateVal: true,
-          } as DecorateRequestOptions,
-          projectId);
+        {
+          autoPaginateVal: true,
+        } as DecorateRequestOptions,
+        projectId
+      );
 
       assert.strictEqual(decoratedReqOpts.autoPaginateVal, undefined);
     });
 
     it('should delete objectMode', () => {
       const decoratedReqOpts = util.decorateRequest(
-          {
-            objectMode: true,
-          } as DecorateRequestOptions,
-          projectId);
+        {
+          objectMode: true,
+        } as DecorateRequestOptions,
+        projectId
+      );
 
       assert.strictEqual(decoratedReqOpts.objectMode, undefined);
     });
 
     it('should delete qs.autoPaginate', () => {
       const decoratedReqOpts = util.decorateRequest(
-          {
-            qs: {
-              autoPaginate: true,
-            },
-          } as DecorateRequestOptions,
-          projectId);
+        {
+          qs: {
+            autoPaginate: true,
+          },
+        } as DecorateRequestOptions,
+        projectId
+      );
 
       assert.strictEqual(decoratedReqOpts.qs.autoPaginate, undefined);
     });
 
     it('should delete qs.autoPaginateVal', () => {
       const decoratedReqOpts = util.decorateRequest(
-          {
-            qs: {
-              autoPaginateVal: true,
-            },
-          } as DecorateRequestOptions,
-          projectId);
+        {
+          qs: {
+            autoPaginateVal: true,
+          },
+        } as DecorateRequestOptions,
+        projectId
+      );
 
       assert.strictEqual(decoratedReqOpts.qs.autoPaginateVal, undefined);
     });
 
     it('should delete json.autoPaginate', () => {
       const decoratedReqOpts = util.decorateRequest(
-          {
-            json: {
-              autoPaginate: true,
-            },
-          } as DecorateRequestOptions,
-          projectId);
+        {
+          json: {
+            autoPaginate: true,
+          },
+        } as DecorateRequestOptions,
+        projectId
+      );
 
       assert.strictEqual(decoratedReqOpts.json.autoPaginate, undefined);
     });
 
     it('should delete json.autoPaginateVal', () => {
       const decoratedReqOpts = util.decorateRequest(
-          {
-            json: {
-              autoPaginateVal: true,
-            },
-          } as DecorateRequestOptions,
-          projectId);
+        {
+          json: {
+            autoPaginateVal: true,
+          },
+        } as DecorateRequestOptions,
+        projectId
+      );
 
       assert.strictEqual(decoratedReqOpts.json.autoPaginateVal, undefined);
     });
@@ -1357,10 +1424,12 @@ describe('common/util', () => {
       const projectId = 'project-id';
       const reqOpts = {
         uri: 'http://',
-        multipart: [{
-          'Content-Type': '...',
-          body: '...',
-        }],
+        multipart: [
+          {
+            'Content-Type': '...',
+            body: '...',
+          },
+        ],
       };
       const decoratedPart = {};
 
@@ -1486,8 +1555,10 @@ describe('common/util', () => {
     it('should allow passing both opts and callback', () => {
       const optionsOrCallback = {};
       const callback = () => {};
-      const [opts, cb] =
-          util.maybeOptionsOrCallback(optionsOrCallback, callback);
+      const [opts, cb] = util.maybeOptionsOrCallback(
+        optionsOrCallback,
+        callback
+      );
       assert.strictEqual(opts, optionsOrCallback);
       assert.strictEqual(cb, callback);
     });

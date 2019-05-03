@@ -21,7 +21,7 @@ import * as os from 'os';
 import * as tmp from 'tmp';
 import {promisify} from 'util';
 
-const mvp = promisify(mv) as {} as (...args: string[]) => Promise<void>;
+const mvp = (promisify(mv) as {}) as (...args: string[]) => Promise<void>;
 const ncpp = promisify(ncp);
 const keep = !!process.env.KEEP_TEMPDIRS;
 const stagingDir = tmp.dirSync({keep, unsafeCleanup: true});
@@ -30,22 +30,23 @@ const pkg = require('../../package.json');
 const pkgName = 'google-cloud-common';
 const npm = os.platform() === 'win32' ? 'npm.cmd' : 'npm';
 
-const spawnp =
-    (command: string, args: string[], options: cp.SpawnOptions = {}) => {
-      return new Promise((resolve, reject) => {
-        cp.spawn(command, args, Object.assign(options, {stdio: 'inherit'}))
-            .on('close',
-                code => {
-                  if (code === 0) {
-                    resolve();
-                  } else {
-                    reject(
-                        new Error(`Spawn failed with an exit code of ${code}`));
-                  }
-                })
-            .on('error', reject);
-      });
-    };
+const spawnp = (
+  command: string,
+  args: string[],
+  options: cp.SpawnOptions = {}
+) => {
+  return new Promise((resolve, reject) => {
+    cp.spawn(command, args, Object.assign(options, {stdio: 'inherit'}))
+      .on('close', code => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Spawn failed with an exit code of ${code}`));
+        }
+      })
+      .on('error', reject);
+  });
+};
 
 /**
  * Create a staging directory with temp fixtures used to test on a fresh

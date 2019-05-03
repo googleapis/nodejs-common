@@ -23,7 +23,7 @@ import * as ent from 'ent';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
-import * as r from 'request';  // types only
+import * as r from 'request'; // types only
 import * as retryRequest from 'retry-request';
 import {Duplex, DuplexOptions, PassThrough, Readable, Writable} from 'stream';
 import {teenyRequest} from 'teeny-request';
@@ -52,17 +52,26 @@ export interface DuplexifyOptions extends DuplexOptions {
 
 export interface Duplexify extends Duplex {
   readonly destroyed: boolean;
-  setWritable(writable: Writable|false|null): void;
-  setReadable(readable: Readable|false|null): void;
+  setWritable(writable: Writable | false | null): void;
+  setReadable(readable: Readable | false | null): void;
 }
 
 export interface DuplexifyConstructor {
-  obj(writable?: Writable|false|null, readable?: Readable|false|null,
-      options?: DuplexifyOptions): Duplexify;
-  new(writable?: Writable|false|null, readable?: Readable|false|null,
-      options?: DuplexifyOptions): Duplexify;
-  (writable?: Writable|false|null, readable?: Readable|false|null,
-   options?: DuplexifyOptions): Duplexify;
+  obj(
+    writable?: Writable | false | null,
+    readable?: Readable | false | null,
+    options?: DuplexifyOptions
+  ): Duplexify;
+  new (
+    writable?: Writable | false | null,
+    readable?: Readable | false | null,
+    options?: DuplexifyOptions
+  ): Duplexify;
+  (
+    writable?: Writable | false | null,
+    readable?: Readable | false | null,
+    options?: DuplexifyOptions
+  ): Duplexify;
 }
 
 export interface ParsedHttpRespMessage {
@@ -72,31 +81,36 @@ export interface ParsedHttpRespMessage {
 
 export interface MakeAuthenticatedRequest {
   (reqOpts: DecorateRequestOptions): Duplexify;
-  (reqOpts: DecorateRequestOptions,
-   options?: MakeAuthenticatedRequestOptions): void|Abortable;
-  (reqOpts: DecorateRequestOptions,
-   callback?: BodyResponseCallback): void|Abortable;
-  (reqOpts: DecorateRequestOptions,
-   optionsOrCallback?: MakeAuthenticatedRequestOptions|
-   BodyResponseCallback): void|Abortable|Duplexify;
-  getCredentials:
-      (callback:
-           (err?: Error|null, credentials?: CredentialBody) => void) => void;
+  (
+    reqOpts: DecorateRequestOptions,
+    options?: MakeAuthenticatedRequestOptions
+  ): void | Abortable;
+  (
+    reqOpts: DecorateRequestOptions,
+    callback?: BodyResponseCallback
+  ): void | Abortable;
+  (
+    reqOpts: DecorateRequestOptions,
+    optionsOrCallback?: MakeAuthenticatedRequestOptions | BodyResponseCallback
+  ): void | Abortable | Duplexify;
+  getCredentials: (
+    callback: (err?: Error | null, credentials?: CredentialBody) => void
+  ) => void;
   authClient: GoogleAuth;
 }
 
-export type Abortable = {
-  abort(): void
-};
-export type AbortableDuplex = Duplexify&Abortable;
+export interface Abortable {
+  abort(): void;
+}
+export type AbortableDuplex = Duplexify & Abortable;
 
 export interface PackageJson {
   name: string;
   version: string;
 }
 
-export interface MakeAuthenticatedRequestFactoryConfig extends
-    GoogleAuthOptions {
+export interface MakeAuthenticatedRequestFactoryConfig
+  extends GoogleAuthOptions {
   /**
    * Automatically retry requests if the response is related to rate limits or
    * certain intermittent server errors. We will exponentially backoff
@@ -134,7 +148,7 @@ export interface MakeAuthenticatedRequestOptions {
 }
 
 export interface OnAuthenticatedCallback {
-  (err: Error|null, reqOpts?: DecorateRequestOptions): void;
+  (err: Error | null, reqOpts?: DecorateRequestOptions): void;
 }
 
 export interface GoogleErrorBody {
@@ -166,9 +180,15 @@ export interface MakeWritableStreamOptions {
    */
   request?: r.Options;
 
-  makeAuthenticatedRequest(reqOpts: r.OptionsWithUri, fnobj: {
-    onAuthenticated(err: Error|null, authenticatedReqOpts?: r.Options): void
-  }): void;
+  makeAuthenticatedRequest(
+    reqOpts: r.OptionsWithUri,
+    fnobj: {
+      onAuthenticated(
+        err: Error | null,
+        authenticatedReqOpts?: r.Options
+      ): void;
+    }
+  ): void;
 }
 
 export interface DecorateRequestOptions extends r.CoreOptions {
@@ -197,7 +217,7 @@ export class ApiError extends Error {
   response?: r.Response;
   constructor(errorMessage: string);
   constructor(errorBody: GoogleErrorBody);
-  constructor(errorBodyOrMessage?: GoogleErrorBody|string) {
+  constructor(errorBodyOrMessage?: GoogleErrorBody | string) {
     super();
     if (typeof errorBodyOrMessage !== 'object') {
       this.message = errorBodyOrMessage || '';
@@ -228,7 +248,9 @@ export class ApiError extends Error {
    * @returns {string}
    */
   static createMultiErrorMessage(
-      err: GoogleErrorBody, errors?: GoogleInnerError[]): string {
+    err: GoogleErrorBody,
+    errors?: GoogleInnerError[]
+  ): string {
     const messages: Set<string> = new Set();
 
     if (err.message) {
@@ -248,7 +270,8 @@ export class ApiError extends Error {
     if (messageArr.length > 1) {
       messageArr = messageArr.map((message, i) => `    ${i + 1}. ${message}`);
       messageArr.unshift(
-          'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n');
+        'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n'
+      );
       messageArr.push('\n');
     }
 
@@ -277,7 +300,7 @@ export class PartialFailureError extends Error {
 }
 
 export interface BodyResponseCallback {
-  (err: Error|null, body?: ResponseBody, res?: r.Response): void;
+  (err: Error | null, body?: ResponseBody, res?: r.Response): void;
 }
 
 export interface MakeRequestConfig {
@@ -324,13 +347,19 @@ export class Util {
    * @param {function} callback - The callback function.
    */
   handleResp(
-      err: Error|null, resp?: r.Response|null, body?: ResponseBody,
-      callback?: BodyResponseCallback) {
+    err: Error | null,
+    resp?: r.Response | null,
+    body?: ResponseBody,
+    callback?: BodyResponseCallback
+  ) {
     callback = callback || util.noop;
 
     const parsedResp = extend(
-        true, {err: err || null}, resp && util.parseHttpRespMessage(resp),
-        body && util.parseHttpRespBody(body));
+      true,
+      {err: err || null},
+      resp && util.parseHttpRespMessage(resp),
+      body && util.parseHttpRespBody(body)
+    );
     // Assign the parsed body to resp.body, even if { json: false } was passed
     // as a request option.
     // We assume that nobody uses the previously unparsed value of resp.body.
@@ -413,8 +442,10 @@ export class Util {
    * @param {function} onComplete - Callback, executed after the writable Request stream has completed.
    */
   makeWritableStream(
-      dup: Duplexify, options: MakeWritableStreamOptions,
-      onComplete?: Function) {
+    dup: Duplexify,
+    options: MakeWritableStreamOptions,
+    onComplete?: Function
+  ) {
     onComplete = onComplete || util.noop;
 
     const writeStream = new PassThrough();
@@ -432,18 +463,17 @@ export class Util {
     const metadata = options.metadata || {};
 
     const reqOpts = extend(true, defaultReqOpts, options.request, {
-                      multipart: [
-                        {
-                          'Content-Type': 'application/json',
-                          body: JSON.stringify(metadata),
-                        },
-                        {
-                          'Content-Type': metadata.contentType ||
-                              'application/octet-stream',
-                          body: writeStream,
-                        },
-                      ],
-                    }) as r.OptionsWithUri;
+      multipart: [
+        {
+          'Content-Type': 'application/json',
+          body: JSON.stringify(metadata),
+        },
+        {
+          'Content-Type': metadata.contentType || 'application/octet-stream',
+          body: writeStream,
+        },
+      ],
+    }) as r.OptionsWithUri;
 
     options.makeAuthenticatedRequest(reqOpts, {
       onAuthenticated(err, authenticatedReqOpts) {
@@ -512,14 +542,15 @@ export class Util {
    * @param {string=} config.keyFile - Path to a .json, .pem, or .p12 keyfile.
    * @param {array} config.scopes - Array of scopes required for the API.
    */
-  makeAuthenticatedRequestFactory(config:
-                                      MakeAuthenticatedRequestFactoryConfig) {
+  makeAuthenticatedRequestFactory(
+    config: MakeAuthenticatedRequestFactoryConfig
+  ) {
     const googleAutoAuthConfig = extend({}, config);
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
       delete googleAutoAuthConfig.projectId;
     }
     const authClient =
-        googleAutoAuthConfig.authClient || new GoogleAuth(googleAutoAuthConfig);
+      googleAutoAuthConfig.authClient || new GoogleAuth(googleAutoAuthConfig);
 
     /**
      * The returned function that will make an authenticated request.
@@ -530,21 +561,24 @@ export class Util {
      *     not be made. Instead, this function is passed the error &
      * authenticated request options.
      */
-    function makeAuthenticatedRequest(reqOpts: DecorateRequestOptions):
-        Duplexify;
     function makeAuthenticatedRequest(
-        reqOpts: DecorateRequestOptions,
-        options?: MakeAuthenticatedRequestOptions): void|Abortable;
+      reqOpts: DecorateRequestOptions
+    ): Duplexify;
     function makeAuthenticatedRequest(
-        reqOpts: DecorateRequestOptions, callback?: BodyResponseCallback): void|
-        Abortable;
+      reqOpts: DecorateRequestOptions,
+      options?: MakeAuthenticatedRequestOptions
+    ): void | Abortable;
     function makeAuthenticatedRequest(
-        reqOpts: DecorateRequestOptions,
-        optionsOrCallback?: MakeAuthenticatedRequestOptions|
-        BodyResponseCallback): void|Abortable|Duplexify {
+      reqOpts: DecorateRequestOptions,
+      callback?: BodyResponseCallback
+    ): void | Abortable;
+    function makeAuthenticatedRequest(
+      reqOpts: DecorateRequestOptions,
+      optionsOrCallback?: MakeAuthenticatedRequestOptions | BodyResponseCallback
+    ): void | Abortable | Duplexify {
       let stream: Duplexify;
       const reqConfig = extend({}, config);
-      let activeRequest_: void|Abortable|null;
+      let activeRequest_: void | Abortable | null;
 
       if (!optionsOrCallback) {
         stream = duplexify();
@@ -552,62 +586,69 @@ export class Util {
       }
 
       const options =
-          typeof optionsOrCallback === 'object' ? optionsOrCallback : undefined;
-      const callback = typeof optionsOrCallback === 'function' ?
-          optionsOrCallback :
-          undefined;
+        typeof optionsOrCallback === 'object' ? optionsOrCallback : undefined;
+      const callback =
+        typeof optionsOrCallback === 'function' ? optionsOrCallback : undefined;
 
-      const onAuthenticated =
-          (err: Error|null, authenticatedReqOpts?: DecorateRequestOptions) => {
-            const autoAuthFailed = err &&
-                err.message.indexOf('Could not load the default credentials') >
-                    -1;
+      const onAuthenticated = (
+        err: Error | null,
+        authenticatedReqOpts?: DecorateRequestOptions
+      ) => {
+        const autoAuthFailed =
+          err &&
+          err.message.indexOf('Could not load the default credentials') > -1;
 
-            if (autoAuthFailed) {
-              // Even though authentication failed, the API might not actually
-              // care.
-              authenticatedReqOpts = reqOpts;
-            }
+        if (autoAuthFailed) {
+          // Even though authentication failed, the API might not actually
+          // care.
+          authenticatedReqOpts = reqOpts;
+        }
 
-            if (!err || autoAuthFailed) {
-              // tslint:disable-next-line:no-any
-              let projectId = (authClient as any)._cachedProjectId;
+        if (!err || autoAuthFailed) {
+          // tslint:disable-next-line:no-any
+          let projectId = (authClient as any)._cachedProjectId;
 
-              if (config.projectId && config.projectId !== '{{projectId}}') {
-                projectId = config.projectId;
-              }
+          if (config.projectId && config.projectId !== '{{projectId}}') {
+            projectId = config.projectId;
+          }
 
-              try {
-                authenticatedReqOpts =
-                    util.decorateRequest(authenticatedReqOpts!, projectId);
-                err = null;
-              } catch (e) {
-                // A projectId was required, but we don't have one.
-                // Re-use the "Could not load the default credentials error" if
-                // auto auth failed.
-                err = err || e;
-              }
-            }
+          try {
+            authenticatedReqOpts = util.decorateRequest(
+              authenticatedReqOpts!,
+              projectId
+            );
+            err = null;
+          } catch (e) {
+            // A projectId was required, but we don't have one.
+            // Re-use the "Could not load the default credentials error" if
+            // auto auth failed.
+            err = err || e;
+          }
+        }
 
-            if (err) {
-              if (stream) {
-                stream.destroy(err);
-              } else {
-                const fn = options && options.onAuthenticated ?
-                    options.onAuthenticated :
-                    callback;
-                (fn as Function)(err);
-              }
-              return;
-            }
+        if (err) {
+          if (stream) {
+            stream.destroy(err);
+          } else {
+            const fn =
+              options && options.onAuthenticated
+                ? options.onAuthenticated
+                : callback;
+            (fn as Function)(err);
+          }
+          return;
+        }
 
-            if (options && options.onAuthenticated) {
-              options.onAuthenticated(null, authenticatedReqOpts);
-            } else {
-              activeRequest_ =
-                  util.makeRequest(authenticatedReqOpts!, reqConfig, callback!);
-            }
-          };
+        if (options && options.onAuthenticated) {
+          options.onAuthenticated(null, authenticatedReqOpts);
+        } else {
+          activeRequest_ = util.makeRequest(
+            authenticatedReqOpts!,
+            reqConfig,
+            callback!
+          );
+        }
+      };
 
       if (reqConfig.customEndpoint) {
         // Using a custom API override. Do not use `google-auth-library` for
@@ -615,13 +656,14 @@ export class Util {
         onAuthenticated(null, reqOpts);
       } else {
         authClient.authorizeRequest(reqOpts).then(
-            res => {
-              const opts = extend(true, {}, reqOpts, res);
-              onAuthenticated(null, opts);
-            },
-            err => {
-              onAuthenticated(err);
-            });
+          res => {
+            const opts = extend(true, {}, reqOpts, res);
+            onAuthenticated(null, opts);
+          },
+          err => {
+            onAuthenticated(err);
+          }
+        );
       }
 
       if (stream!) {
@@ -661,16 +703,18 @@ export class Util {
    * @param {function} callback - The callback function.
    */
   makeRequest(
-      reqOpts: DecorateRequestOptions, config: MakeRequestConfig,
-      callback: BodyResponseCallback): void|Abortable {
-    const options = {
+    reqOpts: DecorateRequestOptions,
+    config: MakeRequestConfig,
+    callback: BodyResponseCallback
+  ): void | Abortable {
+    const options = ({
       request: teenyRequest.defaults(requestDefaults),
       retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
       shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
         return err && util.shouldRetryRequest(err);
       },
-    } as {} as retryRequest.Options;
+    } as {}) as retryRequest.Options;
 
     if (typeof reqOpts.maxRetries === 'number') {
       options.retries = reqOpts.maxRetries;
@@ -696,9 +740,10 @@ export class Util {
     }
 
     // Replay the Request events back to the stream.
-    requestStream.on('error', dup.destroy.bind(dup))
-        .on('response', dup.emit.bind(dup, 'response'))
-        .on('complete', dup.emit.bind(dup, 'complete'));
+    requestStream
+      .on('error', dup.destroy.bind(dup))
+      .on('response', dup.emit.bind(dup, 'response'))
+      .on('complete', dup.emit.bind(dup, 'complete'));
 
     dup.abort = requestStream.abort;
     return dup;
@@ -748,9 +793,9 @@ export class Util {
     const moduleNameParts = module.split('/');
 
     const parentModuleName =
-        moduleNameParts[0] && moduleNameParts[0].toLowerCase();
+      moduleNameParts[0] && moduleNameParts[0].toLowerCase();
     const subModuleName =
-        moduleNameParts[1] && moduleNameParts[1].toLowerCase();
+      moduleNameParts[1] && moduleNameParts[1].toLowerCase();
 
     if (subModuleName && getConstructorName(unknown) !== subModuleName) {
       return false;
@@ -775,10 +820,9 @@ export class Util {
    * @return {string} userAgent - The formatted User-Agent string.
    */
   getUserAgentFromPackageJson(packageJson: PackageJson) {
-    const hyphenatedPackageName =
-        packageJson.name
-            .replace('@google-cloud', 'gcloud-node')  // For legacy purposes.
-            .replace('/', '-');  // For UA spec-compliance purposes.
+    const hyphenatedPackageName = packageJson.name
+      .replace('@google-cloud', 'gcloud-node') // For legacy purposes.
+      .replace('/', '-'); // For UA spec-compliance purposes.
 
     return hyphenatedPackageName + '/' + packageJson.version;
   }
@@ -791,10 +835,12 @@ export class Util {
    * @param cb A potentially undefined callback.
    */
   maybeOptionsOrCallback<T = {}, C = (err?: Error) => void>(
-      optionsOrCallback?: T|C, cb?: C): [T, C] {
-    return typeof optionsOrCallback === 'function' ?
-        [{} as T, optionsOrCallback as C] :
-        [optionsOrCallback as T, cb as C];
+    optionsOrCallback?: T | C,
+    cb?: C
+  ): [T, C] {
+    return typeof optionsOrCallback === 'function'
+      ? [{} as T, optionsOrCallback as C]
+      : [optionsOrCallback as T, cb as C];
   }
 }
 

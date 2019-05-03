@@ -22,19 +22,30 @@ import {Request, RequestResponse} from 'request';
 
 import {Interceptor} from '../src';
 import {ServiceConfig, ServiceOptions} from '../src/service';
-import {BodyResponseCallback, DecorateRequestOptions, MakeAuthenticatedRequest, MakeAuthenticatedRequestFactoryConfig, util, Util} from '../src/util';
+import {
+  BodyResponseCallback,
+  DecorateRequestOptions,
+  MakeAuthenticatedRequest,
+  MakeAuthenticatedRequestFactoryConfig,
+  util,
+  Util,
+} from '../src/util';
 
 proxyquire.noPreserveCache();
 
 const fakeCfg = {} as ServiceConfig;
 
 const makeAuthRequestFactoryCache = util.makeAuthenticatedRequestFactory;
-let makeAuthenticatedRequestFactoryOverride: null|
-    ((config: MakeAuthenticatedRequestFactoryConfig) =>
-         MakeAuthenticatedRequest);
+let makeAuthenticatedRequestFactoryOverride:
+  | null
+  | ((
+      config: MakeAuthenticatedRequestFactoryConfig
+    ) => MakeAuthenticatedRequest);
 
 util.makeAuthenticatedRequestFactory = function(
-    this: Util, config: MakeAuthenticatedRequestFactoryConfig) {
+  this: Util,
+  config: MakeAuthenticatedRequestFactoryConfig
+) {
   if (makeAuthenticatedRequestFactoryOverride) {
     return makeAuthenticatedRequestFactoryOverride.call(this, config);
   }
@@ -45,8 +56,8 @@ describe('Service', () => {
   // tslint:disable-next-line:no-any
   let service: any;
   const Service = proxyquire('../src/service', {
-                    './util': util,
-                  }).Service;
+    './util': util,
+  }).Service;
 
   const CONFIG = {
     scopes: [],
@@ -81,21 +92,22 @@ describe('Service', () => {
     it('should create an authenticated request factory', () => {
       const authenticatedRequest = {} as MakeAuthenticatedRequest;
 
-      makeAuthenticatedRequestFactoryOverride =
-          (config: MakeAuthenticatedRequestFactoryConfig) => {
-            const expectedConfig = extend({}, CONFIG, {
-              credentials: OPTIONS.credentials,
-              keyFile: OPTIONS.keyFilename,
-              email: OPTIONS.email,
-              projectIdRequired: CONFIG.projectIdRequired,
-              projectId: OPTIONS.projectId,
-              token: OPTIONS.token,
-            });
+      makeAuthenticatedRequestFactoryOverride = (
+        config: MakeAuthenticatedRequestFactoryConfig
+      ) => {
+        const expectedConfig = extend({}, CONFIG, {
+          credentials: OPTIONS.credentials,
+          keyFile: OPTIONS.keyFilename,
+          email: OPTIONS.email,
+          projectIdRequired: CONFIG.projectIdRequired,
+          projectId: OPTIONS.projectId,
+          token: OPTIONS.token,
+        });
 
-            assert.deepStrictEqual(config, expectedConfig);
+        assert.deepStrictEqual(config, expectedConfig);
 
-            return authenticatedRequest;
-          };
+        return authenticatedRequest;
+      };
 
       const svc = new Service(CONFIG, OPTIONS);
       assert.strictEqual(svc.makeAuthenticatedRequest, authenticatedRequest);
@@ -104,12 +116,13 @@ describe('Service', () => {
     it('should localize the authClient', () => {
       const authClient = {};
 
-      makeAuthenticatedRequestFactoryOverride =
-          (config?: MakeAuthenticatedRequestFactoryConfig) => {
-            return {
-              authClient,
-            } as MakeAuthenticatedRequest;
-          };
+      makeAuthenticatedRequestFactoryOverride = (
+        config?: MakeAuthenticatedRequestFactoryConfig
+      ) => {
+        return {
+          authClient,
+        } as MakeAuthenticatedRequest;
+      };
 
       const service = new Service(CONFIG, OPTIONS);
       assert.strictEqual(service.authClient, authClient);
@@ -129,14 +142,15 @@ describe('Service', () => {
     it('should localize the getCredentials method', () => {
       function getCredentials() {}
 
-      makeAuthenticatedRequestFactoryOverride =
-          (config?: MakeAuthenticatedRequestFactoryConfig) => {
-            return {
-              authClient: {},
-              getCredentials,
-              // tslint:disable-next-line:no-any
-            } as any;
-          };
+      makeAuthenticatedRequestFactoryOverride = (
+        config?: MakeAuthenticatedRequestFactoryConfig
+      ) => {
+        return {
+          authClient: {},
+          getCredentials,
+          // tslint:disable-next-line:no-any
+        } as any;
+      };
 
       const service = new Service(CONFIG, OPTIONS);
       assert.strictEqual(service.getCredentials, getCredentials);
@@ -204,7 +218,7 @@ describe('Service', () => {
   });
 
   describe('getProjectId', () => {
-    it('should get the project ID from the auth client', (done) => {
+    it('should get the project ID from the auth client', done => {
       service.authClient = {
         getProjectId() {
           done();
@@ -214,7 +228,7 @@ describe('Service', () => {
       service.getProjectId(assert.ifError);
     });
 
-    it('should return error from auth client', (done) => {
+    it('should return error from auth client', done => {
       const error = new Error('Error.');
 
       service.authClient = {
@@ -229,7 +243,7 @@ describe('Service', () => {
       });
     });
 
-    it('should update and return the project ID if found', (done) => {
+    it('should update and return the project ID if found', done => {
       const service = new Service(fakeCfg, {});
       const projectId = 'detected-project-id';
 
@@ -265,18 +279,19 @@ describe('Service', () => {
 
     it('should compose the correct request', done => {
       const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
-      service.makeAuthenticatedRequest =
-          (reqOpts_: DecorateRequestOptions,
-           callback: BodyResponseCallback) => {
-            assert.notStrictEqual(reqOpts_, reqOpts);
-            assert.strictEqual(reqOpts_.uri, expectedUri);
-            assert.strictEqual(reqOpts.interceptors_, undefined);
-            callback(null);  // done()
-          };
+      service.makeAuthenticatedRequest = (
+        reqOpts_: DecorateRequestOptions,
+        callback: BodyResponseCallback
+      ) => {
+        assert.notStrictEqual(reqOpts_, reqOpts);
+        assert.strictEqual(reqOpts_.uri, expectedUri);
+        assert.strictEqual(reqOpts.interceptors_, undefined);
+        callback(null); // done()
+      };
       service.request_(reqOpts, () => done());
     });
 
-    it('should support absolute uris', (done) => {
+    it('should support absolute uris', done => {
       const expectedUri = 'http://www.google.com';
 
       service.makeAuthenticatedRequest = (reqOpts: DecorateRequestOptions) => {
@@ -287,7 +302,7 @@ describe('Service', () => {
       service.request_({uri: expectedUri}, assert.ifError);
     });
 
-    it('should trim slashes', (done) => {
+    it('should trim slashes', done => {
       const reqOpts = {
         uri: '//1/2//',
       };
@@ -302,7 +317,7 @@ describe('Service', () => {
       service.request_(reqOpts, assert.ifError);
     });
 
-    it('should replace path/:subpath with path:subpath', (done) => {
+    it('should replace path/:subpath with path:subpath', done => {
       const reqOpts = {
         uri: ':test',
       };
@@ -315,11 +330,11 @@ describe('Service', () => {
       service.request_(reqOpts, assert.ifError);
     });
 
-    it('should add the User Agent', (done) => {
+    it('should add the User Agent', done => {
       const userAgent = 'user-agent/0.0.0';
 
       const getUserAgentFn = util.getUserAgentFromPackageJson;
-      util.getUserAgentFromPackageJson = (packageJson) => {
+      util.getUserAgentFromPackageJson = packageJson => {
         util.getUserAgentFromPackageJson = getUserAgentFn;
         assert.strictEqual(packageJson, service.packageJson);
         return userAgent;
@@ -333,12 +348,13 @@ describe('Service', () => {
       service.request_(reqOpts, assert.ifError);
     });
 
-    it('should add the api-client header', (done) => {
+    it('should add the api-client header', done => {
       service.makeAuthenticatedRequest = (reqOpts: DecorateRequestOptions) => {
         const pkg = service.packageJson;
         assert.strictEqual(
-            reqOpts.headers!['x-goog-api-client'],
-            `gl-node/${process.versions.node} gccl/${pkg.version}`);
+          reqOpts.headers!['x-goog-api-client'],
+          `gl-node/${process.versions.node} gccl/${pkg.version}`
+        );
         done();
       };
 
@@ -347,25 +363,26 @@ describe('Service', () => {
 
     describe('projectIdRequired', () => {
       describe('false', () => {
-        it('should include the projectId', (done) => {
+        it('should include the projectId', done => {
           const config = extend({}, CONFIG, {projectIdRequired: false});
           const service = new Service(config, OPTIONS);
 
           const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
-          service.makeAuthenticatedRequest =
-              (reqOpts_: DecorateRequestOptions) => {
-                assert.strictEqual(reqOpts_.uri, expectedUri);
+          service.makeAuthenticatedRequest = (
+            reqOpts_: DecorateRequestOptions
+          ) => {
+            assert.strictEqual(reqOpts_.uri, expectedUri);
 
-                done();
-              };
+            done();
+          };
 
           service.request_(reqOpts, assert.ifError);
         });
       });
 
       describe('true', () => {
-        it('should not include the projectId', (done) => {
+        it('should not include the projectId', done => {
           const config = extend({}, CONFIG, {projectIdRequired: true});
           const service = new Service(config, OPTIONS);
 
@@ -376,12 +393,13 @@ describe('Service', () => {
             reqOpts.uri,
           ].join('/');
 
-          service.makeAuthenticatedRequest =
-              (reqOpts_: DecorateRequestOptions) => {
-                assert.strictEqual(reqOpts_.uri, expectedUri);
+          service.makeAuthenticatedRequest = (
+            reqOpts_: DecorateRequestOptions
+          ) => {
+            assert.strictEqual(reqOpts_.uri, expectedUri);
 
-                done();
-              };
+            done();
+          };
 
           service.request_(reqOpts, assert.ifError);
         });
@@ -389,12 +407,12 @@ describe('Service', () => {
     });
 
     describe('request interceptors', () => {
-      it('should call the request interceptors in order', (done) => {
+      it('should call the request interceptors in order', done => {
         const reqOpts = {
           uri: '',
           interceptors_: [] as Array<{}>,
         };
-        type FakeRequestOptions = DecorateRequestOptions&{order: string};
+        type FakeRequestOptions = DecorateRequestOptions & {order: string};
 
         // Called first.
         service.globalInterceptors.push({
@@ -452,7 +470,7 @@ describe('Service', () => {
         service.request_(reqOpts, assert.ifError);
       });
 
-      it('should not affect original interceptor arrays', (done) => {
+      it('should not affect original interceptor arrays', done => {
         function request(reqOpts: DecorateRequestOptions) {
           return reqOpts;
         }
@@ -467,25 +485,30 @@ describe('Service', () => {
 
         service.makeAuthenticatedRequest = () => {
           assert.deepStrictEqual(
-              globalInterceptors, originalGlobalInterceptors);
+            globalInterceptors,
+            originalGlobalInterceptors
+          );
           assert.deepStrictEqual(localInterceptors, originalLocalInterceptors);
           assert.deepStrictEqual(
-              requestInterceptors, originalRequestInterceptors);
+            requestInterceptors,
+            originalRequestInterceptors
+          );
           done();
         };
 
         service.request_(
-            {
-              uri: '',
-              interceptors_: requestInterceptors,
-            },
-            assert.ifError);
+          {
+            uri: '',
+            interceptors_: requestInterceptors,
+          },
+          assert.ifError
+        );
       });
 
-      it('should not call unrelated interceptors', (done) => {
+      it('should not call unrelated interceptors', done => {
         service.interceptors.push({
           anotherInterceptor() {
-            done();  // Will throw.
+            done(); // Will throw.
           },
           request() {
             setImmediate(done);
@@ -499,18 +522,17 @@ describe('Service', () => {
       });
     });
     describe('error handling', () => {
-      it('should re-throw any makeAuthenticatedRequest callback error',
-         done => {
-           const err = new Error('🥓');
-           const res = {body: undefined};
-           service.makeAuthenticatedRequest = (_: void, callback: Function) => {
-             callback(err, res.body, res);
-           };
-           service.request_({uri: ''}, (e: Error) => {
-             assert.strictEqual(e, err);
-             done();
-           });
-         });
+      it('should re-throw any makeAuthenticatedRequest callback error', done => {
+        const err = new Error('🥓');
+        const res = {body: undefined};
+        service.makeAuthenticatedRequest = (_: void, callback: Function) => {
+          callback(err, res.body, res);
+        };
+        service.request_({uri: ''}, (e: Error) => {
+          assert.strictEqual(e, err);
+          done();
+        });
+      });
     });
   });
 
@@ -534,22 +556,26 @@ describe('Service', () => {
       await service.request(fakeOpts);
     });
 
-    it('should accept a callback', (done) => {
+    it('should accept a callback', done => {
       const fakeOpts = {};
       const response = {body: {abc: '123'}, statusCode: 200};
-      Service.prototype.request_ =
-          (reqOpts: DecorateRequestOptions, callback: Function) => {
-            assert.strictEqual(reqOpts, fakeOpts);
-            callback(null, response.body, response);
-          };
+      Service.prototype.request_ = (
+        reqOpts: DecorateRequestOptions,
+        callback: Function
+      ) => {
+        assert.strictEqual(reqOpts, fakeOpts);
+        callback(null, response.body, response);
+      };
 
       service.request(
-          fakeOpts, (err: Error, body: {}, res: RequestResponse) => {
-            assert.ifError(err);
-            assert.deepStrictEqual(res, response);
-            assert.deepStrictEqual(body, response.body);
-            done();
-          });
+        fakeOpts,
+        (err: Error, body: {}, res: RequestResponse) => {
+          assert.ifError(err);
+          assert.deepStrictEqual(res, response);
+          assert.deepStrictEqual(body, response.body);
+          done();
+        }
+      );
     });
   });
 

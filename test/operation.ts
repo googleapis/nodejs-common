@@ -15,12 +15,16 @@
  */
 
 import * as assert from 'assert';
-import * as r from 'request';  // Only needed for type declarations.
+import * as r from 'request'; // Only needed for type declarations.
 import * as sinon from 'sinon';
 
 import {Service} from '../src';
 import {Operation} from '../src/operation';
-import {Metadata, ServiceObject, ServiceObjectConfig} from '../src/service-object';
+import {
+  Metadata,
+  ServiceObject,
+  ServiceObjectConfig,
+} from '../src/service-object';
 import {util} from '../src/util';
 
 // tslint:disable-next-line no-any
@@ -102,12 +106,13 @@ describe('Operation', () => {
         operation.emit('error', error);
       });
       return operation.promise().then(
-          () => {
-            throw new Error('Promise should have been rejected.');
-          },
-          (err: Error) => {
-            assert.strictEqual(err, error);
-          });
+        () => {
+          throw new Error('Promise should have been rejected.');
+        },
+        (err: Error) => {
+          assert.strictEqual(err, error);
+        }
+      );
     });
 
     it('should resolve the promise on complete', () => {
@@ -128,7 +133,7 @@ describe('Operation', () => {
       asAny(operation).startPolling_ = util.noop;
     });
 
-    it('should start polling when complete listener is bound', (done) => {
+    it('should start polling when complete listener is bound', done => {
       asAny(operation).startPolling_ = () => done();
       operation.on('complete', util.noop);
     });
@@ -161,7 +166,7 @@ describe('Operation', () => {
   });
 
   describe('poll_', () => {
-    it('should call getMetdata', (done) => {
+    it('should call getMetdata', done => {
       asAny(operation).getMetadata = () => done();
       asAny(operation).poll_(assert.ifError);
     });
@@ -180,8 +185,9 @@ describe('Operation', () => {
         const apiResponse = {
           error: {},
         } as Metadata;
-        sandbox.stub(operation, 'getMetadata')
-            .callsArgWith(0, null, apiResponse);
+        sandbox
+          .stub(operation, 'getMetadata')
+          .callsArgWith(0, null, apiResponse);
         asAny(operation).poll_((err: Error) => {
           assert.strictEqual(err, apiResponse.error);
           done();
@@ -193,8 +199,9 @@ describe('Operation', () => {
       const apiResponse = {done: false};
 
       beforeEach(() => {
-        sandbox.stub(operation, 'getMetadata')
-            .callsArgWith(0, null, apiResponse);
+        sandbox
+          .stub(operation, 'getMetadata')
+          .callsArgWith(0, null, apiResponse);
       });
 
       it('should callback with no arguments', done => {
@@ -208,8 +215,9 @@ describe('Operation', () => {
     describe('operation complete', () => {
       const apiResponse = {done: true};
       beforeEach(() => {
-        sandbox.stub(operation, 'getMetadata')
-            .callsArgWith(0, null, apiResponse);
+        sandbox
+          .stub(operation, 'getMetadata')
+          .callsArgWith(0, null, apiResponse);
       });
 
       it('should emit complete with metadata', done => {
@@ -227,15 +235,14 @@ describe('Operation', () => {
       operation.hasActiveListeners = true;
     });
 
-    it('should not call getMetadata if no listeners', (done) => {
+    it('should not call getMetadata if no listeners', done => {
       operation.hasActiveListeners = false;
-      sandbox.stub(operation, 'getMetadata')
-          .callsFake(done);  // if called, test will fail.
+      sandbox.stub(operation, 'getMetadata').callsFake(done); // if called, test will fail.
       asAny(operation).startPolling_();
       done();
     });
 
-    it('should call getMetadata if listeners are registered', (done) => {
+    it('should call getMetadata if listeners are registered', done => {
       operation.hasActiveListeners = true;
       sandbox.stub(operation, 'getMetadata').callsFake(() => done());
       asAny(operation).startPolling_();
@@ -247,7 +254,7 @@ describe('Operation', () => {
         sandbox.stub(operation, 'getMetadata').callsArgWith(0, error);
       });
 
-      it('should emit the error', (done) => {
+      it('should emit the error', done => {
         operation.on('error', (err: Error) => {
           assert.strictEqual(err, error);
           done();
@@ -260,16 +267,17 @@ describe('Operation', () => {
       const apiResponse = {done: false};
 
       beforeEach(() => {
-        sandbox.stub(operation, 'getMetadata')
-            .callsArgWith(0, null, apiResponse);
+        sandbox
+          .stub(operation, 'getMetadata')
+          .callsArgWith(0, null, apiResponse);
       });
 
-      it('should call startPolling_ after 500 ms', (done) => {
+      it('should call startPolling_ after 500 ms', done => {
         const startPolling_ = asAny(operation).startPolling_;
         let startPollingCalled = false;
 
         sandbox.stub(global, 'setTimeout').callsFake((fn, timeoutMs) => {
-          fn();  // should call startPolling_
+          fn(); // should call startPolling_
           assert.strictEqual(timeoutMs, 500);
           return asAny({});
         });
@@ -294,8 +302,9 @@ describe('Operation', () => {
       const apiResponse = {done: true};
 
       beforeEach(() => {
-        sandbox.stub(operation, 'getMetadata')
-            .callsArgWith(0, null, apiResponse);
+        sandbox
+          .stub(operation, 'getMetadata')
+          .callsArgWith(0, null, apiResponse);
       });
 
       it('should emit complete with metadata', async () => {
