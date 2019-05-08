@@ -18,8 +18,6 @@
  * @module common/operation
  */
 
-import * as pify from 'pify';
-
 import {
   Metadata,
   MetadataCallback,
@@ -27,6 +25,7 @@ import {
   ServiceObjectConfig,
 } from './service-object';
 import {ApiError} from './util';
+import {promisify} from 'util';
 
 // tslint:disable-next-line no-any
 export class Operation<T = any> extends ServiceObject<T> {
@@ -159,7 +158,7 @@ export class Operation<T = any> extends ServiceObject<T> {
       return;
     }
     try {
-      const metadata = await pify(this.poll_.bind(this))();
+      const metadata = await promisify(this.poll_.bind(this))();
       if (!metadata) {
         setTimeout(this.startPolling_.bind(this), 500);
         return;
