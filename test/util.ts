@@ -16,7 +16,6 @@
 
 import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as assert from 'assert';
-import {AxiosRequestConfig} from 'axios';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as nock from 'nock';
@@ -782,7 +781,7 @@ describe('common/util', () => {
     describe('needs authentication', () => {
       it('should pass correct args to authorizeRequest', done => {
         const fake = extend(true, authClient, {
-          authorizeRequest: async (rOpts: AxiosRequestConfig) => {
+          authorizeRequest: async (rOpts: {}) => {
             assert.deepStrictEqual(rOpts, fakeReqOpts);
             done();
           },
@@ -798,7 +797,7 @@ describe('common/util', () => {
       it('should return a stream if callback is missing', () => {
         sandbox.stub(fakeGoogleAuth, 'GoogleAuth').callsFake(() => {
           return extend(true, authClient, {
-            authorizeRequest: async (rOpts: AxiosRequestConfig) => {
+            authorizeRequest: async (rOpts: {}) => {
               return rOpts;
             },
           });
@@ -855,7 +854,7 @@ describe('common/util', () => {
         const error = new Error('🤮');
 
         beforeEach(() => {
-          authClient.authorizeRequest = async (rOpts: AxiosRequestConfig) => {
+          authClient.authorizeRequest = async (rOpts: {}) => {
             throw error;
           };
         });
@@ -869,7 +868,7 @@ describe('common/util', () => {
           const correctReqOpts = {} as DecorateRequestOptions;
           const incorrectReqOpts = {} as DecorateRequestOptions;
 
-          authClient.authorizeRequest = async (rOpts: AxiosRequestConfig) => {
+          authClient.authorizeRequest = async (rOpts: {}) => {
             throw new Error('Could not load the default credentials');
           };
 
@@ -940,7 +939,7 @@ describe('common/util', () => {
       describe('authentication success', () => {
         const reqOpts = fakeReqOpts;
         beforeEach(() => {
-          authClient.authorizeRequest = async (rOpts: AxiosRequestConfig) => {
+          authClient.authorizeRequest = async (rOpts: {}) => {
             return reqOpts;
           };
         });
