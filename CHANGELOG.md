@@ -4,6 +4,31 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [1.0.0](https://www.github.com/googleapis/nodejs-common/compare/v0.32.1...v1.0.0) (2019-05-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @google-cloud/projectify to v1 ([#414](https://www.github.com/googleapis/nodejs-common/issues/414)) ([6cdc2fe](https://www.github.com/googleapis/nodejs-common/commit/6cdc2fe))
+* **deps:** update dependency @google-cloud/promisify to v1 ([#415](https://www.github.com/googleapis/nodejs-common/issues/415)) ([00c422a](https://www.github.com/googleapis/nodejs-common/commit/00c422a))
+* **deps:** update dependency google-auth-library to v4 ([#422](https://www.github.com/googleapis/nodejs-common/issues/422)) ([e0a94af](https://www.github.com/googleapis/nodejs-common/commit/e0a94af))
+
+
+### Build System
+
+* upgrade engines field to >=8.10.0 ([#412](https://www.github.com/googleapis/nodejs-common/issues/412)) ([4349d68](https://www.github.com/googleapis/nodejs-common/commit/4349d68))
+
+
+### Miscellaneous Chores
+
+* **deps:** update dependency gts to v1 ([#407](https://www.github.com/googleapis/nodejs-common/issues/407)) ([8e73d8c](https://www.github.com/googleapis/nodejs-common/commit/8e73d8c))
+
+
+### BREAKING CHANGES
+
+* **deps:** this will ship async/await in the generated code
+* upgrade engines field to >=8.10.0 (#412)
+
 ## v0.32.1
 
 04-08-2019 10:53 PDT
@@ -340,4 +365,3 @@ These methods have been removed from `@google-cloud/common`.
 - chore: assert.deelEqual => assert.deepStrictEqual (#196)
 - chore: move mocha options to mocha.opts (#195)
 - Update config.yml (#191)
-
