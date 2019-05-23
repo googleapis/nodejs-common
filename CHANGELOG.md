@@ -4,6 +4,17 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [2.0.0](https://www.github.com/googleapis/nodejs-common/compare/v1.0.0...v2.0.0) (2019-05-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* This adds the apiEndpoint property as a required field for the ServiceConfig, and makes it a public property on the Service class. This is being added to broadly support apiEndpoint overrides.
+
+### Features
+
+* add apiEndpoint property to service config ([#427](https://www.github.com/googleapis/nodejs-common/issues/427)) ([c063df8](https://www.github.com/googleapis/nodejs-common/commit/c063df8)), closes [googleapis/nodejs-bigquery#455](https://www.github.com/googleapis/nodejs-common/issues/455)
+
 ## [1.0.0](https://www.github.com/googleapis/nodejs-common/compare/v0.32.1...v1.0.0) (2019-05-09)
 
 
