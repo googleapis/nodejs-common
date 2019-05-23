@@ -16,7 +16,6 @@
 
 import * as assert from 'assert';
 import * as extend from 'extend';
-import {GoogleAuth} from 'google-auth-library';
 import * as proxyquire from 'proxyquire';
 import {Request, RequestResponse} from 'request';
 
@@ -63,6 +62,7 @@ describe('Service', () => {
     scopes: [],
     baseUrl: 'base-url',
     projectIdRequired: false,
+    apiEndpoint: 'common.endpoint.local',
     packageJson: {
       name: '@google-cloud/service',
       version: '0.2.0',
@@ -137,6 +137,10 @@ describe('Service', () => {
 
     it('should localize the baseUrl', () => {
       assert.strictEqual(service.baseUrl, CONFIG.baseUrl);
+    });
+
+    it('should localize the apiEndpoint', () => {
+      assert.strictEqual(service.apiEndpoint, CONFIG.apiEndpoint);
     });
 
     it('should localize the getCredentials method', () => {
