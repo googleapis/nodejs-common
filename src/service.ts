@@ -45,6 +45,12 @@ export interface ServiceConfig {
   baseUrl: string;
 
   /**
+   * The API Endpoint to use when connecting to the service.
+   * Example:  storage.googleapis.com
+   */
+  apiEndpoint: string;
+
+  /**
    * The scopes required for the request.
    */
   scopes: string[];
@@ -77,6 +83,7 @@ export class Service {
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
   authClient: GoogleAuth;
   private getCredentials: {};
+  readonly apiEndpoint: string;
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like
@@ -97,6 +104,7 @@ export class Service {
     options = options || {};
 
     this.baseUrl = config.baseUrl;
+    this.apiEndpoint = config.apiEndpoint;
     this.globalInterceptors = arrify(options.interceptors_!);
     this.interceptors = [];
     this.packageJson = config.packageJson;
