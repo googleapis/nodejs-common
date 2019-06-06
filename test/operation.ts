@@ -122,7 +122,7 @@ describe('Operation', () => {
         operation.emit('complete', metadata);
       });
 
-      return operation.promise().then((data: {}) => {
+      return operation.promise().then(data => {
         assert.deepStrictEqual(data, [metadata]);
       });
     });
