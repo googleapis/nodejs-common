@@ -227,9 +227,7 @@ export class Service {
     const pkg = this.packageJson;
     reqOpts.headers = extend({}, reqOpts.headers, {
       'User-Agent': util.getUserAgentFromPackageJson(pkg),
-      'x-goog-api-client': `gl-node/${process.versions.node} gccl/${
-        pkg.version
-      }`,
+      'x-goog-api-client': `gl-node/${process.versions.node} gccl/${pkg.version}`,
     });
 
     if (reqOpts.shouldReturnStream) {
