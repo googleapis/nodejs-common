@@ -4,5 +4,6 @@
   "release_level": "ga",
   "language": "nodejs",
   "repo": "googleapis/nodejs-common",
-  "distribution_name": "@google-cloud/common"
+  "distribution_name": "@google-cloud/common",
+  "client_documentation": "https://googleapis.dev/nodejs/common/latest"
 }

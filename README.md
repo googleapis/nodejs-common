@@ -14,7 +14,7 @@
 Common components for Cloud APIs Node.js Client Libraries
 
 
-
+* [Google Cloud Common Node.js Client API Reference][client-docs]
 
 * [github.com/googleapis/nodejs-common](https://github.com/googleapis/nodejs-common)
 
@@ -48,6 +48,9 @@ installed as a dependency when you install other `@google-cloud` packages.
 
 
 
+The [Google Cloud Common Node.js Client API Reference][client-docs] documentation
+also contains samples.
+
 ## Versioning
 
 This library follows [Semantic Versioning](http://semver.org/).
@@ -77,7 +80,7 @@ Apache Version 2.0
 
 See [LICENSE](https://github.com/googleapis/nodejs-common/blob/master/LICENSE)
 
-
+[client-docs]: https://googleapis.dev/nodejs/common/latest
 
 [shell_img]: https://gstatic.com/cloudssh/images/open-btn.png
 [projects]: https://console.cloud.google.com/project
