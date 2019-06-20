@@ -100,9 +100,7 @@ export class Service {
    * @param {string[]} config.scopes - The scopes required for the request.
    * @param {object=} options - [Configuration object](#/docs).
    */
-  constructor(config: ServiceConfig, options?: ServiceOptions) {
-    options = options || {};
-
+  constructor(config: ServiceConfig, options: ServiceOptions = {}) {
     this.baseUrl = config.baseUrl;
     this.apiEndpoint = config.apiEndpoint;
     this.globalInterceptors = arrify(options.interceptors_!);
@@ -240,8 +238,6 @@ export class Service {
   /**
    * Make an authenticated API request.
    *
-   * @private
-   *
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
@@ -255,8 +251,6 @@ export class Service {
 
   /**
    * Make an authenticated API request.
-   *
-   * @private
    *
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
