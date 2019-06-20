@@ -521,8 +521,6 @@ class ServiceObject<T = any> extends EventEmitter {
   /**
    * Make an authenticated API request.
    *
-   * @private
-   *
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
@@ -541,8 +539,6 @@ class ServiceObject<T = any> extends EventEmitter {
 
   /**
    * Make an authenticated API request.
-   *
-   * @private
    *
    * @param {object} reqOpts - Request options that are passed to `request`.
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
