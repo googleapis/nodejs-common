@@ -27,7 +27,7 @@
     "presystem-test": "npm run compile",
     "system-test": "mocha build/system-test",
     "samples-test": "cd samples/ && npm link ../ && npm test && cd ../",
-    "docs-test": "linkinator docs -r --skip www.googleapis.com",
+    "docs-test": "linkinator docs",
     "predocs-test": "npm run docs"
   },
   "dependencies": {
