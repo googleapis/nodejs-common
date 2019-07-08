@@ -23,13 +23,14 @@ import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as r from 'request'; // Only needed for type declarations.
 
-import {Interceptor} from './service-object';
+import {Interceptor, Metadata} from './service-object';
 import {
   BodyResponseCallback,
   DecorateRequestOptions,
   MakeAuthenticatedRequest,
   PackageJson,
   util,
+  ResponseBody,
 } from './util';
 
 const PROJECT_ID_TOKEN = '{{projectId}}';
@@ -242,9 +243,9 @@ export class Service {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(
+  request<T = ResponseBody>(
     reqOpts: DecorateRequestOptions,
-    callback: BodyResponseCallback
+    callback: BodyResponseCallback<T>
   ): void {
     Service.prototype.request_.call(this, reqOpts, callback);
   }

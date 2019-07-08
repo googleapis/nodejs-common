@@ -33,7 +33,7 @@ import {
   util,
 } from './util';
 
-export type RequestResponse = [Metadata, r.Response];
+export type RequestResponse<T = ResponseBody> = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
   // tslint:disable-next-line:variable-name
@@ -99,7 +99,7 @@ export interface Methods {
 }
 
 export interface InstanceResponseCallback<T> {
-  (err: ApiError | null, instance?: T | null, apiResponse?: r.Response): void;
+  (err: ApiError | null, instance?: T | null, apiResponse?: Metadata): void;
 }
 
 export interface CreateOptions {}
@@ -122,12 +122,7 @@ export interface GetConfig {
   autoCreate?: boolean;
 }
 type GetOrCreateOptions = GetConfig & CreateOptions;
-export type GetResponse<T> = [T, r.Response];
-
-export interface ResponseCallback {
-  (err?: Error | null, apiResponse?: r.Response): void;
-}
-
+export type GetResponse<T> = [T, Metadata];
 export type SetMetadataResponse = [Metadata];
 export type SetMetadataOptions = object;
 
@@ -143,7 +138,7 @@ export type SetMetadataOptions = object;
  * object requires specific behavior.
  */
 // tslint:disable-next-line no-any
-class ServiceObject<T = any> extends EventEmitter {
+class ServiceObject extends EventEmitter {
   metadata: Metadata;
   baseUrl?: string;
   parent: ServiceObjectParent;
@@ -216,18 +211,18 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  create(options?: CreateOptions): Promise<CreateResponse<T>>;
-  create(options: CreateOptions, callback: CreateCallback<T>): void;
-  create(callback: CreateCallback<T>): void;
+  create(options?: CreateOptions): Promise<CreateResponse<this>>;
+  create(options: CreateOptions, callback: CreateCallback<this>): void;
+  create(callback: CreateCallback<this>): void;
   create(
-    optionsOrCallback?: CreateOptions | CreateCallback<T>,
-    callback?: CreateCallback<T>
-  ): void | Promise<CreateResponse<T>> {
+    optionsOrCallback?: CreateOptions | CreateCallback<this>,
+    callback?: CreateCallback<this>
+  ): void | Promise<CreateResponse<this>> {
     const self = this;
     const args = [this.id] as Array<{}>;
 
     if (typeof optionsOrCallback === 'function') {
-      callback = optionsOrCallback as CreateCallback<T>;
+      callback = optionsOrCallback as CreateCallback<this>;
     }
 
     if (typeof optionsOrCallback === 'object') {
@@ -237,14 +232,14 @@ class ServiceObject<T = any> extends EventEmitter {
     // Wrap the callback to return *this* instance of the object, not the
     // newly-created one.
     // tslint: disable-next-line no-any
-    function onCreate(...args: [Error, ServiceObject<T>]) {
+    const onCreate = (...args: [Error, ServiceObject]) => {
       const [err, instance] = args;
       if (!err) {
         self.metadata = instance.metadata;
         args[1] = self; // replace the created `instance` with this one.
       }
-      callback!(...((args as {}) as [Error, T]));
-    }
+      callback!(...((args as {}) as [Error, this]));
+    };
     args.push(onCreate);
     this.createMethod!.apply(null, args);
   }
@@ -326,29 +321,32 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {object} callback.instance - The instance.
    * @param {object} callback.apiResponse - The full API response.
    */
-  get(options?: GetOrCreateOptions): Promise<GetResponse<T>>;
-  get(callback: InstanceResponseCallback<T>): void;
-  get(options: GetOrCreateOptions, callback: InstanceResponseCallback<T>): void;
+  get(options?: GetOrCreateOptions): Promise<GetResponse<this>>;
+  get(callback: InstanceResponseCallback<this>): void;
   get(
-    optionsOrCallback?: GetOrCreateOptions | InstanceResponseCallback<T>,
-    cb?: InstanceResponseCallback<T>
-  ): Promise<GetResponse<T>> | void {
+    options: GetOrCreateOptions,
+    callback: InstanceResponseCallback<this>
+  ): void;
+  get(
+    optionsOrCallback?: GetOrCreateOptions | InstanceResponseCallback<this>,
+    cb?: InstanceResponseCallback<this>
+  ): Promise<GetResponse<this>> | void {
     const self = this;
 
     const [opts, callback] = util.maybeOptionsOrCallback<
       GetOrCreateOptions,
-      InstanceResponseCallback<T>
+      InstanceResponseCallback<this>
     >(optionsOrCallback, cb);
     const options = Object.assign({}, opts);
 
     const autoCreate = options.autoCreate && typeof this.create === 'function';
     delete options.autoCreate;
 
-    function onCreate(
+    const onCreate = (
       err: ApiError | null,
-      instance: T,
+      instance: this,
       apiResponse: r.Response
-    ) {
+    ) => {
       if (err) {
         if (err.code === 409) {
           self.get(options, callback!);
@@ -358,7 +356,7 @@ class ServiceObject<T = any> extends EventEmitter {
         return;
       }
       callback!(null, instance, apiResponse);
-    }
+    };
 
     this.getMetadata(options, (err: ApiError | null, metadata) => {
       if (err) {
@@ -374,7 +372,7 @@ class ServiceObject<T = any> extends EventEmitter {
         callback!(err, null, metadata as r.Response);
         return;
       }
-      callback!(null, (self as {}) as T, metadata as r.Response);
+      callback!(null, (self as {}) as this, metadata as r.Response);
     });
   }
 
@@ -525,7 +523,9 @@ class ServiceObject<T = any> extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request(reqOpts: DecorateRequestOptions): Promise<RequestResponse>;
+  request<T = ResponseBody>(
+    reqOpts: DecorateRequestOptions
+  ): Promise<RequestResponse>;
   request(
     reqOpts: DecorateRequestOptions,
     callback: BodyResponseCallback

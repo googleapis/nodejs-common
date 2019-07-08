@@ -47,7 +47,7 @@ function asInternal(serviceObject: ServiceObject) {
 }
 
 describe('ServiceObject', () => {
-  let serviceObject: ServiceObject<FakeServiceObject>;
+  let serviceObject: ServiceObject;
   const sandbox = sinon.createSandbox();
 
   const CONFIG = {
@@ -178,15 +178,12 @@ describe('ServiceObject', () => {
       }
 
       const serviceObject = new ServiceObject(config);
-      serviceObject.create(
-        options,
-        (err: Error | null, instance: {}, apiResponse_: {}) => {
-          assert.strictEqual(err, error);
-          assert.strictEqual(instance, null);
-          assert.strictEqual(apiResponse_, apiResponse);
-          done();
-        }
-      );
+      serviceObject.create(options, (err, instance, apiResponse_) => {
+        assert.strictEqual(err, error);
+        assert.strictEqual(instance, null);
+        assert.strictEqual(apiResponse_, apiResponse);
+        done();
+      });
     });
 
     it('should return instance and apiResponse to callback', async () => {

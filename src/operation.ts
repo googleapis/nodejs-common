@@ -28,7 +28,7 @@ import {ApiError} from './util';
 import {promisify} from 'util';
 
 // tslint:disable-next-line no-any
-export class Operation<T = any> extends ServiceObject<T> {
+export class Operation extends ServiceObject {
   completeListeners: number;
   hasActiveListeners: boolean;
 

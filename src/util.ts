@@ -28,7 +28,7 @@ import * as retryRequest from 'retry-request';
 import {Duplex, DuplexOptions, PassThrough, Readable, Writable} from 'stream';
 import {teenyRequest} from 'teeny-request';
 
-import {Interceptor} from './service-object';
+import {Interceptor, Metadata} from './service-object';
 
 const duplexify: DuplexifyConstructor = require('duplexify');
 
@@ -299,8 +299,8 @@ export class PartialFailureError extends Error {
   }
 }
 
-export interface BodyResponseCallback {
-  (err: Error | null, body?: ResponseBody, res?: r.Response): void;
+export interface BodyResponseCallback<T = ResponseBody> {
+  (err: Error | null, body?: T, res?: r.Response): void;
 }
 
 export interface MakeRequestConfig {
