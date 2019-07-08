@@ -404,7 +404,7 @@ export class Util {
    * @param {?error} parsedHttpRespMessage.err - An error detected.
    * @param {object} parsedHttpRespMessage.body - The original body value provided
    *     will try to be JSON.parse'd. If it's successful, the parsed value will
-   * be returned here, otherwise the original value.
+   * be returned here, otherwise the original value and an error will be returned.
    */
   parseHttpRespBody(body: ResponseBody) {
     const parsedHttpRespBody: ParsedHttpResponseBody = {
@@ -415,7 +415,9 @@ export class Util {
       try {
         parsedHttpRespBody.body = JSON.parse(body);
       } catch (err) {
-        parsedHttpRespBody.err = new ApiError('Cannot parse JSON response');
+        parsedHttpRespBody.err = new ApiError(
+          `Cannot parse response as JSON: ${body}`
+        );
       }
     }
 
