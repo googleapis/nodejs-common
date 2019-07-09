@@ -44,7 +44,6 @@ export {
   MetadataCallback,
   MetadataResponse,
   Methods,
-  ResponseCallback,
   ServiceObject,
   ServiceObjectConfig,
   ServiceObjectParent,
