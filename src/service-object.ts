@@ -218,7 +218,6 @@ class ServiceObject extends EventEmitter {
     optionsOrCallback?: CreateOptions | CreateCallback<this>,
     callback?: CreateCallback<this>
   ): void | Promise<CreateResponse<this>> {
-    const self = this;
     const args = [this.id] as Array<{}>;
 
     if (typeof optionsOrCallback === 'function') {
@@ -235,8 +234,8 @@ class ServiceObject extends EventEmitter {
     const onCreate = (...args: [Error, ServiceObject]) => {
       const [err, instance] = args;
       if (!err) {
-        self.metadata = instance.metadata;
-        args[1] = self; // replace the created `instance` with this one.
+        this.metadata = instance.metadata;
+        args[1] = this; // replace the created `instance` with this one.
       }
       callback!(...((args as {}) as [Error, this]));
     };
@@ -331,8 +330,6 @@ class ServiceObject extends EventEmitter {
     optionsOrCallback?: GetOrCreateOptions | InstanceResponseCallback<this>,
     cb?: InstanceResponseCallback<this>
   ): Promise<GetResponse<this>> | void {
-    const self = this;
-
     const [opts, callback] = util.maybeOptionsOrCallback<
       GetOrCreateOptions,
       InstanceResponseCallback<this>
@@ -349,7 +346,7 @@ class ServiceObject extends EventEmitter {
     ) => {
       if (err) {
         if (err.code === 409) {
-          self.get(options, callback!);
+          this.get(options, callback!);
           return;
         }
         callback!(err, null, apiResponse);
@@ -366,13 +363,13 @@ class ServiceObject extends EventEmitter {
             args.push(options);
           }
           args.push(onCreate);
-          self.create(...args);
+          this.create(...args);
           return;
         }
         callback!(err, null, metadata as r.Response);
         return;
       }
-      callback!(null, (self as {}) as this, metadata as r.Response);
+      callback!(null, this, metadata as r.Response);
     });
   }
 
