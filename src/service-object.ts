@@ -53,10 +53,10 @@ export type GetMetadataOptions = object;
 
 // tslint:disable-next-line:no-any
 export type Metadata = any;
-export type MetadataResponse = [Metadata, r.Response];
-export type MetadataCallback = (
+export type MetadataResponse<T = Metadata> = [T, r.Response];
+export type MetadataCallback<T = Metadata> = (
   err: Error | null,
-  metadata?: Metadata,
+  metadata?: T,
   apiResponse?: r.Response
 ) => void;
 
@@ -122,8 +122,8 @@ export interface GetConfig {
   autoCreate?: boolean;
 }
 type GetOrCreateOptions = GetConfig & CreateOptions;
-export type GetResponse<T> = [T, Metadata];
-export type SetMetadataResponse = [Metadata];
+export type GetResponse<T> = [T, r.Response];
+export type SetMetadataResponse<T> = [T, r.Response];
 export type SetMetadataOptions = object;
 
 /**
@@ -138,8 +138,8 @@ export type SetMetadataOptions = object;
  * object requires specific behavior.
  */
 // tslint:disable-next-line no-any
-class ServiceObject extends EventEmitter {
-  metadata: Metadata;
+class ServiceObject<T = Metadata> extends EventEmitter {
+  metadata: T;
   baseUrl?: string;
   parent: ServiceObjectParent;
   id?: string;
@@ -169,7 +169,7 @@ class ServiceObject extends EventEmitter {
    */
   constructor(config: ServiceObjectConfig) {
     super();
-    this.metadata = {};
+    this.metadata = {} as T;
     this.baseUrl = config.baseUrl;
     this.parent = config.parent; // Parent class.
     this.id = config.id; // Name or ID (e.g. dataset ID, bucket name, etc).
@@ -366,10 +366,10 @@ class ServiceObject extends EventEmitter {
           this.create(...args);
           return;
         }
-        callback!(err, null, metadata as r.Response);
+        callback!(err, null, metadata as unknown as r.Response);
         return;
       }
-      callback!(null, this, metadata as r.Response);
+      callback!(null, this, metadata as unknown as r.Response);
     });
   }
 
@@ -381,16 +381,16 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.metadata - The metadata for this object.
    * @param {object} callback.apiResponse - The full API response.
    */
-  getMetadata(options?: GetMetadataOptions): Promise<MetadataResponse>;
-  getMetadata(options: GetMetadataOptions, callback: MetadataCallback): void;
-  getMetadata(callback: MetadataCallback): void;
+  getMetadata(options?: GetMetadataOptions): Promise<MetadataResponse<T>>;
+  getMetadata(options: GetMetadataOptions, callback: MetadataCallback<T>): void;
+  getMetadata(callback: MetadataCallback<T>): void;
   getMetadata(
-    optionsOrCallback: GetMetadataOptions | MetadataCallback,
-    cb?: MetadataCallback
-  ): Promise<MetadataResponse> | void {
+    optionsOrCallback: GetMetadataOptions | MetadataCallback<T>,
+    cb?: MetadataCallback<T>
+  ): Promise<MetadataResponse<T>> | void {
     const [options, callback] = util.maybeOptionsOrCallback<
       GetMetadataOptions,
-      MetadataCallback
+      MetadataCallback<T>
     >(optionsOrCallback, cb);
 
     const methodConfig =
@@ -407,8 +407,8 @@ class ServiceObject extends EventEmitter {
     ServiceObject.prototype.request.call(
       this,
       reqOpts,
-      (err: Error | null, body?: ResponseBody, res?: r.Response) => {
-        this.metadata = body;
+      (err: Error | null, body?: T, res?: r.Response) => {
+        this.metadata = body!;
         callback!(err, this.metadata, res);
       }
     );
@@ -424,23 +424,23 @@ class ServiceObject extends EventEmitter {
    * @param {object} callback.apiResponse - The full API response.
    */
   setMetadata(
-    metadata: Metadata,
+    metadata: Partial<T>,
     options?: SetMetadataOptions
-  ): Promise<SetMetadataResponse>;
-  setMetadata(metadata: Metadata, callback: MetadataCallback): void;
+  ): Promise<SetMetadataResponse<T>>;
+  setMetadata(metadata: Metadata, callback: MetadataCallback<T>): void;
   setMetadata(
-    metadata: Metadata,
+    metadata: Partial<T>,
     options: SetMetadataOptions,
-    callback: MetadataCallback
+    callback: MetadataCallback<T>
   ): void;
   setMetadata(
-    metadata: Metadata,
-    optionsOrCallback: SetMetadataOptions | MetadataCallback,
-    cb?: MetadataCallback
-  ): Promise<SetMetadataResponse> | void {
+    metadata: Partial<T>,
+    optionsOrCallback: SetMetadataOptions | MetadataCallback<T>,
+    cb?: MetadataCallback<T>
+  ): Promise<SetMetadataResponse<T>> | void {
     const [options, callback] = util.maybeOptionsOrCallback<
       SetMetadataOptions,
-      MetadataCallback
+      MetadataCallback<T>
     >(optionsOrCallback, cb);
     const methodConfig =
       (typeof this.methods.setMetadata === 'object' &&
