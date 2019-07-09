@@ -366,10 +366,10 @@ class ServiceObject<T = Metadata> extends EventEmitter {
           this.create(...args);
           return;
         }
-        callback!(err, null, metadata as unknown as r.Response);
+        callback!(err, null, (metadata as unknown) as r.Response);
         return;
       }
-      callback!(null, this, metadata as unknown as r.Response);
+      callback!(null, this, (metadata as unknown) as r.Response);
     });
   }
 
