@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.0.4](https://www.github.com/googleapis/nodejs-common/compare/v2.0.3...v2.0.4) (2019-07-11)
+
+
+### Bug Fixes
+
+* allow methodConfig to override request method and uri ([#451](https://www.github.com/googleapis/nodejs-common/issues/451)) ([8c2f903](https://www.github.com/googleapis/nodejs-common/commit/8c2f903))
+
 ### [2.0.3](https://www.github.com/googleapis/nodejs-common/compare/v2.0.2...v2.0.3) (2019-06-26)
 
 
