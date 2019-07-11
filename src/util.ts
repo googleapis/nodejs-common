@@ -367,6 +367,10 @@ export class Util {
       parsedResp.resp.body = parsedResp.body;
     }
 
+    if (parsedResp.err && resp) {
+      parsedResp.err.response = resp;
+    }
+
     callback(parsedResp.err, parsedResp.body, parsedResp.resp);
   }
 
