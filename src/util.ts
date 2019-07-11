@@ -300,7 +300,7 @@ export class PartialFailureError extends Error {
 }
 
 export interface BodyResponseCallback {
-  (err: Error | null, body?: ResponseBody, res?: r.Response): void;
+  (err: Error | ApiError | null, body?: ResponseBody, res?: r.Response): void;
 }
 
 export interface MakeRequestConfig {
