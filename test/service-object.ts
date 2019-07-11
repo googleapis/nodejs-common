@@ -267,6 +267,34 @@ describe('ServiceObject', () => {
       serviceObject.delete(options, assert.ifError);
     });
 
+    it('should override method and uri field in request with methodConfig', done => {
+      const methodConfig = {
+        reqOpts: {
+          uri: 'v2',
+          method: 'PATCH',
+        },
+      };
+
+      const cachedMethodConfig = extend(true, {}, methodConfig);
+
+      sandbox
+        .stub(ServiceObject.prototype, 'request')
+        .callsFake((reqOpts_, callback) => {
+          assert.deepStrictEqual(
+            serviceObject.methods.delete,
+            cachedMethodConfig
+          );
+          assert.deepStrictEqual(reqOpts_.uri, 'v2');
+          assert.deepStrictEqual(reqOpts_.method, 'PATCH');
+          done();
+          callback(null, null, null!);
+        });
+
+      const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
+      serviceObject.methods.delete = methodConfig;
+      serviceObject.delete();
+    });
+
     it('should extend the defaults with request options', done => {
       const methodConfig = {
         reqOpts: {
@@ -561,6 +589,32 @@ describe('ServiceObject', () => {
       serviceObject.getMetadata(options, assert.ifError);
     });
 
+    it('should override uri field in request with methodConfig', done => {
+      const methodConfig = {
+        reqOpts: {
+          uri: 'v2',
+        },
+      };
+
+      const cachedMethodConfig = extend(true, {}, methodConfig);
+
+      sandbox
+        .stub(ServiceObject.prototype, 'request')
+        .callsFake((reqOpts_, callback) => {
+          assert.deepStrictEqual(
+            serviceObject.methods.getMetadata,
+            cachedMethodConfig
+          );
+          assert.deepStrictEqual(reqOpts_.uri, 'v2');
+          done();
+          callback(null, null, null!);
+        });
+
+      const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
+      serviceObject.methods.getMetadata = methodConfig;
+      serviceObject.getMetadata();
+    });
+
     it('should extend the defaults with request options', done => {
       const methodConfig = {
         reqOpts: {
@@ -660,6 +714,33 @@ describe('ServiceObject', () => {
           callback(null, null, {} as r.Response);
         });
       serviceObject.setMetadata(metadata, options, () => {});
+    });
+
+    it('should override uri and method with methodConfig', done => {
+      const methodConfig = {
+        reqOpts: {
+          uri: 'v2',
+          method: 'PUT',
+        },
+      };
+      const cachedMethodConfig = extend(true, {}, methodConfig);
+
+      sandbox
+        .stub(ServiceObject.prototype, 'request')
+        .callsFake((reqOpts_, callback) => {
+          assert.deepStrictEqual(
+            serviceObject.methods.setMetadata,
+            cachedMethodConfig
+          );
+          assert.deepStrictEqual(reqOpts_.uri, 'v2');
+          assert.deepStrictEqual(reqOpts_.method, 'PUT');
+          done();
+          callback(null, null, null!);
+        });
+
+      const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
+      serviceObject.methods.setMetadata = methodConfig;
+      serviceObject.setMetadata({});
     });
 
     it('should extend the defaults with request options', done => {
