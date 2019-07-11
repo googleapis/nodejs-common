@@ -33,7 +33,7 @@ import {
   util,
 } from './util';
 
-export type RequestResponse<T = ResponseBody> = [Metadata, r.Response];
+export type RequestResponse = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
   // tslint:disable-next-line:variable-name
@@ -539,7 +539,7 @@ class ServiceObject extends EventEmitter {
    * @param {string} reqOpts.uri - A URI relative to the baseUrl.
    * @param {function} callback - The callback function passed to `request`.
    */
-  request<T = ResponseBody>(
+  request(
     reqOpts: DecorateRequestOptions
   ): Promise<RequestResponse>;
   request(
