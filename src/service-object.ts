@@ -271,7 +271,8 @@ class ServiceObject<T = any> extends EventEmitter {
     const methodConfig =
       (typeof this.methods.delete === 'object' && this.methods.delete) || {};
 
-    const reqOpts = extend(true,
+    const reqOpts = extend(
+      true,
       {
         method: 'DELETE',
         uri: '',
@@ -279,7 +280,8 @@ class ServiceObject<T = any> extends EventEmitter {
       methodConfig.reqOpts,
       {
         qs: options,
-      });
+      }
+    );
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
@@ -406,14 +408,16 @@ class ServiceObject<T = any> extends EventEmitter {
       (typeof this.methods.getMetadata === 'object' &&
         this.methods.getMetadata) ||
       {};
-    const reqOpts = extend(true,
+    const reqOpts = extend(
+      true,
       {
         uri: '',
       },
       methodConfig.reqOpts,
       {
         qs: options,
-      });
+      }
+    );
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
@@ -460,7 +464,9 @@ class ServiceObject<T = any> extends EventEmitter {
         this.methods.setMetadata) ||
       {};
 
-    const reqOpts = extend(true, {},
+    const reqOpts = extend(
+      true,
+      {},
       {
         method: 'PATCH',
         uri: '',
@@ -469,7 +475,8 @@ class ServiceObject<T = any> extends EventEmitter {
       {
         json: metadata,
         qs: options,
-      });
+      }
+    );
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
