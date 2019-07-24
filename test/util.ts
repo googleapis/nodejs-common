@@ -377,6 +377,45 @@ describe('common/util', () => {
       stub('parseHttpRespBody', () => done()); // Will throw.
       util.handleResp(null, null, null, done);
     });
+
+    it('should surface the response body in the error message when it cannot be JSON-parsed', done => {
+      const unparseableBody = '<html>There was some error</html>';
+
+      util.handleResp(null, null, unparseableBody, err => {
+        if (err === null) {
+          assert.fail('there should be an error');
+        } else {
+          assert.ok(err.message.includes(unparseableBody));
+        }
+
+        done();
+      });
+    });
+
+    it('should surface the response body as an error property when it cannot be JSON-parsed', done => {
+      const unparseableBody = '<html>There was some error</html>';
+
+      util.handleResp(
+        null,
+        {body: unparseableBody} as r.Response,
+        unparseableBody,
+        err => {
+          if (err === null) {
+            assert.fail('there should be an error');
+          } else {
+            const response = (err! as ApiError).response;
+
+            if (!response) {
+              assert.fail('there should be a response property on the error');
+            } else {
+              assert.strictEqual(response.body, unparseableBody);
+            }
+          }
+
+          done();
+        }
+      );
+    });
   });
 
   describe('parseHttpRespMessage', () => {
