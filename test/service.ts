@@ -143,6 +143,17 @@ describe('Service', () => {
       assert.strictEqual(service.apiEndpoint, CONFIG.apiEndpoint);
     });
 
+    it('should default the timeout to undefined', () => {
+      assert.strictEqual(service.timeout, undefined);
+    });
+
+    it('should localize the timeout', () => {
+      const timeout = 10000;
+      const options = extend({}, OPTIONS, {timeout});
+      const service = new Service(fakeCfg, options);
+      assert.strictEqual(service.timeout, timeout);
+    });
+
     it('should localize the getCredentials method', () => {
       function getCredentials() {}
 
@@ -329,6 +340,27 @@ describe('Service', () => {
       const expectedUri = service.baseUrl + reqOpts.uri;
       service.makeAuthenticatedRequest = (reqOpts_: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts_.uri, expectedUri);
+        done();
+      };
+      service.request_(reqOpts, assert.ifError);
+    });
+
+    it('should not set timeout', done => {
+      service.makeAuthenticatedRequest = (reqOpts_: DecorateRequestOptions) => {
+        assert.strictEqual(reqOpts_.timeout, undefined);
+        done();
+      };
+      service.request_(reqOpts, assert.ifError);
+    });
+
+    it('should set reqOpt.timeout', done => {
+      const timeout = 10000;
+      const config = extend({}, CONFIG);
+      const options = extend({}, OPTIONS, {timeout});
+      const service = new Service(config, options);
+
+      service.makeAuthenticatedRequest = (reqOpts_: DecorateRequestOptions) => {
+        assert.strictEqual(reqOpts_.timeout, timeout);
         done();
       };
       service.request_(reqOpts, assert.ifError);
