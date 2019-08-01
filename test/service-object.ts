@@ -17,7 +17,7 @@
 import {promisify} from '@google-cloud/promisify';
 import * as assert from 'assert';
 import * as extend from 'extend';
-import * as r from 'request';
+import * as r from 'teeny-request';
 import * as sinon from 'sinon';
 
 import {Service} from '../src';

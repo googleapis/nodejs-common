@@ -20,7 +20,7 @@ import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as nock from 'nock';
 import * as proxyquire from 'proxyquire';
-import * as r from 'request';
+import * as r from 'teeny-request';
 import * as retryRequest from 'retry-request';
 import * as sinon from 'sinon';
 import * as stream from 'stream';
@@ -497,7 +497,11 @@ describe('common/util', () => {
             'application/octet-stream'
           );
           // (is a writable stream:)
-          assert.strictEqual(typeof mp[1].body._writableState, 'object');
+          assert.strictEqual(
+            // tslint:disable-next-line no-any
+            typeof (mp[1].body as any)._writableState,
+            'object'
+          );
 
           done();
         },

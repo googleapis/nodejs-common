@@ -15,7 +15,6 @@
  */
 
 import * as assert from 'assert';
-import * as r from 'request'; // Only needed for type declarations.
 import * as sinon from 'sinon';
 
 import {Service} from '../src';

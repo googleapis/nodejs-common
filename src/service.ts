@@ -21,7 +21,7 @@
 import arrify = require('arrify');
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import * as r from 'request'; // Only needed for type declarations.
+import * as r from 'teeny-request';
 
 import {Interceptor} from './service-object';
 import {
