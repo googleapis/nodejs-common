@@ -22,8 +22,8 @@ import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as ent from 'ent';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
-import * as r from 'request'; // types only
+import {CredentialBody} from 'google-auth-library';
+import * as r from 'teeny-request';
 import * as retryRequest from 'retry-request';
 import {Duplex, DuplexOptions, PassThrough, Readable, Writable} from 'stream';
 import {teenyRequest} from 'teeny-request';
@@ -728,7 +728,7 @@ export class Util {
 
     if (!config.stream) {
       return retryRequest(reqOpts, options, (err, response, body) => {
-        util.handleResp(err, response, body, callback!);
+        util.handleResp(err, (response as {}) as r.Response, body, callback!);
       });
     }
     const dup = config.stream as AbortableDuplex;
