@@ -20,7 +20,7 @@ import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as nock from 'nock';
 import * as proxyquire from 'proxyquire';
-import * as r from 'request';
+import * as r from 'teeny-request';
 import * as retryRequest from 'retry-request';
 import * as sinon from 'sinon';
 import * as stream from 'stream';
@@ -377,6 +377,45 @@ describe('common/util', () => {
       stub('parseHttpRespBody', () => done()); // Will throw.
       util.handleResp(null, null, null, done);
     });
+
+    it('should surface the response body in the error message when it cannot be JSON-parsed', done => {
+      const unparseableBody = '<html>There was some error</html>';
+
+      util.handleResp(null, null, unparseableBody, err => {
+        if (err === null) {
+          assert.fail('there should be an error');
+        } else {
+          assert.ok(err.message.includes(unparseableBody));
+        }
+
+        done();
+      });
+    });
+
+    it('should surface the response body as an error property when it cannot be JSON-parsed', done => {
+      const unparseableBody = '<html>There was some error</html>';
+
+      util.handleResp(
+        null,
+        {body: unparseableBody} as r.Response,
+        unparseableBody,
+        err => {
+          if (err === null) {
+            assert.fail('there should be an error');
+          } else {
+            const response = (err! as ApiError).response;
+
+            if (!response) {
+              assert.fail('there should be a response property on the error');
+            } else {
+              assert.strictEqual(response.body, unparseableBody);
+            }
+          }
+
+          done();
+        }
+      );
+    });
   });
 
   describe('parseHttpRespMessage', () => {
@@ -458,7 +497,11 @@ describe('common/util', () => {
             'application/octet-stream'
           );
           // (is a writable stream:)
-          assert.strictEqual(typeof mp[1].body._writableState, 'object');
+          assert.strictEqual(
+            // tslint:disable-next-line no-any
+            typeof (mp[1].body as any)._writableState,
+            'object'
+          );
 
           done();
         },

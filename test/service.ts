@@ -17,7 +17,7 @@
 import * as assert from 'assert';
 import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
-import {Request, RequestResponse} from 'request';
+import {Request} from 'teeny-request';
 
 import {Interceptor} from '../src';
 import {ServiceConfig, ServiceOptions} from '../src/service';
@@ -141,6 +141,17 @@ describe('Service', () => {
 
     it('should localize the apiEndpoint', () => {
       assert.strictEqual(service.apiEndpoint, CONFIG.apiEndpoint);
+    });
+
+    it('should default the timeout to undefined', () => {
+      assert.strictEqual(service.timeout, undefined);
+    });
+
+    it('should localize the timeout', () => {
+      const timeout = 10000;
+      const options = extend({}, OPTIONS, {timeout});
+      const service = new Service(fakeCfg, options);
+      assert.strictEqual(service.timeout, timeout);
     });
 
     it('should localize the getCredentials method', () => {
@@ -329,6 +340,27 @@ describe('Service', () => {
       const expectedUri = service.baseUrl + reqOpts.uri;
       service.makeAuthenticatedRequest = (reqOpts_: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts_.uri, expectedUri);
+        done();
+      };
+      service.request_(reqOpts, assert.ifError);
+    });
+
+    it('should not set timeout', done => {
+      service.makeAuthenticatedRequest = (reqOpts_: DecorateRequestOptions) => {
+        assert.strictEqual(reqOpts_.timeout, undefined);
+        done();
+      };
+      service.request_(reqOpts, assert.ifError);
+    });
+
+    it('should set reqOpt.timeout', done => {
+      const timeout = 10000;
+      const config = extend({}, CONFIG);
+      const options = extend({}, OPTIONS, {timeout});
+      const service = new Service(config, options);
+
+      service.makeAuthenticatedRequest = (reqOpts_: DecorateRequestOptions) => {
+        assert.strictEqual(reqOpts_.timeout, timeout);
         done();
       };
       service.request_(reqOpts, assert.ifError);
@@ -555,7 +587,7 @@ describe('Service', () => {
       const fakeOpts = {};
       Service.prototype.request_ = async (reqOpts: DecorateRequestOptions) => {
         assert.strictEqual(reqOpts, fakeOpts);
-        return Promise.resolve({} as RequestResponse);
+        return Promise.resolve({});
       };
       await service.request(fakeOpts);
     });
@@ -571,15 +603,12 @@ describe('Service', () => {
         callback(null, response.body, response);
       };
 
-      service.request(
-        fakeOpts,
-        (err: Error, body: {}, res: RequestResponse) => {
-          assert.ifError(err);
-          assert.deepStrictEqual(res, response);
-          assert.deepStrictEqual(body, response.body);
-          done();
-        }
-      );
+      service.request(fakeOpts, (err: Error, body: {}, res: {}) => {
+        assert.ifError(err);
+        assert.deepStrictEqual(res, response);
+        assert.deepStrictEqual(body, response.body);
+        done();
+      });
     });
   });
 

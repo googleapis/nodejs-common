@@ -22,8 +22,8 @@ import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as ent from 'ent';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import {CredentialBody} from 'google-auth-library/build/src/auth/credentials';
-import * as r from 'request'; // types only
+import {CredentialBody} from 'google-auth-library';
+import * as r from 'teeny-request';
 import * as retryRequest from 'retry-request';
 import {Duplex, DuplexOptions, PassThrough, Readable, Writable} from 'stream';
 import {teenyRequest} from 'teeny-request';
@@ -367,6 +367,10 @@ export class Util {
       parsedResp.resp.body = parsedResp.body;
     }
 
+    if (parsedResp.err && resp) {
+      parsedResp.err.response = resp;
+    }
+
     callback(parsedResp.err, parsedResp.body, parsedResp.resp);
   }
 
@@ -404,7 +408,7 @@ export class Util {
    * @param {?error} parsedHttpRespMessage.err - An error detected.
    * @param {object} parsedHttpRespMessage.body - The original body value provided
    *     will try to be JSON.parse'd. If it's successful, the parsed value will
-   * be returned here, otherwise the original value.
+   * be returned here, otherwise the original value and an error will be returned.
    */
   parseHttpRespBody(body: ResponseBody) {
     const parsedHttpRespBody: ParsedHttpResponseBody = {
@@ -415,7 +419,9 @@ export class Util {
       try {
         parsedHttpRespBody.body = JSON.parse(body);
       } catch (err) {
-        parsedHttpRespBody.err = new ApiError('Cannot parse JSON response');
+        parsedHttpRespBody.err = new ApiError(
+          `Cannot parse response as JSON: ${body}`
+        );
       }
     }
 
@@ -722,7 +728,7 @@ export class Util {
 
     if (!config.stream) {
       return retryRequest(reqOpts, options, (err, response, body) => {
-        util.handleResp(err, response, body, callback!);
+        util.handleResp(err, (response as {}) as r.Response, body, callback!);
       });
     }
     const dup = config.stream as AbortableDuplex;

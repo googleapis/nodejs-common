@@ -21,7 +21,7 @@
 import arrify = require('arrify');
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
-import * as r from 'request'; // Only needed for type declarations.
+import * as r from 'teeny-request';
 
 import {Interceptor, Metadata} from './service-object';
 import {
@@ -70,6 +70,7 @@ export interface ServiceOptions extends GoogleAuthOptions {
   promise?: PromiseConstructor;
   email?: string;
   token?: string;
+  timeout?: number; // http.request.options.timeout
 }
 
 export class Service {
@@ -85,6 +86,7 @@ export class Service {
   authClient: GoogleAuth;
   private getCredentials: {};
   readonly apiEndpoint: string;
+  timeout: number;
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like
@@ -104,6 +106,7 @@ export class Service {
   constructor(config: ServiceConfig, options: ServiceOptions = {}) {
     this.baseUrl = config.baseUrl;
     this.apiEndpoint = config.apiEndpoint;
+    this.timeout = options.timeout!;
     this.globalInterceptors = arrify(options.interceptors_!);
     this.interceptors = [];
     this.packageJson = config.packageJson;
@@ -180,7 +183,7 @@ export class Service {
     reqOpts: DecorateRequestOptions | StreamRequestOptions,
     callback?: BodyResponseCallback
   ): void | r.Request {
-    reqOpts = extend(true, {}, reqOpts);
+    reqOpts = extend(true, {}, reqOpts, {timeout: this.timeout});
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
     const uriComponents = [this.baseUrl];
 

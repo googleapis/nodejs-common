@@ -22,7 +22,7 @@ import {promisifyAll} from '@google-cloud/promisify';
 import arrify = require('arrify');
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
-import * as r from 'request'; // Only needed for type declarations.
+import * as r from 'teeny-request';
 
 import {StreamRequestOptions} from '.';
 import {
