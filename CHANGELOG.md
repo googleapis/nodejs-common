@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.0.6](https://www.github.com/googleapis/nodejs-common/compare/v2.0.5...v2.0.6) (2019-08-05)
+
+
+### Bug Fixes
+
+* **deps:** upgrade to the latest version of teeny-request ([#448](https://www.github.com/googleapis/nodejs-common/issues/448)) ([bb76f07](https://www.github.com/googleapis/nodejs-common/commit/bb76f07))
+
 ### [2.0.5](https://www.github.com/googleapis/nodejs-common/compare/v2.0.4...v2.0.5) (2019-07-29)
 
 
