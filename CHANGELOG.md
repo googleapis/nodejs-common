@@ -4,6 +4,18 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [2.1.0](https://www.github.com/googleapis/nodejs-common/compare/v2.0.5...v2.1.0) (2019-08-05)
+
+
+### Bug Fixes
+
+* **deps:** upgrade to the latest version of teeny-request ([#448](https://www.github.com/googleapis/nodejs-common/issues/448)) ([bb76f07](https://www.github.com/googleapis/nodejs-common/commit/bb76f07))
+
+
+### Features
+
+* adds timeout to options and use it in reqOpts ([#455](https://www.github.com/googleapis/nodejs-common/issues/455)) ([90a6097](https://www.github.com/googleapis/nodejs-common/commit/90a6097))
+
 ### [2.0.5](https://www.github.com/googleapis/nodejs-common/compare/v2.0.4...v2.0.5) (2019-07-29)
 
 
