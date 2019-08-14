@@ -85,7 +85,7 @@ export class Service {
   authClient: GoogleAuth;
   private getCredentials: {};
   readonly apiEndpoint: string;
-  timeout: number;
+  timeout?: number;
 
   /**
    * Service is a base class, meant to be inherited from by a "service," like
@@ -105,7 +105,7 @@ export class Service {
   constructor(config: ServiceConfig, options: ServiceOptions = {}) {
     this.baseUrl = config.baseUrl;
     this.apiEndpoint = config.apiEndpoint;
-    this.timeout = options.timeout!;
+    this.timeout = options.timeout;
     this.globalInterceptors = arrify(options.interceptors_!);
     this.interceptors = [];
     this.packageJson = config.packageJson;
