@@ -39,7 +39,7 @@
     "extend": "^3.0.2",
     "google-auth-library": "^5.0.0",
     "retry-request": "^4.0.0",
-    "teeny-request": "^5.2.0"
+    "teeny-request": "^5.2.1"
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.9",
