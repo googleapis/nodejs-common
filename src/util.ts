@@ -600,6 +600,7 @@ export class Util {
         err: Error | null,
         authenticatedReqOpts?: DecorateRequestOptions
       ) => {
+        const authLibraryError = err;
         const autoAuthFailed =
           err &&
           err.message.indexOf('Could not load the default credentials') > -1;
@@ -651,7 +652,18 @@ export class Util {
           activeRequest_ = util.makeRequest(
             authenticatedReqOpts!,
             reqConfig,
-            callback!
+            // tslint:disable-next-line:only-arrow-functions
+            function(apiResponseError) {
+              if (
+                apiResponseError &&
+                (apiResponseError as ApiError).code === 401
+              ) {
+                // Re-use the "Could not load the default credentials error" if
+                // the API request failed due to missing credentials.
+                apiResponseError = authLibraryError;
+              }
+              callback!(apiResponseError, arguments[1], arguments[2]);
+            }
           );
         }
       };
