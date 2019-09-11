@@ -652,8 +652,7 @@ export class Util {
           activeRequest_ = util.makeRequest(
             authenticatedReqOpts!,
             reqConfig,
-            // tslint:disable-next-line:only-arrow-functions
-            function(apiResponseError) {
+            (apiResponseError, ...params) => {
               if (
                 apiResponseError &&
                 (apiResponseError as ApiError).code === 401
@@ -662,7 +661,7 @@ export class Util {
                 // the API request failed due to missing credentials.
                 apiResponseError = authLibraryError;
               }
-              callback!(apiResponseError, arguments[1], arguments[2]);
+              callback!(apiResponseError, ...params);
             }
           );
         }
