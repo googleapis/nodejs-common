@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.1.3](https://www.github.com/googleapis/nodejs-common/compare/v2.1.2...v2.1.3) (2019-09-11)
+
+
+### Bug Fixes
+
+* **docs:** remove anchor from reference doc link ([#474](https://www.github.com/googleapis/nodejs-common/issues/474)) ([81ebc1f](https://www.github.com/googleapis/nodejs-common/commit/81ebc1f))
+
 ### [2.1.2](https://www.github.com/googleapis/nodejs-common/compare/v2.1.1...v2.1.2) (2019-08-14)
 
 
