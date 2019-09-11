@@ -4,6 +4,18 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [2.2.0](https://www.github.com/googleapis/nodejs-common/compare/v2.1.2...v2.2.0) (2019-09-11)
+
+
+### Bug Fixes
+
+* **docs:** remove anchor from reference doc link ([#474](https://www.github.com/googleapis/nodejs-common/issues/474)) ([81ebc1f](https://www.github.com/googleapis/nodejs-common/commit/81ebc1f))
+
+
+### Features
+
+* return more helpful error when authentication fails ([#480](https://www.github.com/googleapis/nodejs-common/issues/480)) ([98d2b7f](https://www.github.com/googleapis/nodejs-common/commit/98d2b7f))
+
 ### [2.1.2](https://www.github.com/googleapis/nodejs-common/compare/v2.1.1...v2.1.2) (2019-08-14)
 
 
