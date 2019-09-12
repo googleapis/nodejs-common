@@ -956,6 +956,32 @@ describe('common/util', () => {
           );
         });
 
+        it('should not block 401 errors if auth client succeeds', done => {
+          authClient.authorizeRequest = async (rOpts: {}) => {};
+          sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
+
+          const makeRequestArg1 = new Error('API 401 Error.') as ApiError;
+          makeRequestArg1.code = 401;
+          const makeRequestArg2 = {};
+          const makeRequestArg3 = {};
+          stub('makeRequest', (authenticatedReqOpts, cfg, callback) => {
+            callback(makeRequestArg1, makeRequestArg2, makeRequestArg3);
+          });
+
+          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
+            {}
+          );
+          makeAuthenticatedRequest(
+            {} as DecorateRequestOptions,
+            (arg1, arg2, arg3) => {
+              assert.strictEqual(arg1, makeRequestArg1);
+              assert.strictEqual(arg2, makeRequestArg2);
+              assert.strictEqual(arg3, makeRequestArg3);
+              done();
+            }
+          );
+        });
+
         it('should block decorateRequest error', done => {
           const decorateRequestError = new Error('Error.');
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);

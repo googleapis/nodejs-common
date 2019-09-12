@@ -655,7 +655,8 @@ export class Util {
             (apiResponseError, ...params) => {
               if (
                 apiResponseError &&
-                (apiResponseError as ApiError).code === 401
+                (apiResponseError as ApiError).code === 401 &&
+                authLibraryError
               ) {
                 // Re-use the "Could not load the default credentials error" if
                 // the API request failed due to missing credentials.
