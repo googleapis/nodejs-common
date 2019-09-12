@@ -4,6 +4,52 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.2.1](https://www.github.com/googleapis/nodejs-common/compare/v2.2.0...v2.2.1) (2019-09-12)
+
+
+### Bug Fixes
+
+* do not block API 401 errors when auth was provided ([#482](https://www.github.com/googleapis/nodejs-common/issues/482)) ([1b617e6](https://www.github.com/googleapis/nodejs-common/commit/1b617e6))
+
+## [2.2.0](https://www.github.com/googleapis/nodejs-common/compare/v2.1.2...v2.2.0) (2019-09-11)
+
+
+### Bug Fixes
+
+* **docs:** remove anchor from reference doc link ([#474](https://www.github.com/googleapis/nodejs-common/issues/474)) ([81ebc1f](https://www.github.com/googleapis/nodejs-common/commit/81ebc1f))
+
+
+### Features
+
+* return more helpful error when authentication fails ([#480](https://www.github.com/googleapis/nodejs-common/issues/480)) ([98d2b7f](https://www.github.com/googleapis/nodejs-common/commit/98d2b7f))
+
+### [2.1.2](https://www.github.com/googleapis/nodejs-common/compare/v2.1.1...v2.1.2) (2019-08-14)
+
+
+### Bug Fixes
+
+* **types:** correct internal timeout field type ([#470](https://www.github.com/googleapis/nodejs-common/issues/470)) ([e7dd206](https://www.github.com/googleapis/nodejs-common/commit/e7dd206))
+* upgrade to version of teeny-request with looser types for method ([#472](https://www.github.com/googleapis/nodejs-common/issues/472)) ([143774c](https://www.github.com/googleapis/nodejs-common/commit/143774c))
+
+### [2.1.1](https://www.github.com/googleapis/nodejs-common/compare/v2.1.0...v2.1.1) (2019-08-13)
+
+
+### Bug Fixes
+
+* **deps:** teeny-request@5.2.0 with fixes for http ([#467](https://www.github.com/googleapis/nodejs-common/issues/467)) ([e11d46c](https://www.github.com/googleapis/nodejs-common/commit/e11d46c))
+
+## [2.1.0](https://www.github.com/googleapis/nodejs-common/compare/v2.0.5...v2.1.0) (2019-08-05)
+
+
+### Bug Fixes
+
+* **deps:** upgrade to the latest version of teeny-request ([#448](https://www.github.com/googleapis/nodejs-common/issues/448)) ([bb76f07](https://www.github.com/googleapis/nodejs-common/commit/bb76f07))
+
+
+### Features
+
+* adds timeout to options and use it in reqOpts ([#455](https://www.github.com/googleapis/nodejs-common/issues/455)) ([90a6097](https://www.github.com/googleapis/nodejs-common/commit/90a6097))
+
 ### [2.0.5](https://www.github.com/googleapis/nodejs-common/compare/v2.0.4...v2.0.5) (2019-07-29)
 
 
