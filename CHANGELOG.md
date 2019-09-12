@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.2.1](https://www.github.com/googleapis/nodejs-common/compare/v2.2.0...v2.2.1) (2019-09-12)
+
+
+### Bug Fixes
+
+* do not block API 401 errors when auth was provided ([#482](https://www.github.com/googleapis/nodejs-common/issues/482)) ([1b617e6](https://www.github.com/googleapis/nodejs-common/commit/1b617e6))
+
 ## [2.2.0](https://www.github.com/googleapis/nodejs-common/compare/v2.1.2...v2.2.0) (2019-09-11)
 
 
