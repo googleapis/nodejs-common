@@ -146,6 +146,16 @@ describe('common/util', () => {
       assert.strictEqual(apiError.message, expectedMessage);
     });
 
+    it('should use message in stack', () => {
+      const expectedMessage = 'Message is in the stack too!';
+      const apiError = new ApiError(expectedMessage);
+
+      assert.strictEqual(
+        (apiError.stack || '').split('\n')[0],
+        `Error: ${expectedMessage}`
+      );
+    });
+
     it('should build correct ApiError', () => {
       const fakeMessage = 'Formatted Error.';
       const fakeResponse = {statusCode: 200} as r.Response;

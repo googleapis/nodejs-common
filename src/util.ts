@@ -236,6 +236,7 @@ export class ApiError extends Error {
     }
 
     this.message = ApiError.createMultiErrorMessage(errorBody, this.errors);
+    Error.captureStackTrace(this);
   }
   /**
    * Pieces together an error message by combining all unique error messages

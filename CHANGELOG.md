@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.2.2](https://www.github.com/googleapis/nodejs-common/compare/v2.2.1...v2.2.2) (2019-09-18)
+
+
+### Bug Fixes
+
+* capture message in ApiError.stack ([#466](https://www.github.com/googleapis/nodejs-common/issues/466)) ([811c7cd](https://www.github.com/googleapis/nodejs-common/commit/811c7cd))
+
 ### [2.2.1](https://www.github.com/googleapis/nodejs-common/compare/v2.2.0...v2.2.1) (2019-09-12)
 
 
