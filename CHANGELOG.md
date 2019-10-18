@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.2.3](https://www.github.com/googleapis/nodejs-common/compare/v2.2.2...v2.2.3) (2019-10-18)
+
+
+### Bug Fixes
+
+* **deps:** force newer auth library with various fixes ([#495](https://www.github.com/googleapis/nodejs-common/issues/495)) ([a9c6e43](https://www.github.com/googleapis/nodejs-common/commit/a9c6e4384ddd386955fde4eb52561fc47840e8f3))
+
 ### [2.2.2](https://www.github.com/googleapis/nodejs-common/compare/v2.2.1...v2.2.2) (2019-09-18)
 
 
