@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.2.4](https://www.github.com/googleapis/nodejs-common/compare/v2.2.3...v2.2.4) (2019-11-13)
+
+
+### Bug Fixes
+
+* **docs:** add jsdoc-region-tag plugin ([#500](https://www.github.com/googleapis/nodejs-common/issues/500)) ([e1111d0](https://www.github.com/googleapis/nodejs-common/commit/e1111d0ef643c49d6c8f460be89f100d8826aca1))
+
 ### [2.2.3](https://www.github.com/googleapis/nodejs-common/compare/v2.2.2...v2.2.3) (2019-10-18)
 
 
