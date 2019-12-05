@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [2.2.5](https://www.github.com/googleapis/nodejs-common/compare/v2.2.4...v2.2.5) (2019-12-05)
+
+
+### Bug Fixes
+
+* **deps:** pin TypeScript below 3.7.0 ([e78bd5f](https://www.github.com/googleapis/nodejs-common/commit/e78bd5fafb9e864872e5def4ec71bf5d04acdb19))
+
 ### [2.2.4](https://www.github.com/googleapis/nodejs-common/compare/v2.2.3...v2.2.4) (2019-11-13)
 
 
