@@ -14,6 +14,7 @@
 
 import {promisify} from '@google-cloud/promisify';
 import * as assert from 'assert';
+import {describe, it} from 'mocha';
 import * as extend from 'extend';
 import * as r from 'teeny-request';
 import * as sinon from 'sinon';
