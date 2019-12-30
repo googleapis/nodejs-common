@@ -15,6 +15,7 @@
  */
 
 import * as assert from 'assert';
+import {describe, it} from 'mocha';
 import * as sinon from 'sinon';
 
 import {Service} from '../src';

@@ -14,6 +14,7 @@
 
 import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as assert from 'assert';
+import {describe, it} from 'mocha';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as nock from 'nock';
