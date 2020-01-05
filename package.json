@@ -59,7 +59,7 @@
     "intelli-espower-loader": "^1.0.1",
     "js-green-licenses": "^1.0.0",
     "linkinator": "^1.1.7",
-    "mocha": "^6.0.2",
+    "mocha": "^7.0.0",
     "mv": "^2.1.1",
     "ncp": "^2.0.0",
     "nock": "^11.3.2",
