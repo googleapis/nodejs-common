@@ -160,7 +160,7 @@ export class Operation<T = any> extends ServiceObject<T> {
     try {
       const metadata = await promisify(this.poll_.bind(this))();
       if (!metadata) {
-        setTimeout(this.startPolling_.bind(this), 500);
+        setTimeout(this.startPolling_.bind(this), this.pollIntervalMs || 500);
         return;
       }
       this.emit('complete', metadata);

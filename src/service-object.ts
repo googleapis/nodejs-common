@@ -92,6 +92,12 @@ export interface ServiceObjectConfig {
    * object is Bucket.
    */
   parent: ServiceObjectParent;
+
+  /**
+   * For long running operations, how often should the client poll
+   * for completion.
+   */
+  pollIntervalMs?: number;
 }
 
 export interface Methods {
@@ -148,6 +154,7 @@ class ServiceObject<T = any> extends EventEmitter {
   baseUrl?: string;
   parent: ServiceObjectParent;
   id?: string;
+  pollIntervalMs?: number;
   private createMethod?: Function;
   protected methods: Methods;
   protected interceptors: Interceptor[];
@@ -181,6 +188,7 @@ class ServiceObject<T = any> extends EventEmitter {
     this.createMethod = config.createMethod;
     this.methods = config.methods || {};
     this.interceptors = [];
+    this.pollIntervalMs = config.pollIntervalMs;
     this.Promise = this.parent ? this.parent.Promise : undefined;
 
     if (config.methods) {

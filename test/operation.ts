@@ -272,7 +272,7 @@ describe('Operation', () => {
           .callsArgWith(0, null, apiResponse);
       });
 
-      it('should call startPolling_ after 500 ms', done => {
+      it('should call startPolling_ after 500 ms by default', done => {
         const startPolling_ = asAny(operation).startPolling_;
         let startPollingCalled = false;
 
@@ -295,6 +295,39 @@ describe('Operation', () => {
         };
 
         asAny(operation).startPolling_();
+      });
+
+      it('should call startPolling_ after 2000 ms if configured to do so', done => {
+        // Mock a long running operation with a 2000 ms timeout:
+        const op = new Operation({
+          parent: FAKE_SERVICE,
+          id: OPERATION_ID,
+          pollIntervalMs: 2000,
+        });
+        op.hasActiveListeners = true;
+        sandbox.stub(op, 'getMetadata').callsArgWith(0, null, apiResponse);
+        const startPolling_ = asAny(op).startPolling_;
+        let startPollingCalled = false;
+
+        sandbox.stub(global, 'setTimeout').callsFake((fn, timeoutMs) => {
+          fn(); // should call startPolling_
+          assert.strictEqual(timeoutMs, 2000);
+          return asAny({});
+        });
+
+        asAny(op).startPolling_ = function() {
+          if (!startPollingCalled) {
+            // Call #1.
+            startPollingCalled = true;
+            startPolling_.apply(this, arguments);
+            return;
+          }
+          // This is from the setTimeout call.
+          assert.strictEqual(this, op);
+          done();
+        };
+
+        asAny(op).startPolling_();
       });
     });
 
