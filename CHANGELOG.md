@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [2.3.0](https://www.github.com/googleapis/nodejs-common/compare/v2.2.6...v2.3.0) (2020-01-23)
+
+
+### Features
+
+* allow poll interval to be configured ([#520](https://www.github.com/googleapis/nodejs-common/issues/520)) ([abfbd18](https://www.github.com/googleapis/nodejs-common/commit/abfbd189b5769c8dccd482e3c7369711c27b9895))
+
 ### [2.2.6](https://www.github.com/googleapis/nodejs-common/compare/v2.2.5...v2.2.6) (2020-01-17)
 
 
