@@ -97,7 +97,7 @@ export interface ServiceObjectConfig {
    * For long running operations, how often should the client poll
    * for completion.
    */
-  pollInterval?: number;
+  pollIntervalMs?: number;
 }
 
 export interface Methods {
@@ -154,7 +154,7 @@ class ServiceObject<T = any> extends EventEmitter {
   baseUrl?: string;
   parent: ServiceObjectParent;
   id?: string;
-  pollInterval?: number;
+  pollIntervalMs?: number;
   private createMethod?: Function;
   protected methods: Methods;
   protected interceptors: Interceptor[];
@@ -188,7 +188,7 @@ class ServiceObject<T = any> extends EventEmitter {
     this.createMethod = config.createMethod;
     this.methods = config.methods || {};
     this.interceptors = [];
-    this.pollInterval = config.pollInterval;
+    this.pollIntervalMs = config.pollIntervalMs;
     this.Promise = this.parent ? this.parent.Promise : undefined;
 
     if (config.methods) {

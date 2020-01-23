@@ -302,7 +302,7 @@ describe('Operation', () => {
         const op = new Operation({
           parent: FAKE_SERVICE,
           id: OPERATION_ID,
-          pollInterval: 2000,
+          pollIntervalMs: 2000,
         });
         op.hasActiveListeners = true;
         sandbox.stub(op, 'getMetadata').callsArgWith(0, null, apiResponse);
