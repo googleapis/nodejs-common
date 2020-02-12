@@ -28,8 +28,7 @@
     "system-test": "mocha build/system-test",
     "samples-test": "cd samples/ && npm link ../ && npm test && cd ../",
     "docs-test": "linkinator docs",
-    "predocs-test": "npm run docs",
-    "prelint": "cd samples; npm link ../; npm i"
+    "predocs-test": "npm run docs"
   },
   "dependencies": {
     "@google-cloud/projectify": "^1.0.0",
