@@ -1175,6 +1175,14 @@ describe('common/util', () => {
       rateLimitError.errors = [{reason: 'userRateLimitExceeded'}];
       assert.strictEqual(util.shouldRetryRequest(rateLimitError), true);
     });
+
+    it('should retry on EAI_AGAIN error code', () => {
+      const eaiAgainError = new ApiError('EAI_AGAIN');
+      eaiAgainError.errors = [
+        {reason: 'getaddrinfo EAI_AGAIN pubsub.googleapis.com'},
+      ];
+      assert.strictEqual(util.shouldRetryRequest(eaiAgainError), true);
+    });
   });
 
   describe('makeRequest', () => {
