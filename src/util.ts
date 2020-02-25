@@ -525,6 +525,9 @@ export class Util {
           if (reason === 'userRateLimitExceeded') {
             return true;
           }
+          if (reason && reason.includes('EAI_AGAIN')) {
+            return true;
+          }
         }
       }
     }
