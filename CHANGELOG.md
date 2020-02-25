@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [2.4.0](https://www.github.com/googleapis/nodejs-common/compare/v2.3.0...v2.4.0) (2020-02-25)
+
+
+### Features
+
+* if we see EAI_AGAIN error for reason, retry request ([#534](https://www.github.com/googleapis/nodejs-common/issues/534)) ([0debe28](https://www.github.com/googleapis/nodejs-common/commit/0debe28b77d77bf9382e74dc4c11744fb433db6d)), closes [#473](https://www.github.com/googleapis/nodejs-common/issues/473)
+
 ## [2.3.0](https://www.github.com/googleapis/nodejs-common/compare/v2.2.6...v2.3.0) (2020-01-23)
 
 
