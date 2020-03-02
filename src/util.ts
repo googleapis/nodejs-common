@@ -23,7 +23,7 @@ import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library';
 import * as r from 'teeny-request';
 import * as retryRequest from 'retry-request';
-import {Duplex, DuplexOptions, PassThrough, Readable, Writable} from 'stream';
+import {Duplex, DuplexOptions, Readable, Transform, Writable} from 'stream';
 import {teenyRequest} from 'teeny-request';
 
 import {Interceptor} from './service-object';
@@ -453,7 +453,8 @@ export class Util {
   ) {
     onComplete = onComplete || util.noop;
 
-    const writeStream = new PassThrough();
+    const writeStream = new ProgressStream();
+    writeStream.on('progress', evt => dup.emit('progress', evt));
     dup.setWritable(writeStream);
 
     const defaultReqOpts = {
@@ -861,6 +862,21 @@ export class Util {
     return typeof optionsOrCallback === 'function'
       ? [{} as T, optionsOrCallback as C]
       : [optionsOrCallback as T, cb as C];
+  }
+}
+
+/**
+ * Basic Passthrough Stream that records the number of bytes read
+ * every time the cursor is moved.
+ */
+class ProgressStream extends Transform {
+  bytesRead = 0;
+  // tslint:disable-next-line: no-any
+  _transform(chunk: any, encoding: string, callback: Function) {
+    this.bytesRead += chunk.length;
+    this.emit('progress', {bytesWritten: this.bytesRead, contentLength: '*'});
+    this.push(chunk);
+    callback();
   }
 }
 
