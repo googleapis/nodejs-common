@@ -36,8 +36,6 @@ import {
 export type RequestResponse = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
-  // tslint:disable-next-line:variable-name
-  Promise?: PromiseConstructor;
   requestStream(reqOpts: DecorateRequestOptions): r.Request;
   request(
     reqOpts: DecorateRequestOptions,
@@ -158,8 +156,6 @@ class ServiceObject<T = any> extends EventEmitter {
   private createMethod?: Function;
   protected methods: Methods;
   protected interceptors: Interceptor[];
-  // tslint:disable-next-line:variable-name
-  Promise?: PromiseConstructor;
 
   /*
    * @constructor
@@ -189,7 +185,6 @@ class ServiceObject<T = any> extends EventEmitter {
     this.methods = config.methods || {};
     this.interceptors = [];
     this.pollIntervalMs = config.pollIntervalMs;
-    this.Promise = this.parent ? this.parent.Promise : undefined;
 
     if (config.methods) {
       Object.getOwnPropertyNames(ServiceObject.prototype)

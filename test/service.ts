@@ -208,17 +208,6 @@ describe('Service', () => {
       assert.strictEqual(service.projectIdRequired, true);
     });
 
-    it('should localize the Promise object', () => {
-      // tslint:disable-next-line:variable-name
-      const FakePromise = () => {};
-      const service = new Service(fakeCfg, {promise: FakePromise});
-      assert.strictEqual(service.Promise, FakePromise);
-    });
-
-    it('should localize the native Promise object by default', () => {
-      assert.strictEqual(service.Promise, global.Promise);
-    });
-
     it('should disable forever agent for Cloud Function envs', () => {
       process.env.FUNCTION_NAME = 'cloud-function-name';
       const service = new Service(CONFIG, OPTIONS);

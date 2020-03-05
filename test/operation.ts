@@ -37,7 +37,6 @@ describe('Operation', () => {
   let operation: Operation;
   beforeEach(() => {
     operation = new Operation({parent: FAKE_SERVICE, id: OPERATION_ID});
-    operation.Promise = Promise;
   });
 
   afterEach(() => {
@@ -91,13 +90,6 @@ describe('Operation', () => {
   describe('promise', () => {
     beforeEach(() => {
       asAny(operation).startPolling_ = () => Promise.resolve();
-    });
-
-    it('should return an instance of the localized Promise', () => {
-      class FakePromise<T> extends Promise<T> {}
-      operation.Promise = FakePromise;
-      const promise = operation.promise();
-      assert(promise instanceof FakePromise);
     });
 
     it('should reject the promise if an error occurs', () => {

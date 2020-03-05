@@ -118,16 +118,6 @@ describe('ServiceObject', () => {
       assert.strictEqual(typeof serviceObject.create, 'function');
       assert.strictEqual(serviceObject.delete, undefined);
     });
-
-    it('should localize the Promise object', () => {
-      // tslint:disable-next-line:variable-name
-      const FakePromise = () => {};
-      const config = extend({}, CONFIG, {
-        parent: {Promise: FakePromise},
-      });
-      const serviceObject = new ServiceObject(config) as FakeServiceObject;
-      assert.strictEqual(serviceObject.Promise, FakePromise);
-    });
   });
 
   describe('create', () => {
