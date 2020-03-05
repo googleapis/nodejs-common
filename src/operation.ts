@@ -82,16 +82,14 @@ export class Operation<T = any> extends ServiceObject<T> {
   /**
    * Wraps the `complete` and `error` events in a Promise.
    *
-   * @return {promise}
+   * @return {Promise}
    */
   promise() {
-    return new this.Promise!(
-      (resolve: Function, reject: (err: Error) => void) => {
-        this.on('error', reject).on('complete', (metadata: {}) => {
-          resolve([metadata]);
-        });
-      }
-    );
+    return new Promise((resolve, reject) => {
+      this.on('error', reject).on('complete', (metadata: {}) => {
+        resolve([metadata]);
+      });
+    });
   }
 
   /**

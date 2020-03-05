@@ -66,7 +66,6 @@ export interface ServiceConfig {
 
 export interface ServiceOptions extends GoogleAuthOptions {
   interceptors_?: Interceptor[];
-  promise?: PromiseConstructor;
   email?: string;
   token?: string;
   timeout?: number; // http.request.options.timeout
@@ -79,8 +78,6 @@ export class Service {
   private packageJson: PackageJson;
   projectId: string;
   private projectIdRequired: boolean;
-  // tslint:disable-next-line:variable-name
-  Promise: PromiseConstructor;
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
   authClient: GoogleAuth;
   private getCredentials: {};
@@ -111,7 +108,6 @@ export class Service {
     this.packageJson = config.packageJson;
     this.projectId = options.projectId || PROJECT_ID_TOKEN;
     this.projectIdRequired = config.projectIdRequired !== false;
-    this.Promise = options.promise || Promise;
 
     const reqCfg = extend({}, config, {
       projectIdRequired: this.projectIdRequired,
