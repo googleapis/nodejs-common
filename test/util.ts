@@ -574,6 +574,21 @@ describe('common/util', () => {
       util.makeWritableStream(dup, {makeAuthenticatedRequest() {}});
     });
 
+    it('dup should emit a progress event with the bytes written', done => {
+      let happened = false;
+
+      const dup = duplexify();
+      dup.on('progress', (progress: {}) => {
+        happened = true;
+      });
+
+      util.makeWritableStream(dup, {makeAuthenticatedRequest() {}}, util.noop);
+      dup.write(Buffer.from('abcdefghijklmnopqrstuvwxyz'), 'utf-8', util.noop);
+
+      assert.strictEqual(happened, true);
+      done();
+    });
+
     it('should emit an error if the request fails', done => {
       const dup = duplexify();
       const fakeStream = new stream.Writable();
