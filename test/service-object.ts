@@ -14,7 +14,7 @@
 
 import {promisify} from '@google-cloud/promisify';
 import * as assert from 'assert';
-import {describe, it} from 'mocha';
+import {describe, it, beforeEach, afterEach} from 'mocha';
 import * as extend from 'extend';
 import * as r from 'teeny-request';
 import * as sinon from 'sinon';
@@ -29,7 +29,7 @@ import {
   util,
 } from '../src/util';
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FakeServiceObject = any;
 interface InternalServiceObject {
   request_: (
@@ -219,11 +219,11 @@ describe('ServiceObject', () => {
       const args = ['a', 'b', 'c', 'd', 'e', 'f'];
 
       function createMethod(id: string, options_: {}, callback: Function) {
-        callback.apply(null, args);
+        callback(...args);
       }
 
       const serviceObject = new ServiceObject(config);
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       serviceObject.create(options, (...args: any[]) => {
         assert.deepStrictEqual([].slice.call(args), args);
         done();
@@ -393,11 +393,9 @@ describe('ServiceObject', () => {
 
   describe('get', () => {
     it('should get the metadata', done => {
-      serviceObject.getMetadata = promisify(
-        (_callback: SO.MetadataCallback): void => {
-          done();
-        }
-      );
+      serviceObject.getMetadata = promisify((): void => {
+        done();
+      });
 
       serviceObject.get(assert.ifError);
     });
@@ -414,11 +412,9 @@ describe('ServiceObject', () => {
     });
 
     it('handles not getting a config', done => {
-      serviceObject.getMetadata = promisify(
-        (_callback: SO.MetadataCallback): void => {
-          done();
-        }
-      );
+      serviceObject.getMetadata = promisify((): void => {
+        done();
+      });
       (serviceObject as FakeServiceObject).get(assert.ifError);
     });
 
@@ -515,7 +511,7 @@ describe('ServiceObject', () => {
           const error = new Error('Error.');
           const apiResponse = {} as r.Response;
 
-          // tslint:disable-next-line no-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (sandbox.stub(serviceObject, 'create') as any).callsFake(
             (optsOrCb: {}, cb: Function) => {
               const callback = typeof optsOrCb === 'function' ? optsOrCb : cb;
@@ -557,7 +553,7 @@ describe('ServiceObject', () => {
     it('should make the correct request', done => {
       sandbox
         .stub(ServiceObject.prototype, 'request')
-        .callsFake(function(this: ServiceObject, reqOpts, callback) {
+        .callsFake(function (this: ServiceObject, reqOpts, callback) {
           assert.strictEqual(this, serviceObject);
           assert.strictEqual(reqOpts.uri, '');
           done();
@@ -570,7 +566,7 @@ describe('ServiceObject', () => {
       const options = {queryOptionProperty: true};
       sandbox
         .stub(ServiceObject.prototype, 'request')
-        .callsFake(function(this: ServiceObject, reqOpts, callback) {
+        .callsFake((reqOpts, callback) => {
           assert.deepStrictEqual(reqOpts.qs, options);
           done();
           callback(null, null, {} as r.Response);
@@ -681,7 +677,7 @@ describe('ServiceObject', () => {
       const metadata = {metadataProperty: true};
       sandbox
         .stub(ServiceObject.prototype, 'request')
-        .callsFake(function(this: ServiceObject, reqOpts, callback) {
+        .callsFake(function (this: ServiceObject, reqOpts, callback) {
           assert.strictEqual(this, serviceObject);
           assert.strictEqual(reqOpts.method, 'PATCH');
           assert.strictEqual(reqOpts.uri, '');
@@ -697,7 +693,7 @@ describe('ServiceObject', () => {
       const options = {queryOptionProperty: true};
       sandbox
         .stub(ServiceObject.prototype, 'request')
-        .callsFake(function(this: ServiceObject, reqOpts, callback) {
+        .callsFake((reqOpts, callback) => {
           assert.deepStrictEqual(reqOpts.qs, options);
           done();
           callback(null, null, {} as r.Response);
@@ -885,7 +881,7 @@ describe('ServiceObject', () => {
       const parent = new ServiceObject(CONFIG) as FakeServiceObject;
       parent.interceptors.push({
         request(reqOpts: DecorateRequestOptions) {
-          // tslint:disable-next-line:no-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (reqOpts as any).parent = true;
           return reqOpts;
         },
@@ -896,7 +892,7 @@ describe('ServiceObject', () => {
       ) as FakeServiceObject;
       child.interceptors.push({
         request(reqOpts: DecorateRequestOptions) {
-          // tslint:disable-next-line:no-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (reqOpts as any).child = true;
           return reqOpts;
         },
@@ -920,13 +916,13 @@ describe('ServiceObject', () => {
           callback(null, null, {} as r.Response);
         });
 
-      const res = await child.request_({uri: ''});
+      await child.request_({uri: ''});
     });
 
     it('should pass a clone of the interceptors', done => {
       asInternal(serviceObject).interceptors.push({
         request(reqOpts: DecorateRequestOptions) {
-          // tslint:disable-next-line:no-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (reqOpts as any).one = true;
           return reqOpts;
         },
@@ -996,7 +992,7 @@ describe('ServiceObject', () => {
       const errorBody = '🤮';
       const response = {body: {error: errorBody}, statusCode: 500};
       const err = new Error(errorBody);
-      // tslint:disable-next-line:no-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err as any).response = response;
       sandbox
         .stub(asInternal(serviceObject), 'request_')

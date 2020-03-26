@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import * as assert from 'assert';
-import {describe, it} from 'mocha';
+import {describe, it, before, beforeEach, after} from 'mocha';
 import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
 import {Request} from 'teeny-request';
@@ -40,7 +40,7 @@ let makeAuthenticatedRequestFactoryOverride:
       config: MakeAuthenticatedRequestFactoryConfig
     ) => MakeAuthenticatedRequest);
 
-util.makeAuthenticatedRequestFactory = function(
+util.makeAuthenticatedRequestFactory = function (
   this: Util,
   config: MakeAuthenticatedRequestFactoryConfig
 ) {
@@ -51,7 +51,7 @@ util.makeAuthenticatedRequestFactory = function(
 };
 
 describe('Service', () => {
-  // tslint:disable-next-line:no-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let service: any;
   const Service = proxyquire('../src/service', {
     './util': util,
@@ -84,7 +84,7 @@ describe('Service', () => {
   describe('instantiation', () => {
     it('should not require options', () => {
       assert.doesNotThrow(() => {
-        const s = new Service(CONFIG);
+        new Service(CONFIG);
       });
     });
 
@@ -114,15 +114,11 @@ describe('Service', () => {
 
     it('should localize the authClient', () => {
       const authClient = {};
-
-      makeAuthenticatedRequestFactoryOverride = (
-        config?: MakeAuthenticatedRequestFactoryConfig
-      ) => {
+      makeAuthenticatedRequestFactoryOverride = () => {
         return {
           authClient,
         } as MakeAuthenticatedRequest;
       };
-
       const service = new Service(CONFIG, OPTIONS);
       assert.strictEqual(service.authClient, authClient);
     });
@@ -156,13 +152,11 @@ describe('Service', () => {
     it('should localize the getCredentials method', () => {
       function getCredentials() {}
 
-      makeAuthenticatedRequestFactoryOverride = (
-        config?: MakeAuthenticatedRequestFactoryConfig
-      ) => {
+      makeAuthenticatedRequestFactoryOverride = () => {
         return {
           authClient: {},
           getCredentials,
-          // tslint:disable-next-line:no-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
       };
 

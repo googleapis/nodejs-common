@@ -1,4 +1,4 @@
-// Copyright 2016 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as assert from 'assert';
-import {describe, it} from 'mocha';
-import {Operation, Service, ServiceObject, util} from '../src';
-
-describe('common', () => {
-  it('should correctly export the common modules', () => {
-    assert(Operation);
-    assert(Service);
-    assert(ServiceObject);
-    assert(util);
-  });
-});
+module.exports = {
+  ...require('gts/.prettierrc.json'),
+}
