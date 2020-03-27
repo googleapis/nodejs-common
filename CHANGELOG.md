@@ -4,6 +4,30 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.0.0](https://www.github.com/googleapis/nodejs-common/compare/v2.4.0...v3.0.0) (2020-03-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop support for node.js 8 (#554)
+* remove support for custom promises (#541)
+
+### Features
+
+* add progress events ([#540](https://www.github.com/googleapis/nodejs-common/issues/540)) ([1834059](https://www.github.com/googleapis/nodejs-common/commit/18340596ecb61018e5427371b9b5a120753ec003))
+
+
+### Bug Fixes
+
+* remove support for custom promises ([#541](https://www.github.com/googleapis/nodejs-common/issues/541)) ([ecf1c16](https://www.github.com/googleapis/nodejs-common/commit/ecf1c167927b609f13dc4fbec1954ff3a2765344))
+* **deps:** update dependency @google-cloud/projectify to v2 ([#553](https://www.github.com/googleapis/nodejs-common/issues/553)) ([23030a2](https://www.github.com/googleapis/nodejs-common/commit/23030a25783cd091f4720c25a15416c91e7bd0a0))
+* **deps:** update dependency @google-cloud/promisify to v2 ([#552](https://www.github.com/googleapis/nodejs-common/issues/552)) ([63175e0](https://www.github.com/googleapis/nodejs-common/commit/63175e0c4504020466a95e92c2449bdb8ac47546))
+
+
+### Miscellaneous Chores
+
+* drop support for node.js 8 ([#554](https://www.github.com/googleapis/nodejs-common/issues/554)) ([9f41047](https://www.github.com/googleapis/nodejs-common/commit/9f410477432893f68e57b5eeb31a068a3d8ef52f))
+
 ## [2.4.0](https://www.github.com/googleapis/nodejs-common/compare/v2.3.0...v2.4.0) (2020-02-25)
 
 
