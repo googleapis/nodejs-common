@@ -31,7 +31,7 @@
     "predocs-test": "npm run docs"
   },
   "dependencies": {
-    "@google-cloud/projectify": "^1.0.0",
+    "@google-cloud/projectify": "^2.0.0",
     "@google-cloud/promisify": "^1.0.0",
     "arrify": "^2.0.0",
     "duplexify": "^3.6.0",
