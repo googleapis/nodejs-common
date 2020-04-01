@@ -28,7 +28,6 @@ import {teenyRequest} from 'teeny-request';
 
 import {Interceptor} from './service-object';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const duplexify: DuplexifyConstructor = require('duplexify');
 
 const requestDefaults = {
@@ -40,7 +39,7 @@ const requestDefaults = {
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// tslint:disable-next-line:no-any
 export type ResponseBody = any;
 
 // Directly copy over Duplexify interfaces
@@ -616,7 +615,7 @@ export class Util {
         }
 
         if (!err || autoAuthFailed) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // tslint:disable-next-line:no-any
           let projectId = (authClient as any)._cachedProjectId;
 
           if (config.projectId && config.projectId !== '{{projectId}}') {
@@ -748,7 +747,7 @@ export class Util {
       });
     }
     const dup = config.stream as AbortableDuplex;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // tslint:disable-next-line:no-any
     let requestStream: any;
     const isGetRequest = (reqOpts.method || 'GET').toUpperCase() === 'GET';
 
@@ -806,7 +805,7 @@ export class Util {
     return reqOpts;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // tslint:disable-next-line:no-any
   isCustomType(unknown: any, module: string) {
     function getConstructorName(obj: Function) {
       return obj.constructor && obj.constructor.name.toLowerCase();
@@ -824,7 +823,6 @@ export class Util {
     }
 
     let walkingModule = unknown;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       if (getConstructorName(walkingModule) === parentModuleName) {
         return true;
@@ -873,7 +871,7 @@ export class Util {
  */
 class ProgressStream extends Transform {
   bytesRead = 0;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // tslint:disable-next-line: no-any
   _transform(chunk: any, encoding: string, callback: Function) {
     this.bytesRead += chunk.length;
     this.emit('progress', {bytesWritten: this.bytesRead, contentLength: '*'});

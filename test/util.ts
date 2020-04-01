@@ -14,7 +14,7 @@
 
 import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as assert from 'assert';
-import {describe, it, before, beforeEach, afterEach} from 'mocha';
+import {describe, it} from 'mocha';
 import * as extend from 'extend';
 import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as nock from 'nock';
@@ -39,7 +39,6 @@ import {
   Util,
 } from '../src/util';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const duplexify: DuplexifyConstructor = require('duplexify');
 
 nock.disableNetConnect();
@@ -61,10 +60,9 @@ const fakeReqOpts: DecorateRequestOptions = {
 
 const fakeError = new Error('this error is like so fake');
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// tslint:disable-next-line:no-any
 let requestOverride: any;
 function fakeRequest() {
-  // eslint-disable-next-line prefer-spread, prefer-rest-params
   return (requestOverride || teenyRequest).apply(null, arguments);
 }
 
@@ -76,16 +74,13 @@ fakeRequest.defaults = () => {
 
 let retryRequestOverride: Function | null;
 function fakeRetryRequest() {
-  // eslint-disable-next-line prefer-spread, prefer-rest-params
   return (retryRequestOverride || retryRequest).apply(null, arguments);
 }
 
 let replaceProjectIdTokenOverride: Function | null;
 function fakeReplaceProjectIdToken() {
-  // eslint-disable-next-line prefer-spread, prefer-rest-params
   return (replaceProjectIdTokenOverride || replaceProjectIdToken).apply(
     null,
-    // eslint-disable-next-line prefer-spread, prefer-rest-params
     arguments
   );
 }
@@ -93,7 +88,7 @@ function fakeReplaceProjectIdToken() {
 describe('common/util', () => {
   let util: Util & {[index: string]: Function};
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // tslint:disable-next-line:no-any
   function stub(method: keyof Util, meth: (...args: any[]) => void) {
     return sandbox.stub(util, method).callsFake(meth);
   }
@@ -484,7 +479,7 @@ describe('common/util', () => {
   describe('makeWritableStream', () => {
     it('should use defaults', done => {
       const dup = duplexify();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // tslint:disable-next-line:no-any
       const metadata = {a: 'b', c: 'd'} as any;
       util.makeWritableStream(dup, {
         metadata,
@@ -499,20 +494,20 @@ describe('common/util', () => {
           const mp = request.multipart as r.RequestPart[];
 
           assert.strictEqual(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // tslint:disable-next-line:no-any
             (mp[0] as any)['Content-Type'],
             'application/json'
           );
           assert.strictEqual(mp[0].body, JSON.stringify(metadata));
 
           assert.strictEqual(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // tslint:disable-next-line:no-any
             (mp[1] as any)['Content-Type'],
             'application/octet-stream'
           );
           // (is a writable stream:)
           assert.strictEqual(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // tslint:disable-next-line no-any
             typeof (mp[1].body as any)._writableState,
             'object'
           );
@@ -542,7 +537,7 @@ describe('common/util', () => {
           assert.deepStrictEqual(request.qs, req.qs);
           assert.strictEqual(request.uri, req.uri);
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // tslint:disable-next-line:no-any
           const mp = request.multipart as any[];
           assert.strictEqual(mp[1]['Content-Type'], 'application/json');
 
@@ -583,7 +578,7 @@ describe('common/util', () => {
       let happened = false;
 
       const dup = duplexify();
-      dup.on('progress', () => {
+      dup.on('progress', (progress: {}) => {
         happened = true;
       });
 
@@ -598,7 +593,10 @@ describe('common/util', () => {
       const dup = duplexify();
       const fakeStream = new stream.Writable();
       const error = new Error('Error.');
-      fakeStream.write = () => false;
+
+      fakeStream.write =
+        // tslint:disable-next-line:no-any
+        (chunk: any, encoding?: string | Function, cb?: Function) => false;
       dup.end = () => {};
 
       stub('handleResp', (err, res, body, callback) => {
@@ -612,7 +610,9 @@ describe('common/util', () => {
         callback(error);
       };
 
-      requestOverride.defaults = () => requestOverride;
+      requestOverride.defaults = (opts: DecorateRequestOptions) => {
+        return requestOverride;
+      };
 
       dup.on('error', err => {
         assert.strictEqual(err, error);
@@ -633,7 +633,7 @@ describe('common/util', () => {
     it('should emit the response', done => {
       const dup = duplexify();
       const fakeStream = new stream.Writable();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // tslint:disable-next-line:no-any
       (fakeStream as any).write = () => {};
 
       stub('handleResp', (err, res, body, callback) => {
@@ -647,9 +647,10 @@ describe('common/util', () => {
         callback(null, fakeResponse);
       };
 
-      requestOverride.defaults = () => requestOverride;
+      requestOverride.defaults = (opts: DecorateRequestOptions) =>
+        requestOverride;
       const options = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // tslint:disable-next-line:no-any
         makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
           opts.onAuthenticated();
         },
@@ -665,7 +666,7 @@ describe('common/util', () => {
 
     it('should pass back the response data to the callback', done => {
       const dup = duplexify();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // tslint:disable-next-line:no-any
       const fakeStream: any = new stream.Writable();
       const fakeResponse = {};
 
@@ -681,12 +682,12 @@ describe('common/util', () => {
       ) => {
         callback();
       };
-      requestOverride.defaults = () => {
+      requestOverride.defaults = (opts: DecorateRequestOptions) => {
         return requestOverride;
       };
 
       const options = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // tslint:disable-next-line:no-any
         makeAuthenticatedRequest(request: DecorateRequestOptions, opts: any) {
           opts.onAuthenticated();
         },
@@ -707,7 +708,7 @@ describe('common/util', () => {
     const authClient = {
       getCredentials() {},
       _cachedProjectId: 'project-id',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // tslint:disable-next-line:no-any
     } as any;
 
     it('should create an authClient', done => {
@@ -776,9 +777,10 @@ describe('common/util', () => {
     });
 
     describe('customEndpoint (no authentication attempted)', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // tslint:disable-next-line:no-any
       let makeAuthenticatedRequest: any;
       const config = {customEndpoint: true};
+      const expectedProjectId = authClient.projectId;
 
       beforeEach(() => {
         makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(config);
@@ -919,7 +921,7 @@ describe('common/util', () => {
         const error = new Error('🤮');
 
         beforeEach(() => {
-          authClient.authorizeRequest = async () => {
+          authClient.authorizeRequest = async (rOpts: {}) => {
             throw error;
           };
         });
@@ -933,7 +935,7 @@ describe('common/util', () => {
           const correctReqOpts = {} as DecorateRequestOptions;
           const incorrectReqOpts = {} as DecorateRequestOptions;
 
-          authClient.authorizeRequest = async () => {
+          authClient.authorizeRequest = async (rOpts: {}) => {
             throw new Error('Could not load the default credentials');
           };
 
@@ -979,7 +981,7 @@ describe('common/util', () => {
         });
 
         it('should not block 401 errors if auth client succeeds', done => {
-          authClient.authorizeRequest = async () => {};
+          authClient.authorizeRequest = async (rOpts: {}) => {};
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
 
           const makeRequestArg1 = new Error('API 401 Error.') as ApiError;
@@ -1046,7 +1048,7 @@ describe('common/util', () => {
         it('should emit an error and end the stream', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const mar = util.makeAuthenticatedRequestFactory({});
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // tslint:disable-next-line:no-any
           const stream = mar(fakeReqOpts) as any;
           stream.on('error', (err: Error) => {
             assert.strictEqual(err, error);
@@ -1061,7 +1063,9 @@ describe('common/util', () => {
       describe('authentication success', () => {
         const reqOpts = fakeReqOpts;
         beforeEach(() => {
-          authClient.authorizeRequest = async () => reqOpts;
+          authClient.authorizeRequest = async (rOpts: {}) => {
+            return reqOpts;
+          };
         });
 
         it('should return authenticated request to callback', done => {
@@ -1297,7 +1301,7 @@ describe('common/util', () => {
           const userStream = duplexify() as Duplexify & Abortable;
 
           retryRequestOverride = () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // tslint:disable-next-line:no-any
             const requestStream: any = new stream.Stream();
             requestStream.abort = done;
             return requestStream;
@@ -1321,19 +1325,31 @@ describe('common/util', () => {
             setImmediate(done);
             return userStream;
           };
-          requestOverride.defaults = () => requestOverride;
+
+          requestOverride.defaults = (opts: DecorateRequestOptions) => {
+            return requestOverride;
+          };
+
           util.makeRequest(reqOpts, {stream: userStream}, util.noop);
         });
 
         it('should set the writable stream', done => {
           const userStream = duplexify();
           const requestStream = new stream.Stream();
-          requestOverride = () => requestStream;
-          requestOverride.defaults = () => requestOverride;
+
+          requestOverride = () => {
+            return requestStream;
+          };
+
+          requestOverride.defaults = (opts: DecorateRequestOptions) => {
+            return requestOverride;
+          };
+
           userStream.setWritable = stream => {
             assert.strictEqual(stream, requestStream);
             done();
           };
+
           util.makeRequest(
             {method: 'POST'} as DecorateRequestOptions,
             {stream: userStream},
@@ -1363,7 +1379,7 @@ describe('common/util', () => {
       it('should pass the default options to retryRequest', done => {
         retryRequestOverride = testDefaultRetryRequestConfig(done);
         util.makeRequest(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // tslint:disable-next-line:no-any
           reqOpts,
           {},
           assert.ifError

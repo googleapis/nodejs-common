@@ -1,16 +1,18 @@
-// Copyright 2015 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*!
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /*!
  * @module common/service-object
@@ -47,7 +49,7 @@ export interface Interceptor {
 
 export type GetMetadataOptions = object;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// tslint:disable-next-line:no-any
 export type Metadata = any;
 export type MetadataResponse = [Metadata, r.Response];
 export type MetadataCallback = (
@@ -104,12 +106,11 @@ export interface InstanceResponseCallback<T> {
   (err: ApiError | null, instance?: T | null, apiResponse?: r.Response): void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface CreateOptions {}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// tslint:disable-next-line no-any
 export type CreateResponse<T> = any[];
 export interface CreateCallback<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // tslint:disable-next-line no-any
   (err: ApiError | null, instance?: T | null, ...args: any[]): void;
 }
 
@@ -145,7 +146,7 @@ export type SetMetadataOptions = object;
  * shared behaviors. Note that any method can be overridden when the service
  * object requires specific behavior.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// tslint:disable-next-line no-any
 class ServiceObject<T = any> extends EventEmitter {
   metadata: Metadata;
   baseUrl?: string;
@@ -194,16 +195,16 @@ class ServiceObject<T = any> extends EventEmitter {
             !/^request/.test(methodName) &&
             // clang-format on
             // The ServiceObject didn't redefine the method.
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // tslint:disable-next-line no-any
             (this as any)[methodName] ===
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // tslint:disable-next-line no-any
               (ServiceObject.prototype as any)[methodName] &&
             // This method isn't wanted.
             !config.methods![methodName]
           );
         })
         .forEach(methodName => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // tslint:disable-next-line no-any
           (this as any)[methodName] = undefined;
         });
     }
@@ -225,7 +226,6 @@ class ServiceObject<T = any> extends EventEmitter {
     optionsOrCallback?: CreateOptions | CreateCallback<T>,
     callback?: CreateCallback<T>
   ): void | Promise<CreateResponse<T>> {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const args = [this.id] as Array<{}>;
 
@@ -249,7 +249,6 @@ class ServiceObject<T = any> extends EventEmitter {
       callback!(...((args as {}) as [Error, T]));
     }
     args.push(onCreate);
-    // eslint-disable-next-line prefer-spread
     this.createMethod!.apply(null, args);
   }
 
@@ -343,7 +342,6 @@ class ServiceObject<T = any> extends EventEmitter {
     optionsOrCallback?: GetOrCreateOptions | InstanceResponseCallback<T>,
     cb?: InstanceResponseCallback<T>
   ): Promise<GetResponse<T>> | void {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     const [opts, callback] = util.maybeOptionsOrCallback<

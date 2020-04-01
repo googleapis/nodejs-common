@@ -14,13 +14,13 @@
 
 import * as assert from 'assert';
 import {describe, it} from 'mocha';
-import {Operation, Service, ServiceObject, util} from '../src';
+const common = require('../src');
 
 describe('common', () => {
   it('should correctly export the common modules', () => {
-    assert(Operation);
-    assert(Service);
-    assert(ServiceObject);
-    assert(util);
+    assert(common.Operation);
+    assert(common.Service);
+    assert(common.ServiceObject);
+    assert(common.util);
   });
 });
