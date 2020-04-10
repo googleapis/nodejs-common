@@ -390,24 +390,6 @@ describe('Service', () => {
       service.request_(reqOpts, assert.ifError);
     });
 
-    it('should add the User Agent', done => {
-      const userAgent = 'user-agent/0.0.0';
-
-      const getUserAgentFn = util.getUserAgentFromPackageJson;
-      util.getUserAgentFromPackageJson = packageJson => {
-        util.getUserAgentFromPackageJson = getUserAgentFn;
-        assert.strictEqual(packageJson, service.packageJson);
-        return userAgent;
-      };
-
-      service.makeAuthenticatedRequest = (reqOpts: DecorateRequestOptions) => {
-        assert.strictEqual(reqOpts.headers!['User-Agent'], userAgent);
-        done();
-      };
-
-      service.request_(reqOpts, assert.ifError);
-    });
-
     it('should add the api-client header', done => {
       service.makeAuthenticatedRequest = (reqOpts: DecorateRequestOptions) => {
         const pkg = service.packageJson;
