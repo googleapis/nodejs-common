@@ -225,7 +225,7 @@ export class Service {
     const pkg = this.packageJson;
     let userAgent = util.getUserAgentFromPackageJson(pkg);
     if (this.providedUserAgent) {
-      userAgent = `${this.providedUserAgent} ${userAgent}`
+      userAgent = `${this.providedUserAgent} ${userAgent}`;
     }
     reqOpts.headers = extend({}, reqOpts.headers, {
       'User-Agent': userAgent,

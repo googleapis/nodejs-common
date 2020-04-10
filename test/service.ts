@@ -149,6 +149,13 @@ describe('Service', () => {
       assert.strictEqual(service.timeout, timeout);
     });
 
+    it('should localize the user agent', () => {
+      const userAgent = 'test';
+      const options = extend({}, OPTIONS, {userAgent});
+      const service = new Service(fakeCfg, options);
+      assert.strictEqual(service.providedUserAgent, userAgent);
+    });
+
     it('should localize the getCredentials method', () => {
       function getCredentials() {}
 
