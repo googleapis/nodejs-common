@@ -149,13 +149,6 @@ describe('Service', () => {
       assert.strictEqual(service.timeout, timeout);
     });
 
-    it('should localize the user agent', () => {
-      const userAgent = 'test';
-      const options = extend({}, OPTIONS, {userAgent});
-      const service = new Service(fakeCfg, options);
-      assert.strictEqual(service.providedUserAgent, userAgent);
-    });
-
     it('should localize the getCredentials method', () => {
       function getCredentials() {}
 
@@ -352,6 +345,48 @@ describe('Service', () => {
         assert.strictEqual(reqOpts_.timeout, timeout);
         done();
       };
+      service.request_(reqOpts, assert.ifError);
+    });
+
+    it('should add the User Agent', done => {
+      const userAgent = 'user-agent/0.0.0';
+
+      const getUserAgentFn = util.getUserAgentFromPackageJson;
+      util.getUserAgentFromPackageJson = packageJson => {
+        util.getUserAgentFromPackageJson = getUserAgentFn;
+        assert.strictEqual(packageJson, service.packageJson);
+        return userAgent;
+      };
+
+      service.makeAuthenticatedRequest = (reqOpts: DecorateRequestOptions) => {
+        assert.strictEqual(reqOpts.headers!['User-Agent'], userAgent);
+        done();
+      };
+
+      service.request_(reqOpts, assert.ifError);
+    });
+
+    it('should add the provided User Agent', done => {
+      const userAgent = 'user-agent/0.0.0';
+      const providedUserAgent = 'test';
+
+      service.providedUserAgent = providedUserAgent;
+
+      const getUserAgentFn = util.getUserAgentFromPackageJson;
+      util.getUserAgentFromPackageJson = packageJson => {
+        util.getUserAgentFromPackageJson = getUserAgentFn;
+        assert.strictEqual(packageJson, service.packageJson);
+        return userAgent;
+      };
+
+      service.makeAuthenticatedRequest = (reqOpts: DecorateRequestOptions) => {
+        assert.strictEqual(
+          reqOpts.headers!['User-Agent'],
+          `${providedUserAgent} ${userAgent}`
+        );
+        done();
+      };
+
       service.request_(reqOpts, assert.ifError);
     });
 
