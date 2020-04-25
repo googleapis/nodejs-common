@@ -4,7 +4,7 @@
       "git": {
         "name": ".",
         "remote": "https://github.com/googleapis/nodejs-common.git",
-        "sha": "4d34a838a597f7aa5f418cbd8669e61fc2372371"
+        "sha": "80cf7706d579446b880193e919c9e4e149dfea32"
       }
     },
     {
