@@ -67,6 +67,7 @@ export interface ServiceOptions extends GoogleAuthOptions {
   email?: string;
   token?: string;
   timeout?: number; // http.request.options.timeout
+  userAgent?: string;
 }
 
 export class Service {
@@ -76,6 +77,7 @@ export class Service {
   private packageJson: PackageJson;
   projectId: string;
   private projectIdRequired: boolean;
+  providedUserAgent?: string;
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
   authClient: GoogleAuth;
   private getCredentials: {};
@@ -106,6 +108,7 @@ export class Service {
     this.packageJson = config.packageJson;
     this.projectId = options.projectId || PROJECT_ID_TOKEN;
     this.projectIdRequired = config.projectIdRequired !== false;
+    this.providedUserAgent = options.userAgent;
 
     const reqCfg = extend({}, config, {
       projectIdRequired: this.projectIdRequired,
@@ -220,8 +223,12 @@ export class Service {
     delete reqOpts.interceptors_;
 
     const pkg = this.packageJson;
+    let userAgent = util.getUserAgentFromPackageJson(pkg);
+    if (this.providedUserAgent) {
+      userAgent = `${this.providedUserAgent} ${userAgent}`;
+    }
     reqOpts.headers = extend({}, reqOpts.headers, {
-      'User-Agent': util.getUserAgentFromPackageJson(pkg),
+      'User-Agent': userAgent,
       'x-goog-api-client': `gl-node/${process.versions.node} gccl/${pkg.version}`,
     });
 
