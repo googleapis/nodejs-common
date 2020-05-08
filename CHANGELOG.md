@@ -4,6 +4,20 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.1.0](https://www.github.com/googleapis/nodejs-common/compare/v3.0.0...v3.1.0) (2020-05-08)
+
+
+### Features
+
+* **service:** add optional provided user agent ([#566](https://www.github.com/googleapis/nodejs-common/issues/566)) ([a0b814e](https://www.github.com/googleapis/nodejs-common/commit/a0b814ead58c8b255de2da8044c81d1be7b3825d))
+
+
+### Bug Fixes
+
+* **deps:** update dependency google-auth-library to v6 ([#556](https://www.github.com/googleapis/nodejs-common/issues/556)) ([03a8a54](https://www.github.com/googleapis/nodejs-common/commit/03a8a542ac329f63776388346d1f74732b0ab984))
+* apache license URL ([#468](https://www.github.com/googleapis/nodejs-common/issues/468)) ([#564](https://www.github.com/googleapis/nodejs-common/issues/564)) ([1adc855](https://www.github.com/googleapis/nodejs-common/commit/1adc855c17091b67e7f8821e0286ce7256023040))
+* retry error code 408 ([#578](https://www.github.com/googleapis/nodejs-common/issues/578)) ([0d3239d](https://www.github.com/googleapis/nodejs-common/commit/0d3239d9eeb03bb9cb49e1107d3d6d4864ffe341))
+
 ## [3.0.0](https://www.github.com/googleapis/nodejs-common/compare/v2.4.0...v3.0.0) (2020-03-26)
 
 

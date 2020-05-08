@@ -1151,6 +1151,12 @@ describe('common/util', () => {
       assert.strictEqual(util.shouldRetryRequest(error), false);
     });
 
+    it('should return true with error code 408', () => {
+      const error = new ApiError('408');
+      error.code = 408;
+      assert.strictEqual(util.shouldRetryRequest(error), true);
+    });
+
     it('should return true with error code 429', () => {
       const error = new ApiError('429');
       error.code = 429;
