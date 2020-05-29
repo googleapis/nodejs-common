@@ -154,7 +154,7 @@ class ServiceObject<T = any> extends EventEmitter {
   pollIntervalMs?: number;
   private createMethod?: Function;
   protected methods: Methods;
-  protected interceptors: Interceptor[];
+  interceptors: Interceptor[];
 
   /*
    * @constructor
