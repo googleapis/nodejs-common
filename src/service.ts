@@ -73,7 +73,7 @@ export interface ServiceOptions extends GoogleAuthOptions {
 export class Service {
   baseUrl: string;
   private globalInterceptors: Interceptor[];
-  private interceptors: Interceptor[];
+  interceptors: Interceptor[];
   private packageJson: PackageJson;
   projectId: string;
   private projectIdRequired: boolean;
