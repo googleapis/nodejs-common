@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.1.1](https://www.github.com/googleapis/nodejs-common/compare/v3.1.0...v3.1.1) (2020-05-29)
+
+
+### Bug Fixes
+
+* allow users to set interceptors ([#579](https://www.github.com/googleapis/nodejs-common/issues/579)) ([75f0d8a](https://www.github.com/googleapis/nodejs-common/commit/75f0d8ad92702a893b614d60f36aea09fe20bb30))
+
 ## [3.1.0](https://www.github.com/googleapis/nodejs-common/compare/v3.0.0...v3.1.0) (2020-05-08)
 
 
