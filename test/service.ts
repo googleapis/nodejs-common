@@ -28,6 +28,7 @@ import {
   util,
   Util,
 } from '../src/util';
+import {appendFile} from 'fs';
 
 proxyquire.noPreserveCache();
 
@@ -211,6 +212,82 @@ describe('Service', () => {
 
       const modifiedReqOpts = interceptor.request({forever: true});
       assert.strictEqual(modifiedReqOpts.forever, false);
+    });
+  });
+
+  describe('getRequestInterceptors', () => {
+    it('should call the request interceptors in order', () => {
+      // Called first.
+      service.globalInterceptors.push({
+        request(reqOpts: {order: string}) {
+          reqOpts.order = '1';
+          return reqOpts;
+        },
+      });
+
+      // Called third.
+      service.interceptors.push({
+        request(reqOpts: {order: string}) {
+          reqOpts.order += '3';
+          return reqOpts;
+        },
+      });
+
+      // Called second.
+      service.globalInterceptors.push({
+        request(reqOpts: {order: string}) {
+          reqOpts.order += '2';
+          return reqOpts;
+        },
+      });
+
+      // Called fourth.
+      service.interceptors.push({
+        request(reqOpts: {order: string}) {
+          reqOpts.order += '4';
+          return reqOpts;
+        },
+      });
+
+      const reqOpts: {order?: string} = {};
+      const requestInterceptors = service.getRequestInterceptors();
+      requestInterceptors.forEach((requestInterceptor: Function) => {
+        Object.assign(reqOpts, requestInterceptor(reqOpts));
+      });
+      assert.strictEqual(reqOpts.order, '1234');
+    });
+
+    it('should not affect original interceptor arrays', () => {
+      function request(reqOpts: DecorateRequestOptions) {
+        return reqOpts;
+      }
+
+      const globalInterceptors = [{request}];
+      const localInterceptors = [{request}];
+
+      const originalGlobalInterceptors = [].slice.call(globalInterceptors);
+      const originalLocalInterceptors = [].slice.call(localInterceptors);
+
+      service.getRequestInterceptors();
+
+      assert.deepStrictEqual(globalInterceptors, originalGlobalInterceptors);
+      assert.deepStrictEqual(localInterceptors, originalLocalInterceptors);
+    });
+
+    it('should not call unrelated interceptors', () => {
+      service.interceptors.push({
+        anotherInterceptor() {
+          throw new Error('Unrelated interceptor was called.');
+        },
+        request() {
+          return {};
+        },
+      });
+
+      const requestInterceptors = service.getRequestInterceptors();
+      requestInterceptors.forEach((requestInterceptor: Function) => {
+        requestInterceptor();
+      });
     });
   });
 
@@ -449,120 +526,65 @@ describe('Service', () => {
     });
 
     describe('request interceptors', () => {
-      it('should call the request interceptors in order', done => {
-        const reqOpts = {
-          uri: '',
-          interceptors_: [] as Array<{}>,
+      type FakeRequestOptions = DecorateRequestOptions & {a: string; b: string};
+
+      it('should include request interceptors', done => {
+        const requestInterceptors = [
+          (reqOpts: FakeRequestOptions) => {
+            reqOpts.a = 'a';
+            return reqOpts;
+          },
+          (reqOpts: FakeRequestOptions) => {
+            reqOpts.b = 'b';
+            return reqOpts;
+          },
+        ];
+
+        service.getRequestInterceptors = () => {
+          return requestInterceptors;
         };
-        type FakeRequestOptions = DecorateRequestOptions & {order: string};
-
-        // Called first.
-        service.globalInterceptors.push({
-          request(reqOpts: FakeRequestOptions) {
-            reqOpts.order = '1';
-            return reqOpts;
-          },
-        });
-
-        // Called third.
-        service.interceptors.push({
-          request(reqOpts: FakeRequestOptions) {
-            reqOpts.order += '3';
-            return reqOpts;
-          },
-        });
-
-        // Called second.
-        service.globalInterceptors.push({
-          request(reqOpts: FakeRequestOptions) {
-            reqOpts.order += '2';
-            return reqOpts;
-          },
-        });
-
-        // Called fifth.
-        reqOpts.interceptors_.push({
-          request(reqOpts: FakeRequestOptions) {
-            reqOpts.order += '5';
-            return reqOpts;
-          },
-        });
-
-        // Called fourth.
-        service.interceptors.push({
-          request(reqOpts: FakeRequestOptions) {
-            reqOpts.order += '4';
-            return reqOpts;
-          },
-        });
-
-        // Called sixth.
-        reqOpts.interceptors_.push({
-          request(reqOpts: FakeRequestOptions) {
-            reqOpts.order += '6';
-            return reqOpts;
-          },
-        });
 
         service.makeAuthenticatedRequest = (reqOpts: FakeRequestOptions) => {
-          assert.strictEqual(reqOpts.order, '123456');
+          assert.strictEqual(reqOpts.a, 'a');
+          assert.strictEqual(reqOpts.b, 'b');
           done();
         };
 
         service.request_(reqOpts, assert.ifError);
       });
 
-      it('should not affect original interceptor arrays', done => {
-        function request(reqOpts: DecorateRequestOptions) {
-          return reqOpts;
-        }
+      it('should combine reqOpts interceptors', done => {
+        const requestInterceptors = [
+          (reqOpts: FakeRequestOptions) => {
+            reqOpts.a = 'a';
+            return reqOpts;
+          },
+        ];
 
-        const globalInterceptors = [{request}];
-        const localInterceptors = [{request}];
-        const requestInterceptors = [{request}];
+        service.getRequestInterceptors = () => {
+          return requestInterceptors;
+        };
 
-        const originalGlobalInterceptors = [].slice.call(globalInterceptors);
-        const originalLocalInterceptors = [].slice.call(localInterceptors);
-        const originalRequestInterceptors = [].slice.call(requestInterceptors);
+        reqOpts.interceptors_ = [
+          {
+            request: (reqOpts: FakeRequestOptions) => {
+              reqOpts.b = 'b';
+              return reqOpts;
+            },
+          },
+        ];
 
-        service.makeAuthenticatedRequest = () => {
-          assert.deepStrictEqual(
-            globalInterceptors,
-            originalGlobalInterceptors
-          );
-          assert.deepStrictEqual(localInterceptors, originalLocalInterceptors);
-          assert.deepStrictEqual(
-            requestInterceptors,
-            originalRequestInterceptors
-          );
+        service.makeAuthenticatedRequest = (reqOpts: FakeRequestOptions) => {
+          assert.strictEqual(reqOpts.a, 'a');
+          assert.strictEqual(reqOpts.b, 'b');
+          assert.strictEqual(typeof reqOpts.interceptors_, 'undefined');
           done();
         };
 
-        service.request_(
-          {
-            uri: '',
-            interceptors_: requestInterceptors,
-          },
-          assert.ifError
-        );
-      });
-
-      it('should not call unrelated interceptors', done => {
-        service.interceptors.push({
-          anotherInterceptor() {
-            done(); // Will throw.
-          },
-          request() {
-            setImmediate(done);
-            return {};
-          },
-        });
-
-        service.makeAuthenticatedRequest = util.noop;
-
-        service.request_({uri: ''}, assert.ifError);
+        service.request_(reqOpts, assert.ifError);
       });
     });
+
     describe('error handling', () => {
       it('should re-throw any makeAuthenticatedRequest callback error', done => {
         const err = new Error('🥓');
