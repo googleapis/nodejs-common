@@ -4,6 +4,18 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.2.0](https://www.github.com/googleapis/nodejs-common/compare/v3.1.1...v3.2.0) (2020-06-23)
+
+
+### Features
+
+* expose method to get request interceptors ([#589](https://www.github.com/googleapis/nodejs-common/issues/589)) ([d01507f](https://www.github.com/googleapis/nodejs-common/commit/d01507f3fae41ffdffa2056bfb1aa40d97ffb653))
+
+
+### Bug Fixes
+
+* **deps:** update dependency teeny-request to v7 ([#581](https://www.github.com/googleapis/nodejs-common/issues/581)) ([8d12007](https://www.github.com/googleapis/nodejs-common/commit/8d12007c5b43b8b6a679b0a925c05cb665d850b7))
+
 ### [3.1.1](https://www.github.com/googleapis/nodejs-common/compare/v3.1.0...v3.1.1) (2020-05-29)
 
 
