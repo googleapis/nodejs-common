@@ -138,6 +138,18 @@ export class Service {
   }
 
   /**
+   * Return the user's custom request interceptors.
+   */
+  getRequestInterceptors(): Function[] {
+    // Interceptors should be returned in the order they were assigned.
+    return ([] as Interceptor[]).slice
+      .call(this.globalInterceptors)
+      .concat(this.interceptors)
+      .filter(interceptor => typeof interceptor.request === 'function')
+      .map(interceptor => interceptor.request);
+  }
+
+  /**
    * Get and update the Service's project ID.
    *
    * @param {function} callback - The callback function.
@@ -205,20 +217,17 @@ export class Service {
       // Good: https://.../projects:list
       .replace(/\/:/g, ':');
 
-    // Interceptors should be called in the order they were assigned.
-    const combinedInterceptors: Interceptor[] = ([] as Interceptor[]).slice
-      .call(this.globalInterceptors)
-      .concat(this.interceptors)
-      .concat(arrify(reqOpts.interceptors_!));
+    const requestInterceptors = this.getRequestInterceptors();
 
-    let interceptor: Interceptor | undefined;
-    while (
-      // tslint:disable-next-line:no-conditional-assignment
-      (interceptor = combinedInterceptors.shift()) &&
-      interceptor.request
-    ) {
-      reqOpts = interceptor.request(reqOpts);
-    }
+    arrify(reqOpts.interceptors_!).forEach(interceptor => {
+      if (typeof interceptor.request === 'function') {
+        requestInterceptors.push(interceptor.request);
+      }
+    });
+
+    requestInterceptors.forEach(requestInterceptor => {
+      reqOpts = requestInterceptor(reqOpts);
+    });
 
     delete reqOpts.interceptors_;
 
