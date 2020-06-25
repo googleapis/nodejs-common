@@ -34,6 +34,8 @@ import {
 export type RequestResponse = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
+  interceptors: Interceptor[];
+  getRequestInterceptors(): Function[];
   requestStream(reqOpts: DecorateRequestOptions): r.Request;
   request(
     reqOpts: DecorateRequestOptions,
@@ -437,6 +439,17 @@ class ServiceObject<T = any> extends EventEmitter {
   }
 
   /**
+   * Return the user's custom request interceptors.
+   */
+  getRequestInterceptors(): Function[] {
+    // Interceptors should be returned in the order they were assigned.
+    const localInterceptors = this.interceptors
+      .filter(interceptor => typeof interceptor.request === 'function')
+      .map(interceptor => interceptor.request);
+    return this.parent.getRequestInterceptors().concat(localInterceptors);
+  }
+
+  /**
    * Set the metadata for this object.
    *
    * @param {object} metadata - The metadata to set on this object.
@@ -573,6 +586,6 @@ class ServiceObject<T = any> extends EventEmitter {
   }
 }
 
-promisifyAll(ServiceObject);
+promisifyAll(ServiceObject, {exclude: ['getRequestInterceptors']});
 
 export {ServiceObject};

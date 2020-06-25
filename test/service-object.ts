@@ -58,6 +58,7 @@ describe('ServiceObject', () => {
 
   beforeEach(() => {
     serviceObject = new ServiceObject(CONFIG);
+    serviceObject.parent.interceptors = [];
   });
 
   afterEach(() => {
@@ -668,6 +669,98 @@ describe('ServiceObject', () => {
         assert.ifError(err);
         assert.strictEqual(metadata, apiResponse);
         done();
+      });
+    });
+  });
+
+  describe('getRequestInterceptors', () => {
+    it('should call the request interceptors in order', () => {
+      // Called first.
+      serviceObject.parent.interceptors.push({
+        request(reqOpts: DecorateRequestOptions) {
+          reqOpts.uri = '1';
+          return reqOpts;
+        },
+      });
+
+      // Called third.
+      serviceObject.interceptors.push({
+        request(reqOpts: DecorateRequestOptions) {
+          reqOpts.uri += '3';
+          return reqOpts;
+        },
+      });
+
+      // Called second.
+      serviceObject.parent.interceptors.push({
+        request(reqOpts: DecorateRequestOptions) {
+          reqOpts.uri += '2';
+          return reqOpts;
+        },
+      });
+
+      // Called fourth.
+      serviceObject.interceptors.push({
+        request(reqOpts: DecorateRequestOptions) {
+          reqOpts.uri += '4';
+          return reqOpts;
+        },
+      });
+
+      serviceObject.parent.getRequestInterceptors = () => {
+        return serviceObject.parent.interceptors.map(
+          interceptor => interceptor.request
+        );
+      };
+
+      const reqOpts: DecorateRequestOptions = {uri: ''};
+      const requestInterceptors = serviceObject.getRequestInterceptors();
+      requestInterceptors.forEach((requestInterceptor: Function) => {
+        Object.assign(reqOpts, requestInterceptor(reqOpts));
+      });
+      assert.strictEqual(reqOpts.uri, '1234');
+    });
+
+    it('should not affect original interceptor arrays', () => {
+      function request(reqOpts: DecorateRequestOptions) {
+        return reqOpts;
+      }
+
+      serviceObject.parent.interceptors = [{request}];
+      serviceObject.interceptors = [{request}];
+
+      const originalParentInterceptors = [].slice.call(
+        serviceObject.parent.interceptors
+      );
+      const originalLocalInterceptors = [].slice.call(
+        serviceObject.interceptors
+      );
+
+      serviceObject.getRequestInterceptors();
+
+      assert.deepStrictEqual(
+        serviceObject.parent.interceptors,
+        originalParentInterceptors
+      );
+      assert.deepStrictEqual(
+        serviceObject.interceptors,
+        originalLocalInterceptors
+      );
+    });
+
+    it('should not call unrelated interceptors', () => {
+      (serviceObject.interceptors as object[]).push({
+        anotherInterceptor() {
+          throw new Error('Unrelated interceptor was called.');
+        },
+        request(reqOpts: DecorateRequestOptions) {
+          return reqOpts;
+        },
+      });
+
+      const requestInterceptors = serviceObject.getRequestInterceptors();
+      requestInterceptors.forEach((requestInterceptor: Function) => {
+        requestInterceptor();
       });
     });
   });
