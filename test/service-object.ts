@@ -119,6 +119,23 @@ describe('ServiceObject', () => {
       assert.strictEqual(typeof serviceObject.create, 'function');
       assert.strictEqual(serviceObject.delete, undefined);
     });
+
+    it('should always expose the request method', () => {
+      const methods = {};
+      const config = extend({}, CONFIG, {methods});
+      const serviceObject = new ServiceObject(config);
+      assert.strictEqual(typeof serviceObject.request, 'function');
+    });
+
+    it('should always expose the getRequestInterceptors method', () => {
+      const methods = {};
+      const config = extend({}, CONFIG, {methods});
+      const serviceObject = new ServiceObject(config);
+      assert.strictEqual(
+        typeof serviceObject.getRequestInterceptors,
+        'function'
+      );
+    });
   });
 
   describe('create', () => {
