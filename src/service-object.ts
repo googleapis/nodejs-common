@@ -188,12 +188,16 @@ class ServiceObject<T = any> extends EventEmitter {
     this.pollIntervalMs = config.pollIntervalMs;
 
     if (config.methods) {
+      // This filters the ServiceObject instance (e.g. a "File") to only have
+      // the configured methods. We make a couple of exceptions for core-
+      // functionality ("request()" and "getRequestInterceptors()")
       Object.getOwnPropertyNames(ServiceObject.prototype)
         .filter(methodName => {
           return (
-            // All ServiceObjects need `request`.
+            // All ServiceObjects need `request` and `getRequestInterceptors`.
             // clang-format off
             !/^request/.test(methodName) &&
+            !/^getRequestInterceptors/.test(methodName) &&
             // clang-format on
             // The ServiceObject didn't redefine the method.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
