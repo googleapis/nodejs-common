@@ -34,6 +34,8 @@ import {
 export type RequestResponse = [Metadata, r.Response];
 
 export interface ServiceObjectParent {
+  interceptors: Interceptor[];
+  getRequestInterceptors(): Function[];
   requestStream(reqOpts: DecorateRequestOptions): r.Request;
   request(
     reqOpts: DecorateRequestOptions,
@@ -186,12 +188,16 @@ class ServiceObject<T = any> extends EventEmitter {
     this.pollIntervalMs = config.pollIntervalMs;
 
     if (config.methods) {
+      // This filters the ServiceObject instance (e.g. a "File") to only have
+      // the configured methods. We make a couple of exceptions for core-
+      // functionality ("request()" and "getRequestInterceptors()")
       Object.getOwnPropertyNames(ServiceObject.prototype)
         .filter(methodName => {
           return (
-            // All ServiceObjects need `request`.
+            // All ServiceObjects need `request` and `getRequestInterceptors`.
             // clang-format off
             !/^request/.test(methodName) &&
+            !/^getRequestInterceptors/.test(methodName) &&
             // clang-format on
             // The ServiceObject didn't redefine the method.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -437,6 +443,17 @@ class ServiceObject<T = any> extends EventEmitter {
   }
 
   /**
+   * Return the user's custom request interceptors.
+   */
+  getRequestInterceptors(): Function[] {
+    // Interceptors should be returned in the order they were assigned.
+    const localInterceptors = this.interceptors
+      .filter(interceptor => typeof interceptor.request === 'function')
+      .map(interceptor => interceptor.request);
+    return this.parent.getRequestInterceptors().concat(localInterceptors);
+  }
+
+  /**
    * Set the metadata for this object.
    *
    * @param {object} metadata - The metadata to set on this object.
@@ -573,6 +590,6 @@ class ServiceObject<T = any> extends EventEmitter {
   }
 }
 
-promisifyAll(ServiceObject);
+promisifyAll(ServiceObject, {exclude: ['getRequestInterceptors']});
 
 export {ServiceObject};
