@@ -12,16 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {promisify} from '@google-cloud/promisify';
+import {
+  promisify,
+  promisifyAll,
+  PromisifyAllOptions,
+} from '@google-cloud/promisify';
 import * as assert from 'assert';
 import {describe, it, beforeEach, afterEach} from 'mocha';
 import * as extend from 'extend';
+import * as proxyquire from 'proxyquire';
 import * as r from 'teeny-request';
 import * as sinon from 'sinon';
 
 import {Service} from '../src';
 import * as SO from '../src/service-object';
-import {ServiceObject} from '../src/service-object';
+
+let promisified = false;
+const fakePromisify = {
+  // tslint:disable-next-line:variable-name
+  promisifyAll(Class: Function, options: PromisifyAllOptions) {
+    if (Class.name === 'ServiceObject') {
+      promisified = true;
+      assert.deepStrictEqual(options.exclude, ['getRequestInterceptors']);
+    }
+
+    return promisifyAll(Class, options);
+  },
+};
+const ServiceObject = proxyquire('../src/service-object', {
+  '@google-cloud/promisify': fakePromisify,
+}).ServiceObject;
+
 import {
   ApiError,
   BodyResponseCallback,
@@ -41,12 +62,12 @@ interface InternalServiceObject {
   interceptors: SO.Interceptor[];
 }
 
-function asInternal(serviceObject: ServiceObject) {
+function asInternal(serviceObject: SO.ServiceObject) {
   return (serviceObject as {}) as InternalServiceObject;
 }
 
 describe('ServiceObject', () => {
-  let serviceObject: ServiceObject<FakeServiceObject>;
+  let serviceObject: SO.ServiceObject<FakeServiceObject>;
   const sandbox = sinon.createSandbox();
 
   const CONFIG = {
@@ -66,13 +87,8 @@ describe('ServiceObject', () => {
   });
 
   describe('instantiation', () => {
-    it('should promisify all the things', async () => {
-      const res = {statusCode: 123, body: 'sunny'} as r.Response;
-      sandbox
-        .stub(ServiceObject.prototype, 'request')
-        .callsArgWith(1, null, res.body, res);
-      const [r] = await serviceObject.delete();
-      assert.strictEqual(r, res.body);
+    it('should promisify all the things', () => {
+      assert(promisified);
     });
 
     it('should create an empty metadata object', () => {
@@ -571,7 +587,7 @@ describe('ServiceObject', () => {
     it('should make the correct request', done => {
       sandbox
         .stub(ServiceObject.prototype, 'request')
-        .callsFake(function (this: ServiceObject, reqOpts, callback) {
+        .callsFake(function (this: SO.ServiceObject, reqOpts, callback) {
           assert.strictEqual(this, serviceObject);
           assert.strictEqual(reqOpts.uri, '');
           done();
@@ -787,7 +803,7 @@ describe('ServiceObject', () => {
       const metadata = {metadataProperty: true};
       sandbox
         .stub(ServiceObject.prototype, 'request')
-        .callsFake(function (this: ServiceObject, reqOpts, callback) {
+        .callsFake(function (this: SO.ServiceObject, reqOpts, callback) {
           assert.strictEqual(this, serviceObject);
           assert.strictEqual(reqOpts.method, 'PATCH');
           assert.strictEqual(reqOpts.uri, '');
@@ -1009,7 +1025,7 @@ describe('ServiceObject', () => {
       });
 
       sandbox
-        .stub(parent.parent as ServiceObject, 'request')
+        .stub(parent.parent as SO.ServiceObject, 'request')
         .callsFake((reqOpts, callback) => {
           assert.deepStrictEqual(
             reqOpts.interceptors_![0].request({} as DecorateRequestOptions),
