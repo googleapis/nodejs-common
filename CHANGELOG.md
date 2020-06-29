@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.3.0](https://www.github.com/googleapis/nodejs-common/compare/v3.2.0...v3.3.0) (2020-06-29)
+
+
+### Features
+
+* add ServiceObject#getRequestInterceptors() ([#591](https://www.github.com/googleapis/nodejs-common/issues/591)) ([ade7e50](https://www.github.com/googleapis/nodejs-common/commit/ade7e50558e87b514adf48940f6e4413b2160b37))
+
 ## [3.2.0](https://www.github.com/googleapis/nodejs-common/compare/v3.1.1...v3.2.0) (2020-06-23)
 
 
