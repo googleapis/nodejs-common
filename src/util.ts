@@ -419,9 +419,7 @@ export class Util {
       try {
         parsedHttpRespBody.body = JSON.parse(body);
       } catch (err) {
-        parsedHttpRespBody.err = new ApiError(
-          `Cannot parse response as JSON: ${body}`
-        );
+        parsedHttpRespBody.body = body;
       }
     }
 
