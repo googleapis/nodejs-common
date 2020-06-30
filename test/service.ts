@@ -262,16 +262,21 @@ describe('Service', () => {
         return reqOpts;
       }
 
-      const globalInterceptors = [{request}];
-      const localInterceptors = [{request}];
+      service.globalInterceptors = [{request}];
+      service.interceptors = [{request}];
 
-      const originalGlobalInterceptors = [].slice.call(globalInterceptors);
-      const originalLocalInterceptors = [].slice.call(localInterceptors);
+      const originalGlobalInterceptors = [].slice.call(
+        service.globalInterceptors
+      );
+      const originalLocalInterceptors = [].slice.call(service.interceptors);
 
       service.getRequestInterceptors();
 
-      assert.deepStrictEqual(globalInterceptors, originalGlobalInterceptors);
-      assert.deepStrictEqual(localInterceptors, originalLocalInterceptors);
+      assert.deepStrictEqual(
+        service.globalInterceptors,
+        originalGlobalInterceptors
+      );
+      assert.deepStrictEqual(service.interceptors, originalLocalInterceptors);
     });
 
     it('should not call unrelated interceptors', () => {
