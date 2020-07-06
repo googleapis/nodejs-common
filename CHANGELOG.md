@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.3.1](https://www.github.com/googleapis/nodejs-common/compare/v3.3.0...v3.3.1) (2020-07-06)
+
+
+### Bug Fixes
+
+* allow non-JSON body ([#587](https://www.github.com/googleapis/nodejs-common/issues/587)) ([dbaad17](https://www.github.com/googleapis/nodejs-common/commit/dbaad170a2e3a6785568523086f15d88fb34eaca))
+
 ## [3.3.0](https://www.github.com/googleapis/nodejs-common/compare/v3.2.0...v3.3.0) (2020-06-29)
 
 
