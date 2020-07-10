@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.3.2](https://www.github.com/googleapis/nodejs-common/compare/v3.3.1...v3.3.2) (2020-07-09)
+
+
+### Bug Fixes
+
+* typeo in nodejs .gitattribute ([#597](https://www.github.com/googleapis/nodejs-common/issues/597)) ([50269c2](https://www.github.com/googleapis/nodejs-common/commit/50269c23b0e22f4affbaa20d1c2c2947d824dc9e))
+
 ### [3.3.1](https://www.github.com/googleapis/nodejs-common/compare/v3.3.0...v3.3.1) (2020-07-06)
 
 
