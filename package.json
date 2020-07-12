@@ -46,7 +46,7 @@
     "@compodoc/compodoc": "^1.1.11",
     "@types/ent": "^2.2.1",
     "@types/extend": "^3.0.1",
-    "@types/mocha": "^7.0.2",
+    "@types/mocha": "^8.0.0",
     "@types/mv": "^2.1.0",
     "@types/ncp": "^2.0.3",
     "@types/node": "^12.12.31",
