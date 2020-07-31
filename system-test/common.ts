@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {before, describe, it, beforeEach} from 'mocha';
+import {before, describe, it} from 'mocha';
 import * as assert from 'assert';
 import * as http from 'http';
 
@@ -24,8 +24,6 @@ describe('Common', () => {
 
   describe('Service', () => {
     let service: common.Service;
-    let mockServer: http.Server;
-    const mockResponse = 'response';
 
     before(() => {
       service = new common.Service({
@@ -36,16 +34,9 @@ describe('Common', () => {
       });
     });
 
-    beforeEach(done => {
-      if (mockServer) {
-        mockServer.close(done);
-      } else {
-        done();
-      }
-    });
-
     it('should send a request and receive a response', done => {
-      mockServer = new http.Server((req, res) => {
+      const mockResponse = 'response';
+      const mockServer = new http.Server((req, res) => {
         res.end(mockResponse);
       });
 
@@ -58,7 +49,7 @@ describe('Common', () => {
         (err, resp) => {
           assert.ifError(err);
           assert.strictEqual(resp, mockResponse);
-          done();
+          mockServer.close(done);
         }
       );
     });
@@ -68,7 +59,7 @@ describe('Common', () => {
 
       let numRequestAttempts = 0;
 
-      mockServer = new http.Server((req, res) => {
+      const mockServer = new http.Server((req, res) => {
         numRequestAttempts++;
         res.statusCode = 408;
         res.end();
@@ -83,7 +74,7 @@ describe('Common', () => {
         err => {
           assert.strictEqual((err! as common.ApiError).code, 408);
           assert.strictEqual(numRequestAttempts, 4);
-          done();
+          mockServer.close(done);
         }
       );
     });
