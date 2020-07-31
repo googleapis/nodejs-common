@@ -14,6 +14,9 @@
 Common components for Cloud APIs Node.js Client Libraries
 
 
+A comprehensive list of changes in each version may be found in
+[the CHANGELOG](https://github.com/googleapis/nodejs-common/blob/master/CHANGELOG.md).
+
 * [Google Cloud Common Node.js Client API Reference][client-docs]
 
 * [github.com/googleapis/nodejs-common](https://github.com/googleapis/nodejs-common)
