@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.3.3](https://www.github.com/googleapis/nodejs-common/compare/v3.3.2...v3.3.3) (2020-08-28)
+
+
+### Bug Fixes
+
+* move system and samples test from Node 10 to Node 12 ([#619](https://www.github.com/googleapis/nodejs-common/issues/619)) ([8dee48f](https://www.github.com/googleapis/nodejs-common/commit/8dee48f78b5f8df25ec97bd0dc2be731481bba35))
+
 ### [3.3.2](https://www.github.com/googleapis/nodejs-common/compare/v3.3.1...v3.3.2) (2020-07-09)
 
 
