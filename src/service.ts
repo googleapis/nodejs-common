@@ -63,6 +63,7 @@ export interface ServiceConfig {
 }
 
 export interface ServiceOptions extends GoogleAuthOptions {
+  authClient?: GoogleAuth;
   interceptors_?: Interceptor[];
   email?: string;
   token?: string;
@@ -113,6 +114,7 @@ export class Service {
     const reqCfg = extend({}, config, {
       projectIdRequired: this.projectIdRequired,
       projectId: this.projectId,
+      authClient: options.authClient,
       credentials: options.credentials,
       keyFile: options.keyFilename,
       email: options.email,
