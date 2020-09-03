@@ -28,7 +28,6 @@ import {
   util,
   Util,
 } from '../src/util';
-import {appendFile} from 'fs';
 
 proxyquire.noPreserveCache();
 
@@ -70,6 +69,7 @@ describe('Service', () => {
   };
 
   const OPTIONS = {
+    authClient: {getCredentials: () => {}},
     credentials: {},
     keyFile: {},
     email: 'email',
@@ -96,6 +96,7 @@ describe('Service', () => {
         config: MakeAuthenticatedRequestFactoryConfig
       ) => {
         const expectedConfig = extend({}, CONFIG, {
+          authClient: OPTIONS.authClient,
           credentials: OPTIONS.credentials,
           keyFile: OPTIONS.keyFilename,
           email: OPTIONS.email,
@@ -122,6 +123,11 @@ describe('Service', () => {
       };
       const service = new Service(CONFIG, OPTIONS);
       assert.strictEqual(service.authClient, authClient);
+    });
+
+    it('should localize the provided authClient', () => {
+      const service = new Service(CONFIG, OPTIONS);
+      assert.strictEqual(service.authClient, OPTIONS.authClient);
     });
 
     it('should allow passing a custom GoogleAuth client', () => {
