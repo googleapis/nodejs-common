@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.4.0](https://www.github.com/googleapis/nodejs-common/compare/v3.3.3...v3.4.0) (2020-09-12)
+
+
+### Features
+
+* support user-provided auth clients ([#623](https://www.github.com/googleapis/nodejs-common/issues/623)) ([a053e40](https://www.github.com/googleapis/nodejs-common/commit/a053e40a91e647a47dc44ba47cfb86775904556d))
+
 ### [3.3.3](https://www.github.com/googleapis/nodejs-common/compare/v3.3.2...v3.3.3) (2020-08-28)
 
 
