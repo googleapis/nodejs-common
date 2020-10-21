@@ -298,14 +298,18 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    ServiceObject.prototype.request.call(this, reqOpts, (err: ApiError | null, ...args) => {
-      if(err) {
-        if(err.code === 404 && ignoreNotFound) {
-          err = null;
+    ServiceObject.prototype.request.call(
+      this,
+      reqOpts,
+      (err: ApiError | null, ...args) => {
+        if (err) {
+          if (err.code === 404 && ignoreNotFound) {
+            err = null;
+          }
         }
+        callback(err, ...(args as any));
       }
-      callback(err, ...args as any);
-    });
+    );
   }
 
   /**

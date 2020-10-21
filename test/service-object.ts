@@ -321,9 +321,7 @@ describe('ServiceObject', () => {
     it('should respect ignoreNotFound opion', done => {
       const options = {ignoreNotFound: true};
       const error = new ApiError({code: 404, response: {} as r.Response});
-      sandbox
-        .stub(ServiceObject.prototype, 'request')
-        .callsArgWith(1, error);;
+      sandbox.stub(ServiceObject.prototype, 'request').callsArgWith(1, error);
       serviceObject.delete(options, (err, apiResponse_) => {
         assert.ifError(err);
         assert.strictEqual(apiResponse_, undefined);
@@ -334,9 +332,7 @@ describe('ServiceObject', () => {
     it('should propagate other then 404 error', done => {
       const options = {ignoreNotFound: true};
       const error = new ApiError({code: 406, response: {} as r.Response});
-      sandbox
-        .stub(ServiceObject.prototype, 'request')
-        .callsArgWith(1, error);;
+      sandbox.stub(ServiceObject.prototype, 'request').callsArgWith(1, error);
       serviceObject.delete(options, (err, apiResponse_) => {
         assert.strictEqual(err, error);
         assert.strictEqual(apiResponse_, undefined);
