@@ -153,11 +153,7 @@ describe('common/util', () => {
     it('should use message in stack', () => {
       const expectedMessage = 'Message is in the stack too!';
       const apiError = new ApiError(expectedMessage);
-
-      assert.strictEqual(
-        (apiError.stack || '').split('\n')[0],
-        `Error: ${expectedMessage}`
-      );
+      assert(apiError.stack?.includes(expectedMessage));
     });
 
     it('should build correct ApiError', () => {
