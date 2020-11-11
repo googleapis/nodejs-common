@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.5.0](https://www.github.com/googleapis/nodejs-common/compare/v3.4.1...v3.5.0) (2020-11-11)
+
+
+### Features
+
+* add ignoreNotFound to service-object#delete ([#634](https://www.github.com/googleapis/nodejs-common/issues/634)) ([3248e27](https://www.github.com/googleapis/nodejs-common/commit/3248e27c3776d705720f69c2dcf48d51f2cc4e5c))
+
 ### [3.4.1](https://www.github.com/googleapis/nodejs-common/compare/v3.4.0...v3.4.1) (2020-10-06)
 
 
