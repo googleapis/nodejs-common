@@ -318,6 +318,40 @@ describe('ServiceObject', () => {
       serviceObject.delete();
     });
 
+    it('should respect ignoreNotFound opion', done => {
+      const options = {ignoreNotFound: true};
+      const error = new ApiError({code: 404, response: {} as r.Response});
+      sandbox.stub(ServiceObject.prototype, 'request').callsArgWith(1, error);
+      serviceObject.delete(options, (err, apiResponse_) => {
+        assert.ifError(err);
+        assert.strictEqual(apiResponse_, undefined);
+        done();
+      });
+    });
+
+    it('should propagate other then 404 error', done => {
+      const options = {ignoreNotFound: true};
+      const error = new ApiError({code: 406, response: {} as r.Response});
+      sandbox.stub(ServiceObject.prototype, 'request').callsArgWith(1, error);
+      serviceObject.delete(options, (err, apiResponse_) => {
+        assert.strictEqual(err, error);
+        assert.strictEqual(apiResponse_, undefined);
+        done();
+      });
+    });
+
+    it('should not pass ignoreNotFound to request', done => {
+      const options = {ignoreNotFound: true};
+      sandbox
+        .stub(ServiceObject.prototype, 'request')
+        .callsFake((reqOpts, callback) => {
+          assert.strictEqual(reqOpts.qs.ignoreNotFound, undefined);
+          done();
+          callback(null, null, {} as r.Response);
+        });
+      serviceObject.delete(options, assert.ifError);
+    });
+
     it('should extend the defaults with request options', done => {
       const methodConfig = {
         reqOpts: {

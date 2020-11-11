@@ -115,7 +115,7 @@ export interface CreateCallback<T> {
   (err: ApiError | null, instance?: T | null, ...args: any[]): void;
 }
 
-export type DeleteOptions = object;
+export type DeleteOptions = {ignoreNotFound?: boolean} & object;
 export interface DeleteCallback {
   (err: Error | null, apiResponse?: r.Response): void;
 }
@@ -270,13 +270,16 @@ class ServiceObject<T = any> extends EventEmitter {
   delete(options: DeleteOptions, callback: DeleteCallback): void;
   delete(callback: DeleteCallback): void;
   delete(
-    optionsOrCallback: DeleteOptions | DeleteCallback,
+    optionsOrCallback?: DeleteOptions | DeleteCallback,
     cb?: DeleteCallback
   ): Promise<[r.Response]> | void {
     const [options, callback] = util.maybeOptionsOrCallback<
       DeleteOptions,
       DeleteCallback
     >(optionsOrCallback, cb);
+
+    const ignoreNotFound = options.ignoreNotFound!;
+    delete options.ignoreNotFound;
 
     const methodConfig =
       (typeof this.methods.delete === 'object' && this.methods.delete) || {};
@@ -295,7 +298,18 @@ class ServiceObject<T = any> extends EventEmitter {
 
     // The `request` method may have been overridden to hold any special
     // behavior. Ensure we call the original `request` method.
-    ServiceObject.prototype.request.call(this, reqOpts, callback);
+    ServiceObject.prototype.request.call(
+      this,
+      reqOpts,
+      (err: ApiError | null, ...args) => {
+        if (err) {
+          if (err.code === 404 && ignoreNotFound) {
+            err = null;
+          }
+        }
+        callback(err, ...(args as any));
+      }
+    );
   }
 
   /**
