@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.6.0](https://www.github.com/googleapis/nodejs-common/compare/v3.5.0...v3.6.0) (2021-02-17)
+
+
+### Features
+
+* **deps:** google-auth-library with workload identity federation ([#649](https://www.github.com/googleapis/nodejs-common/issues/649)) ([31945ac](https://www.github.com/googleapis/nodejs-common/commit/31945accc3fbfed513ab54c63038685a219429f4)), closes [#648](https://www.github.com/googleapis/nodejs-common/issues/648)
+
 ## [3.5.0](https://www.github.com/googleapis/nodejs-common/compare/v3.4.1...v3.5.0) (2020-11-11)
 
 
