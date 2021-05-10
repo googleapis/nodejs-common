@@ -63,7 +63,7 @@ interface InternalServiceObject {
 }
 
 function asInternal(serviceObject: SO.ServiceObject) {
-  return (serviceObject as {}) as InternalServiceObject;
+  return serviceObject as {} as InternalServiceObject;
 }
 
 describe('ServiceObject', () => {
@@ -1089,8 +1089,8 @@ describe('ServiceObject', () => {
       });
 
       serviceObject.parent.request = (reqOpts, callback) => {
-        const serviceObjectInterceptors = asInternal(serviceObject)
-          .interceptors;
+        const serviceObjectInterceptors =
+          asInternal(serviceObject).interceptors;
         assert.deepStrictEqual(
           reqOpts.interceptors_,
           serviceObjectInterceptors

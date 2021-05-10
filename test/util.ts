@@ -896,9 +896,8 @@ describe('common/util', () => {
             setImmediate(done);
           });
 
-          const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-            config
-          );
+          const makeAuthenticatedRequest =
+            util.makeAuthenticatedRequestFactory(config);
 
           makeAuthenticatedRequest(reqOpts, {
             onAuthenticated: assert.ifError,
