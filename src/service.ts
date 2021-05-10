@@ -121,9 +121,8 @@ export class Service {
       token: options.token,
     });
 
-    this.makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-      reqCfg
-    );
+    this.makeAuthenticatedRequest =
+      util.makeAuthenticatedRequestFactory(reqCfg);
     this.authClient = this.makeAuthenticatedRequest.authClient;
     this.getCredentials = this.makeAuthenticatedRequest.getCredentials;
 
@@ -244,7 +243,7 @@ export class Service {
     });
 
     if (reqOpts.shouldReturnStream) {
-      return (this.makeAuthenticatedRequest(reqOpts) as {}) as r.Request;
+      return this.makeAuthenticatedRequest(reqOpts) as {} as r.Request;
     } else {
       this.makeAuthenticatedRequest(reqOpts, callback);
     }

@@ -20,7 +20,7 @@ import * as tmp from 'tmp';
 import {promisify} from 'util';
 import {describe, it, after} from 'mocha';
 
-const mvp = (promisify(mv) as {}) as (...args: string[]) => Promise<void>;
+const mvp = promisify(mv) as {} as (...args: string[]) => Promise<void>;
 const ncpp = promisify(ncp);
 const keep = !!process.env.KEEP_TEMPDIRS;
 const stagingDir = tmp.dirSync({keep, unsafeCleanup: true});

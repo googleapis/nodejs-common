@@ -252,7 +252,7 @@ class ServiceObject<T = any> extends EventEmitter {
         self.metadata = instance.metadata;
         args[1] = self; // replace the created `instance` with this one.
       }
-      callback!(...((args as {}) as [Error, T]));
+      callback!(...(args as {} as [Error, T]));
     }
     args.push(onCreate);
     // eslint-disable-next-line prefer-spread
@@ -405,7 +405,7 @@ class ServiceObject<T = any> extends EventEmitter {
         callback!(err, null, metadata as r.Response);
         return;
       }
-      callback!(null, (self as {}) as T, metadata as r.Response);
+      callback!(null, self as {} as T, metadata as r.Response);
     });
   }
 

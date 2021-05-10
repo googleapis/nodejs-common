@@ -727,14 +727,14 @@ export class Util {
     config: MakeRequestConfig,
     callback: BodyResponseCallback
   ): void | Abortable {
-    const options = ({
+    const options = {
       request: teenyRequest.defaults(requestDefaults),
       retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
       shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
         return err && util.shouldRetryRequest(err);
       },
-    } as {}) as retryRequest.Options;
+    } as {} as retryRequest.Options;
 
     if (typeof reqOpts.maxRetries === 'number') {
       options.retries = reqOpts.maxRetries;
@@ -742,7 +742,7 @@ export class Util {
 
     if (!config.stream) {
       return retryRequest(reqOpts, options, (err, response, body) => {
-        util.handleResp(err, (response as {}) as r.Response, body, callback!);
+        util.handleResp(err, response as {} as r.Response, body, callback!);
       });
     }
     const dup = config.stream as AbortableDuplex;
