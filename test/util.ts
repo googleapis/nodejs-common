@@ -870,10 +870,11 @@ describe('common/util', () => {
         const reqOpts = {} as DecorateRequestOptions;
 
         it('should default to authClient projectId', done => {
+          const authClientProjectId = 'authclient-project-id';
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-          authClient._cachedProjectId = 'authclient-project-id';
+          authClient.getProjectId = () => 'authclient-project-id';
           stub('decorateRequest', (reqOpts, projectId) => {
-            assert.strictEqual(projectId, authClient._cachedProjectId);
+            assert.strictEqual(projectId, authClientProjectId);
             setImmediate(done);
           });
 

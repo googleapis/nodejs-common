@@ -598,7 +598,7 @@ export class Util {
       const callback =
         typeof optionsOrCallback === 'function' ? optionsOrCallback : undefined;
 
-      const onAuthenticated = (
+      const onAuthenticated = async (
         err: Error | null,
         authenticatedReqOpts?: DecorateRequestOptions
       ) => {
@@ -615,7 +615,7 @@ export class Util {
 
         if (!err || autoAuthFailed) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          let projectId = (authClient as any)._cachedProjectId;
+          let projectId = await (authClient as any).getProjectId();
 
           if (config.projectId && config.projectId !== '{{projectId}}') {
             projectId = config.projectId;
