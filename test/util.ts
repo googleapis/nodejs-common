@@ -697,7 +697,9 @@ describe('common/util', () => {
   describe('makeAuthenticatedRequestFactory', () => {
     const authClient = {
       getCredentials() {},
-      _cachedProjectId: 'project-id',
+      getProjectId: () => {
+        return 'authclient-project-id';
+      },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
@@ -772,12 +774,12 @@ describe('common/util', () => {
       const config = {customEndpoint: true};
 
       beforeEach(() => {
+        sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
         makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(config);
       });
 
       it('should decorate the request', done => {
         const decoratedRequest = {};
-        sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
         stub('decorateRequest', reqOpts_ => {
           assert.strictEqual(reqOpts_, fakeReqOpts);
           return decoratedRequest;
@@ -872,7 +874,6 @@ describe('common/util', () => {
         it('should default to authClient projectId', done => {
           const authClientProjectId = 'authclient-project-id';
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
-          authClient.getProjectId = () => 'authclient-project-id';
           stub('decorateRequest', (reqOpts, projectId) => {
             assert.strictEqual(projectId, authClientProjectId);
             setImmediate(done);
