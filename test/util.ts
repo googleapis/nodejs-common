@@ -697,9 +697,7 @@ describe('common/util', () => {
   describe('makeAuthenticatedRequestFactory', () => {
     const authClient = {
       getCredentials() {},
-      getProjectId: () => {
-        return 'authclient-project-id';
-      },
+      getProjectId: async () => 'authclient-project-id',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
