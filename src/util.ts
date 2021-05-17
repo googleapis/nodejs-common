@@ -614,8 +614,7 @@ export class Util {
         }
 
         if (!err || autoAuthFailed) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          let projectId = await (authClient as any).getProjectId();
+          let projectId = await authClient.getProjectId();
 
           if (config.projectId && config.projectId !== '{{projectId}}') {
             projectId = config.projectId;
