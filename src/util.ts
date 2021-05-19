@@ -585,6 +585,7 @@ export class Util {
       optionsOrCallback?: MakeAuthenticatedRequestOptions | BodyResponseCallback
     ): void | Abortable | Duplexify {
       let stream: Duplexify;
+      let projectId = config.projectId;
       const reqConfig = extend({}, config);
       let activeRequest_: void | Abortable | null;
 
@@ -598,7 +599,7 @@ export class Util {
       const callback =
         typeof optionsOrCallback === 'function' ? optionsOrCallback : undefined;
 
-      const onAuthenticated = async (
+      const onAuthenticated = (
         err: Error | null,
         authenticatedReqOpts?: DecorateRequestOptions
       ) => {
@@ -614,16 +615,10 @@ export class Util {
         }
 
         if (!err || autoAuthFailed) {
-          let projectId = await authClient.getProjectId();
-
-          if (config.projectId && config.projectId !== '{{projectId}}') {
-            projectId = config.projectId;
-          }
-
           try {
             authenticatedReqOpts = util.decorateRequest(
               authenticatedReqOpts!,
-              projectId
+              projectId!
             );
             err = null;
           } catch (e) {
@@ -669,21 +664,19 @@ export class Util {
         }
       };
 
-      if (reqConfig.customEndpoint) {
-        // Using a custom API override. Do not use `google-auth-library` for
-        // authentication. (ex: connecting to a local Datastore server)
-        onAuthenticated(null, reqOpts);
-      } else {
-        authClient.authorizeRequest(reqOpts).then(
-          res => {
-            const opts = extend(true, {}, reqOpts, res);
-            onAuthenticated(null, opts);
-          },
-          err => {
-            onAuthenticated(err);
-          }
-        );
-      }
+      Promise.all([
+        authClient.getProjectId(),
+        reqConfig.customEndpoint
+          ? // Using a custom API override. Do not use `google-auth-library` for
+            // authentication. (ex: connecting to a local Datastore server)
+            new Promise(resolve => resolve(reqOpts))
+          : authClient.authorizeRequest(reqOpts),
+      ])
+        .then(([_projectId, authorizedReqOpts]) => {
+          projectId = _projectId as string;
+          onAuthenticated(null, authorizedReqOpts as DecorateRequestOptions);
+        })
+        .catch(onAuthenticated);
 
       if (stream!) {
         return stream!;

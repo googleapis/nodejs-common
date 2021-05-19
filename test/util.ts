@@ -695,9 +695,10 @@ describe('common/util', () => {
   });
 
   describe('makeAuthenticatedRequestFactory', () => {
+    const AUTH_CLIENT_PROJECT_ID = 'authclient-project-id';
     const authClient = {
       getCredentials() {},
-      getProjectId: async () => 'authclient-project-id',
+      getProjectId: () => Promise.resolve(AUTH_CLIENT_PROJECT_ID),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
@@ -839,7 +840,8 @@ describe('common/util', () => {
         const fake = extend(true, authClient, {
           authorizeRequest: async (rOpts: {}) => {
             assert.deepStrictEqual(rOpts, fakeReqOpts);
-            done();
+            setImmediate(done);
+            return rOpts;
           },
         });
         retryRequestOverride = () => {
@@ -870,10 +872,9 @@ describe('common/util', () => {
         const reqOpts = {} as DecorateRequestOptions;
 
         it('should default to authClient projectId', done => {
-          const authClientProjectId = 'authclient-project-id';
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           stub('decorateRequest', (reqOpts, projectId) => {
-            assert.strictEqual(projectId, authClientProjectId);
+            assert.strictEqual(projectId, AUTH_CLIENT_PROJECT_ID);
             setImmediate(done);
           });
 
@@ -887,8 +888,6 @@ describe('common/util', () => {
         });
 
         it('should use user-provided projectId', done => {
-          authClient.projectId = 'authclient-project-id';
-
           const config = {customEndpoint: true, projectId: 'project-id'};
 
           stub('decorateRequest', (reqOpts, projectId) => {
@@ -969,7 +968,9 @@ describe('common/util', () => {
         });
 
         it('should not block 401 errors if auth client succeeds', done => {
-          authClient.authorizeRequest = async () => {};
+          authClient.authorizeRequest = async () => {
+            return {};
+          };
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
 
           const makeRequestArg1 = new Error('API 401 Error.') as ApiError;
