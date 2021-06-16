@@ -1224,42 +1224,54 @@ describe('common/util', () => {
     }
 
     const retryOptionsTwoMaxRetries = {
-      retryOptions: 
-      {
-        maxRetries: 7
+      retryOptions: {
+        maxRetries: 7,
       },
-      maxRetries: 7
+      maxRetries: 7,
     };
 
     const retryOptionsTwoAutoRetry = {
-      retryOptions: 
-      {
-        autoRetry: false
+      retryOptions: {
+        autoRetry: false,
       },
-      autoRetry: false
+      autoRetry: false,
     };
 
     const retryOptionsConfig = {
-      retryOptions: 
-      {
+      retryOptions: {
         autoRetry: false,
         maxRetries: 7,
         retryDelayMultiplier: 3,
         totalTimeout: 60,
-        maxRetryDelay: 640
-      }
+        maxRetryDelay: 640,
+      },
     };
     function testRetryOptions(done: () => void) {
       return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
-        assert.strictEqual(config.retryOptions?.autoRetry, retryOptionsConfig.retryOptions.autoRetry);
-        assert.strictEqual(config.retryOptions?.maxRetries, retryOptionsConfig.retryOptions.maxRetries);
-        assert.strictEqual(config.retryOptions?.retryDelayMultiplier, retryOptionsConfig.retryOptions.retryDelayMultiplier);
-        assert.strictEqual(config.retryOptions?.totalTimeout, retryOptionsConfig.retryOptions.totalTimeout);
-        assert.strictEqual(config.retryOptions?.maxRetryDelay, retryOptionsConfig.retryOptions.maxRetryDelay);
+        assert.strictEqual(
+          config.retryOptions?.autoRetry,
+          retryOptionsConfig.retryOptions.autoRetry
+        );
+        assert.strictEqual(
+          config.retryOptions?.maxRetries,
+          retryOptionsConfig.retryOptions.maxRetries
+        );
+        assert.strictEqual(
+          config.retryOptions?.retryDelayMultiplier,
+          retryOptionsConfig.retryOptions.retryDelayMultiplier
+        );
+        assert.strictEqual(
+          config.retryOptions?.totalTimeout,
+          retryOptionsConfig.retryOptions.totalTimeout
+        );
+        assert.strictEqual(
+          config.retryOptions?.maxRetryDelay,
+          retryOptionsConfig.retryOptions.maxRetryDelay
+        );
         done();
       };
     }
-    
+
     const customRetryRequestConfig = {maxRetries: 10};
     function testCustomRetryRequestConfig(done: () => void) {
       return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
