@@ -743,8 +743,7 @@ export class Util {
       config.autoRetry !== undefined &&
       config.retryOptions?.autoRetry !== undefined
     ) {
-      throw new ApiError('autoRetry is deprecated. Use retryOptions.autoRetry instead.')
-      );
+      throw new ApiError('autoRetry is deprecated. Use retryOptions.autoRetry instead.');
     } else if (config.autoRetry !== undefined) {
       autoRetryValue = config.autoRetry;
     } else if (config.retryOptions?.autoRetry !== undefined) {
@@ -754,8 +753,7 @@ export class Util {
     const MAX_RETRY_DEFAULT = 3;
     let maxRetryValue = MAX_RETRY_DEFAULT;
     if (config.maxRetries && config.retryOptions?.maxRetries) {
-      throw new ApiError('maxRetries is deprecated. Use retryOptions.maxRetries instead.')
-      );
+      throw new ApiError('maxRetries is deprecated. Use retryOptions.maxRetries instead.');
     } else if (config.maxRetries) {
       maxRetryValue = config.maxRetries;
     } else if (config.retryOptions?.maxRetries) {
