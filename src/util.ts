@@ -764,7 +764,6 @@ export class Util {
       maxRetryValue = config.retryOptions.maxRetries;
     }
 
-    console.log('maxretryvalue', maxRetryValue);
     const options = {
       request: teenyRequest.defaults(requestDefaults),
       retries: autoRetryValue !== false ? maxRetryValue : 0,
