@@ -322,6 +322,9 @@ export interface MakeRequestConfig {
   stream?: Duplexify;
 
   shouldRetryFn?: (response?: r.Response) => boolean;
+
+  retryableErrorFn?: (err: ApiError) => boolean;
+
 }
 
 export class Util {
@@ -727,13 +730,17 @@ export class Util {
     config: MakeRequestConfig,
     callback: BodyResponseCallback
   ): void | Abortable {
+
+    const DEFAULT_RETRYABLE_ERR_FN = util.shouldRetryRequest;
+    const RETRYABLE_ERR_FN = config.retryableErrorFn ? config.retryableErrorFn : DEFAULT_RETRYABLE_ERR_FN;
+    
     const options = {
       request: teenyRequest.defaults(requestDefaults),
       retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
-      shouldRetryFn(httpRespMessage: r.Response) {
+      shouldRetryFn: function shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
-        return err && util.shouldRetryRequest(err);
-      },
+        return err && RETRYABLE_ERR_FN(err);
+      }
     } as {} as retryRequest.Options;
 
     if (typeof reqOpts.maxRetries === 'number') {
