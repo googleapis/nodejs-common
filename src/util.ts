@@ -730,7 +730,6 @@ export class Util {
     config: MakeRequestConfig,
     callback: BodyResponseCallback
   ): void | Abortable {
-
     const DEFAULT_RETRYABLE_ERR_FN = util.shouldRetryRequest;
     const RETRYABLE_ERR_FN = config.retryOptions.retryableErrorFn ? config.retryOptions.retryableErrorFn : DEFAULT_RETRYABLE_ERR_FN;
     
