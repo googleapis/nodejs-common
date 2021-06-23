@@ -40,6 +40,22 @@ const requestDefaults = {
   },
 };
 
+/**
+ * Default behavior: Automatically retry retriable server errors.
+ *
+ * @const {boolean}
+ * @private
+ */
+const AUTO_RETRY_DEFAULT = true;
+
+/**
+ * Default behavior: Only attempt to retry retriable errors 3 times.
+ *
+ * @const {number}
+ * @private
+ */
+const MAX_RETRY_DEFAULT = 3;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ResponseBody = any;
 
@@ -737,7 +753,6 @@ export class Util {
     config: MakeRequestConfig,
     callback: BodyResponseCallback
   ): void | Abortable {
-    const AUTO_RETRY_DEFAULT = true;
     let autoRetryValue = AUTO_RETRY_DEFAULT;
     if (
       config.autoRetry !== undefined &&
@@ -752,7 +767,6 @@ export class Util {
       autoRetryValue = config.retryOptions.autoRetry;
     }
 
-    const MAX_RETRY_DEFAULT = 3;
     let maxRetryValue = MAX_RETRY_DEFAULT;
     if (config.maxRetries && config.retryOptions?.maxRetries) {
       throw new ApiError(
