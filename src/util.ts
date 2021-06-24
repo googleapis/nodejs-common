@@ -665,7 +665,11 @@ export class Util {
       };
 
       Promise.all([
-        authClient.getProjectId(),
+        config.projectId && config.projectId !== '{{projectId}}'
+          ? // The user provided a project ID. We don't need to check with the
+            // auth client, it could be incorrect.
+            new Promise(resolve => resolve(config.projectId))
+          : authClient.getProjectId(),
         reqConfig.customEndpoint
           ? // Using a custom API override. Do not use `google-auth-library` for
             // authentication. (ex: connecting to a local Datastore server)

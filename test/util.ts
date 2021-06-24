@@ -887,8 +887,13 @@ describe('common/util', () => {
           });
         });
 
-        it('should use user-provided projectId', done => {
-          const config = {customEndpoint: true, projectId: 'project-id'};
+        it('should prefer user-provided projectId', done => {
+          sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
+
+          const config = {
+            customEndpoint: true,
+            projectId: 'user-provided-project-id',
+          };
 
           stub('decorateRequest', (reqOpts, projectId) => {
             assert.strictEqual(projectId, config.projectId);
