@@ -585,7 +585,7 @@ export class Util {
       optionsOrCallback?: MakeAuthenticatedRequestOptions | BodyResponseCallback
     ): void | Abortable | Duplexify {
       let stream: Duplexify;
-      let projectId = config.projectId;
+      let projectId: string;
       const reqConfig = extend({}, config);
       let activeRequest_: void | Abortable | null;
 
@@ -618,7 +618,7 @@ export class Util {
           try {
             authenticatedReqOpts = util.decorateRequest(
               authenticatedReqOpts!,
-              projectId!
+              projectId
             );
             err = null;
           } catch (e) {
