@@ -1217,7 +1217,10 @@ describe('common/util', () => {
 
     const noRetryRequestConfig = {autoRetry: false};
     function testNoRetryRequestConfig(done: () => void) {
-      return (reqOpts: DecorateRequestOptions, config: retryRequest.Options) => {
+      return (
+        reqOpts: DecorateRequestOptions,
+        config: retryRequest.Options
+      ) => {
         assert.strictEqual(config.retries, 0);
         done();
       };
@@ -1247,7 +1250,10 @@ describe('common/util', () => {
       },
     };
     function testRetryOptions(done: () => void) {
-      return (reqOpts: DecorateRequestOptions, config: retryRequest.Options) => {
+      return (
+        reqOpts: DecorateRequestOptions,
+        config: retryRequest.Options
+      ) => {
         assert.strictEqual(
           config.retries,
           0 //autoRetry was set to false, so shouldn't retry

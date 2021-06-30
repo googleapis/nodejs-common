@@ -787,7 +787,7 @@ export class Util {
       },
       maxRetryDelay: config.retryOptions?.maxRetryDelay,
       retryDelayMultiplier: config.retryOptions?.retryDelayMultiplier,
-      totalTimeout: config.retryOptions?.totalTimeout
+      totalTimeout: config.retryOptions?.totalTimeout,
     } as {} as retryRequest.Options;
 
     if (typeof reqOpts.maxRetries === 'number') {
