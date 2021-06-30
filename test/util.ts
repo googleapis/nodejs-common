@@ -1217,7 +1217,7 @@ describe('common/util', () => {
 
     const noRetryRequestConfig = {autoRetry: false};
     function testNoRetryRequestConfig(done: () => void) {
-      return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
+      return (reqOpts: DecorateRequestOptions, config: retryRequest.Options) => {
         assert.strictEqual(config.retries, 0);
         done();
       };
@@ -1247,25 +1247,21 @@ describe('common/util', () => {
       },
     };
     function testRetryOptions(done: () => void) {
-      return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
+      return (reqOpts: DecorateRequestOptions, config: retryRequest.Options) => {
         assert.strictEqual(
-          config.retryOptions?.autoRetry,
-          retryOptionsConfig.retryOptions.autoRetry
+          config.retries,
+          0 //autoRetry was set to false, so shouldn't retry
         );
         assert.strictEqual(
-          config.retryOptions?.maxRetries,
-          retryOptionsConfig.retryOptions.maxRetries
-        );
-        assert.strictEqual(
-          config.retryOptions?.retryDelayMultiplier,
+          config.retryDelayMultiplier,
           retryOptionsConfig.retryOptions.retryDelayMultiplier
         );
         assert.strictEqual(
-          config.retryOptions?.totalTimeout,
+          config.totalTimeout,
           retryOptionsConfig.retryOptions.totalTimeout
         );
         assert.strictEqual(
-          config.retryOptions?.maxRetryDelay,
+          config.maxRetryDelay,
           retryOptionsConfig.retryOptions.maxRetryDelay
         );
         done();

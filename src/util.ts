@@ -785,6 +785,9 @@ export class Util {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
         return err && util.shouldRetryRequest(err);
       },
+      maxRetryDelay: config.retryOptions?.maxRetryDelay,
+      retryDelayMultiplier: config.retryOptions?.retryDelayMultiplier,
+      totalTimeout: config.retryOptions?.totalTimeout
     } as {} as retryRequest.Options;
 
     if (typeof reqOpts.maxRetries === 'number') {
