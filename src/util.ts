@@ -324,7 +324,6 @@ export interface MakeRequestConfig {
   shouldRetryFn?: (response?: r.Response) => boolean;
 
   retryableErrorFn?: (err: ApiError) => boolean; //TODO: refactor into RetryConfig
-
 }
 
 export class Util {
@@ -731,8 +730,10 @@ export class Util {
     callback: BodyResponseCallback
   ): void | Abortable {
     const DEFAULT_RETRYABLE_ERR_FN = util.shouldRetryRequest;
-    const RETRYABLE_ERR_FN = config.retryOptions.retryableErrorFn ? config.retryOptions.retryableErrorFn : DEFAULT_RETRYABLE_ERR_FN;
-    
+    const RETRYABLE_ERR_FN = config.retryOptions.retryableErrorFn
+      ? config.retryOptions.retryableErrorFn
+      : DEFAULT_RETRYABLE_ERR_FN;
+
     const options = {
       request: teenyRequest.defaults(requestDefaults),
       retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
