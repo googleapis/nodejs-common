@@ -349,7 +349,6 @@ export interface MakeRequestConfig {
   stream?: Duplexify;
 
   shouldRetryFn?: (response?: r.Response) => boolean;
-
 }
 
 export class Util {
