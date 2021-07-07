@@ -1217,8 +1217,59 @@ describe('common/util', () => {
 
     const noRetryRequestConfig = {autoRetry: false};
     function testNoRetryRequestConfig(done: () => void) {
-      return (reqOpts: DecorateRequestOptions, config: MakeRequestConfig) => {
+      return (
+        reqOpts: DecorateRequestOptions,
+        config: retryRequest.Options
+      ) => {
         assert.strictEqual(config.retries, 0);
+        done();
+      };
+    }
+
+    const retryOptionsTwoMaxRetries = {
+      retryOptions: {
+        maxRetries: 7,
+      },
+      maxRetries: 7,
+    };
+
+    const retryOptionsTwoAutoRetry = {
+      retryOptions: {
+        autoRetry: false,
+      },
+      autoRetry: false,
+    };
+
+    const retryOptionsConfig = {
+      retryOptions: {
+        autoRetry: false,
+        maxRetries: 7,
+        retryDelayMultiplier: 3,
+        totalTimeout: 60,
+        maxRetryDelay: 640,
+      },
+    };
+    function testRetryOptions(done: () => void) {
+      return (
+        reqOpts: DecorateRequestOptions,
+        config: retryRequest.Options
+      ) => {
+        assert.strictEqual(
+          config.retries,
+          0 //autoRetry was set to false, so shouldn't retry
+        );
+        assert.strictEqual(
+          config.retryDelayMultiplier,
+          retryOptionsConfig.retryOptions.retryDelayMultiplier
+        );
+        assert.strictEqual(
+          config.totalTimeout,
+          retryOptionsConfig.retryOptions.totalTimeout
+        );
+        assert.strictEqual(
+          config.maxRetryDelay,
+          retryOptionsConfig.retryOptions.maxRetryDelay
+        );
         done();
       };
     }
@@ -1374,6 +1425,25 @@ describe('common/util', () => {
       it('should override number of retries to retryRequest', done => {
         retryRequestOverride = testCustomRetryRequestConfig(done);
         util.makeRequest(reqOpts, customRetryRequestConfig, assert.ifError);
+      });
+
+      it('should use retryOptions if provided', done => {
+        retryRequestOverride = testRetryOptions(done);
+        util.makeRequest(reqOpts, retryOptionsConfig, assert.ifError);
+      });
+
+      it('should throw if autoRetry is specified twice', done => {
+        assert.throws(() => {
+          util.makeRequest(reqOpts, retryOptionsTwoAutoRetry, util.noop);
+        }, /autoRetry is deprecated. Use retryOptions.autoRetry instead\./);
+        done();
+      });
+
+      it('should throw if maxRetries is specified twice', done => {
+        assert.throws(() => {
+          util.makeRequest(reqOpts, retryOptionsTwoMaxRetries, util.noop);
+        }, /maxRetries is deprecated. Use retryOptions.maxRetries instead\./);
+        done();
       });
 
       it('should allow request options to control retry setting', done => {
