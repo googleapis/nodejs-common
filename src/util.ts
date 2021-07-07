@@ -538,7 +538,6 @@ export class Util {
    * @return {boolean} True if the API request should be retried, false otherwise.
    */
   shouldRetryRequest(err?: ApiError) {
-    console.log('hereshouldretryrequst')
     if (err) {
       if ([408, 429, 500, 502, 503].indexOf(err.code!) !== -1) {
         return true;
@@ -755,7 +754,6 @@ export class Util {
     config: MakeRequestConfig,
     callback: BodyResponseCallback
   ): void | Abortable {
-    
     let autoRetryValue = AUTO_RETRY_DEFAULT;
     if (
       config.autoRetry !== undefined &&
