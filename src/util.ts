@@ -538,6 +538,7 @@ export class Util {
    * @return {boolean} True if the API request should be retried, false otherwise.
    */
   shouldRetryRequest(err?: ApiError) {
+    console.log('hereshouldretryrequst')
     if (err) {
       if ([408, 429, 500, 502, 503].indexOf(err.code!) !== -1) {
         return true;
@@ -754,10 +755,7 @@ export class Util {
     config: MakeRequestConfig,
     callback: BodyResponseCallback
   ): void | Abortable {
-    const DEFAULT_RETRYABLE_ERR_FN = util.shouldRetryRequest;
-    const RETRYABLE_ERR_FN = config.retryOptions?.retryableErrorFn
-      ? config.retryOptions?.retryableErrorFn
-      : DEFAULT_RETRYABLE_ERR_FN;
+    
     let autoRetryValue = AUTO_RETRY_DEFAULT;
     if (
       config.autoRetry !== undefined &&
@@ -788,7 +786,10 @@ export class Util {
       retries: autoRetryValue !== false ? maxRetryValue : 0,
       shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
-        return err && RETRYABLE_ERR_FN(err);
+        if (config.retryOptions?.retryableErrorFn) {
+          return err && config.retryOptions?.retryableErrorFn(err);
+        }
+        return err && util.shouldRetryRequest(err);
       },
       maxRetryDelay: config.retryOptions?.maxRetryDelay,
       retryDelayMultiplier: config.retryOptions?.retryDelayMultiplier,
