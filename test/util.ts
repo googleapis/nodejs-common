@@ -1218,10 +1218,7 @@ describe('common/util', () => {
     const customRetryRequestFunctionConfig = {
       retryOptions: {
         retryableErrorFn: function (err: ApiError) {
-          if (err.message === errorMessage) {
-            return true;
-          }
-          return false;
+          return err.message === errorMessage;
         },
       },
     };
