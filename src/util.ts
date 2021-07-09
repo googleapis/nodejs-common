@@ -40,6 +40,22 @@ const requestDefaults = {
   },
 };
 
+/**
+ * Default behavior: Automatically retry retriable server errors.
+ *
+ * @const {boolean}
+ * @private
+ */
+const AUTO_RETRY_DEFAULT = true;
+
+/**
+ * Default behavior: Only attempt to retry retriable errors 3 times.
+ *
+ * @const {number}
+ * @private
+ */
+const MAX_RETRY_DEFAULT = 3;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ResponseBody = any;
 
@@ -303,6 +319,15 @@ export interface BodyResponseCallback {
   (err: Error | ApiError | null, body?: ResponseBody, res?: r.Response): void;
 }
 
+export interface RetryOptions {
+  retryDelayMultiplier?: number;
+  totalTimeout?: number;
+  maxRetryDelay?: number;
+  autoRetry?: boolean;
+  maxRetries?: number;
+  retryableErrorFn?: (err: ApiError) => boolean;
+}
+
 export interface MakeRequestConfig {
   /**
    * Automatically retry requests if the response is related to rate limits or
@@ -318,6 +343,8 @@ export interface MakeRequestConfig {
   maxRetries?: number;
 
   retries?: number;
+
+  retryOptions?: RetryOptions;
 
   stream?: Duplexify;
 
@@ -727,13 +754,44 @@ export class Util {
     config: MakeRequestConfig,
     callback: BodyResponseCallback
   ): void | Abortable {
+    let autoRetryValue = AUTO_RETRY_DEFAULT;
+    if (
+      config.autoRetry !== undefined &&
+      config.retryOptions?.autoRetry !== undefined
+    ) {
+      throw new ApiError(
+        'autoRetry is deprecated. Use retryOptions.autoRetry instead.'
+      );
+    } else if (config.autoRetry !== undefined) {
+      autoRetryValue = config.autoRetry;
+    } else if (config.retryOptions?.autoRetry !== undefined) {
+      autoRetryValue = config.retryOptions.autoRetry;
+    }
+
+    let maxRetryValue = MAX_RETRY_DEFAULT;
+    if (config.maxRetries && config.retryOptions?.maxRetries) {
+      throw new ApiError(
+        'maxRetries is deprecated. Use retryOptions.maxRetries instead.'
+      );
+    } else if (config.maxRetries) {
+      maxRetryValue = config.maxRetries;
+    } else if (config.retryOptions?.maxRetries) {
+      maxRetryValue = config.retryOptions.maxRetries;
+    }
+
     const options = {
       request: teenyRequest.defaults(requestDefaults),
-      retries: config.autoRetry !== false ? config.maxRetries || 3 : 0,
+      retries: autoRetryValue !== false ? maxRetryValue : 0,
       shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
+        if (config.retryOptions?.retryableErrorFn) {
+          return err && config.retryOptions?.retryableErrorFn(err);
+        }
         return err && util.shouldRetryRequest(err);
       },
+      maxRetryDelay: config.retryOptions?.maxRetryDelay,
+      retryDelayMultiplier: config.retryOptions?.retryDelayMultiplier,
+      totalTimeout: config.retryOptions?.totalTimeout,
     } as {} as retryRequest.Options;
 
     if (typeof reqOpts.maxRetries === 'number') {
