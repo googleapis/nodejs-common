@@ -325,6 +325,7 @@ export interface RetryOptions {
   maxRetryDelay?: number;
   autoRetry?: boolean;
   maxRetries?: number;
+  retryableErrorFn?: (err: ApiError) => boolean;
 }
 
 export interface MakeRequestConfig {
@@ -783,6 +784,9 @@ export class Util {
       retries: autoRetryValue !== false ? maxRetryValue : 0,
       shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
+        if (config.retryOptions?.retryableErrorFn) {
+          return err && config.retryOptions?.retryableErrorFn(err);
+        }
         return err && util.shouldRetryRequest(err);
       },
       maxRetryDelay: config.retryOptions?.maxRetryDelay,

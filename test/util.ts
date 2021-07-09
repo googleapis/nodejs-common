@@ -1214,6 +1214,33 @@ describe('common/util', () => {
         config.shouldRetryFn!();
       };
     }
+    const errorMessage = 'Error.';
+    const customRetryRequestFunctionConfig = {
+      retryOptions: {
+        retryableErrorFn: function (err: ApiError) {
+          return err.message === errorMessage;
+        },
+      },
+    };
+    function testCustomFunctionRetryRequestConfig(done: () => void) {
+      return (reqOpts_: DecorateRequestOptions, config: MakeRequestConfig) => {
+        assert.strictEqual(reqOpts_, reqOpts);
+        assert.strictEqual(config.retries, 3);
+        extend({}, config, customRetryRequestFunctionConfig);
+
+        const error = new Error(errorMessage);
+        stub('parseHttpRespMessage', () => {
+          return {err: error};
+        });
+        stub('shouldRetryRequest', err => {
+          assert.strictEqual(err, error);
+          done();
+        });
+
+        assert.strictEqual(config.shouldRetryFn!(), true);
+        done();
+      };
+    }
 
     const noRetryRequestConfig = {autoRetry: false};
     function testNoRetryRequestConfig(done: () => void) {
@@ -1413,6 +1440,15 @@ describe('common/util', () => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           reqOpts,
           {},
+          assert.ifError
+        );
+      });
+
+      it('should allow setting a custom retry function', done => {
+        retryRequestOverride = testCustomFunctionRetryRequestConfig(done);
+        util.makeRequest(
+          reqOpts,
+          customRetryRequestFunctionConfig,
           assert.ifError
         );
       });
