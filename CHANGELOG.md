@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.7.0](https://www.github.com/googleapis/nodejs-common/compare/v3.6.0...v3.7.0) (2021-07-09)
+
+
+### Features
+
+* Customize retry implementation ([#680](https://www.github.com/googleapis/nodejs-common/issues/680)) ([b529998](https://www.github.com/googleapis/nodejs-common/commit/b529998cdd1c8a7f159846f65651e2118bae5d9e))
+
 ## [3.6.0](https://www.github.com/googleapis/nodejs-common/compare/v3.5.0...v3.6.0) (2021-02-17)
 
 
