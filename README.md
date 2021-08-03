@@ -110,7 +110,7 @@ Apache Version 2.0
 
 See [LICENSE](https://github.com/googleapis/nodejs-common/blob/master/LICENSE)
 
-[client-docs]: https://googleapis.dev/nodejs/common/latest
+[client-docs]: https://cloud.google.com/nodejs/docs/reference/common/latest
 
 [shell_img]: https://gstatic.com/cloudssh/images/open-btn.png
 [projects]: https://console.cloud.google.com/project
