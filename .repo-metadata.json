@@ -5,5 +5,5 @@
   "language": "nodejs",
   "repo": "googleapis/nodejs-common",
   "distribution_name": "@google-cloud/common",
-  "client_documentation": "https://googleapis.dev/nodejs/common/latest"
+  "client_documentation": "https://cloud.google.com/nodejs/docs/reference/common/latest"
 }
