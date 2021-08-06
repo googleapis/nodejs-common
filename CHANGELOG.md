@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.7.1](https://www.github.com/googleapis/nodejs-common/compare/v3.7.0...v3.7.1) (2021-08-06)
+
+
+### Bug Fixes
+
+* correctly locate projectId from auth library ([#663](https://www.github.com/googleapis/nodejs-common/issues/663)) ([72e3168](https://www.github.com/googleapis/nodejs-common/commit/72e3168bcac1d177360257197293a566c5fb63d3))
+
 ## [3.7.0](https://www.github.com/googleapis/nodejs-common/compare/v3.6.0...v3.7.0) (2021-07-09)
 
 
