@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.7.2](https://www.github.com/googleapis/nodejs-common/compare/v3.7.1...v3.7.2) (2021-09-03)
+
+
+### Bug Fixes
+
+* **build:** migrate to main branch ([#689](https://www.github.com/googleapis/nodejs-common/issues/689)) ([0f4bef8](https://www.github.com/googleapis/nodejs-common/commit/0f4bef834e68032396c4b7e5dbdb71f44e8f3f95))
+
 ### [3.7.1](https://www.github.com/googleapis/nodejs-common/compare/v3.7.0...v3.7.1) (2021-08-06)
 
 
