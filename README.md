@@ -6,7 +6,7 @@
 
 [![release level](https://img.shields.io/badge/release%20level-general%20availability%20%28GA%29-brightgreen.svg?style=flat)](https://cloud.google.com/terms/launch-stages)
 [![npm version](https://img.shields.io/npm/v/@google-cloud/common.svg)](https://www.npmjs.org/package/@google-cloud/common)
-[![codecov](https://img.shields.io/codecov/c/github/googleapis/nodejs-common/master.svg?style=flat)](https://codecov.io/gh/googleapis/nodejs-common)
+[![codecov](https://img.shields.io/codecov/c/github/googleapis/nodejs-common/main.svg?style=flat)](https://codecov.io/gh/googleapis/nodejs-common)
 
 
 
@@ -15,7 +15,7 @@ Common components for Cloud APIs Node.js Client Libraries
 
 
 A comprehensive list of changes in each version may be found in
-[the CHANGELOG](https://github.com/googleapis/nodejs-common/blob/master/CHANGELOG.md).
+[the CHANGELOG](https://github.com/googleapis/nodejs-common/blob/main/CHANGELOG.md).
 
 * [Google Cloud Common Node.js Client API Reference][client-docs]
 
@@ -96,7 +96,7 @@ More Information: [Google Cloud Platform Launch Stages][launch_stages]
 
 ## Contributing
 
-Contributions welcome! See the [Contributing Guide](https://github.com/googleapis/nodejs-common/blob/master/CONTRIBUTING.md).
+Contributions welcome! See the [Contributing Guide](https://github.com/googleapis/nodejs-common/blob/main/CONTRIBUTING.md).
 
 Please note that this `README.md`, the `samples/README.md`,
 and a variety of configuration files in this repository (including `.nycrc` and `tsconfig.json`)
@@ -108,7 +108,7 @@ to its templates in
 
 Apache Version 2.0
 
-See [LICENSE](https://github.com/googleapis/nodejs-common/blob/master/LICENSE)
+See [LICENSE](https://github.com/googleapis/nodejs-common/blob/main/LICENSE)
 
 [client-docs]: https://googleapis.dev/nodejs/common/latest
 
