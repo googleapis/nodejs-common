@@ -835,6 +835,33 @@ describe('common/util', () => {
       });
     });
 
+    describe('customEndpoint (authentication attempted)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let makeAuthenticatedRequest: any;
+      const config = {customEndpoint: true, useAuthWithCustomEndpoint: true};
+
+      beforeEach(() => {
+        sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
+        makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(config);
+      });
+
+      it('should authenticate requests with a custom API', done => {
+        const reqOpts = {a: 'b', c: 'd'};
+
+        stub('makeRequest', rOpts => {
+          assert.deepStrictEqual(rOpts, reqOpts);
+          done();
+        });
+
+        authClient.authorizeRequest = async (opts: {}) => {
+          assert.strictEqual(opts, reqOpts);
+          done();
+        };
+
+        makeAuthenticatedRequest(reqOpts, assert.ifError);
+      });
+    });
+
     describe('needs authentication', () => {
       it('should pass correct args to authorizeRequest', done => {
         const fake = extend(true, authClient, {

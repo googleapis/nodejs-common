@@ -69,6 +69,7 @@ export interface ServiceOptions extends GoogleAuthOptions {
   token?: string;
   timeout?: number; // http.request.options.timeout
   userAgent?: string;
+  useAuthWithCustomEndpoint?: boolean;
 }
 
 export class Service {
