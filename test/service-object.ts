@@ -175,7 +175,7 @@ describe('ServiceObject', () => {
       serviceObject.create(options, done);
     });
 
-    it('should update id with metadata', done => {
+    it('should update id with metadata id', done => {
       const config = extend({}, CONFIG, {
         createMethod,
       });
@@ -188,7 +188,7 @@ describe('ServiceObject', () => {
       ) {
         assert.strictEqual(id, config.id);
         assert.strictEqual(options_, options);
-        callback(null, {metadata: {id: 14} }, {}); // calls done()
+        callback(null, {metadata: {id: 14} }, {});
       }
 
       const serviceObject = new ServiceObject(config);
