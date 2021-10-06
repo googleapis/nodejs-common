@@ -188,12 +188,12 @@ describe('ServiceObject', () => {
       ) {
         assert.strictEqual(id, config.id);
         assert.strictEqual(options_, options);
-        callback(null, {metadata: {id: 14} }, {});
+        callback(null, {metadata: {id: 14}}, {});
       }
 
       const serviceObject = new ServiceObject(config);
       serviceObject.create(options);
-      assert.strictEqual(serviceObject.id, 14)
+      assert.strictEqual(serviceObject.id, 14);
       done();
     });
 
