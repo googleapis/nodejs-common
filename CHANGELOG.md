@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.7.3](https://www.github.com/googleapis/nodejs-common/compare/v3.7.2...v3.7.3) (2021-10-06)
+
+
+### Bug Fixes
+
+* updated instance id to match returned metadata id ([#696](https://www.github.com/googleapis/nodejs-common/issues/696)) ([f15b02d](https://www.github.com/googleapis/nodejs-common/commit/f15b02dca69dd487df241b36a50e6a06efbfb697))
+
 ### [3.7.2](https://www.github.com/googleapis/nodejs-common/compare/v3.7.1...v3.7.2) (2021-09-03)
 
 
