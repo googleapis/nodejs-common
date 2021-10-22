@@ -175,7 +175,7 @@ describe('ServiceObject', () => {
       serviceObject.create(options, done);
     });
 
-    it('should update id with metadata id', done => {
+    it('should not change id', done => {
       const config = extend({}, CONFIG, {
         createMethod,
       });
@@ -193,7 +193,7 @@ describe('ServiceObject', () => {
 
       const serviceObject = new ServiceObject(config);
       serviceObject.create(options);
-      assert.strictEqual(serviceObject.id, 14);
+      assert.notStrictEqual(serviceObject.id, 14);
       done();
     });
 
