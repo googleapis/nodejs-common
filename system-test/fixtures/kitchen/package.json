@@ -18,7 +18,7 @@
     "@google-cloud/common": "file:./google-cloud-common.tgz"
   },
   "devDependencies": {
-    "@types/node": "^14.0.0",
+    "@types/node": "^16.0.0",
     "typescript": "^3.1.0",
     "gts": "^2.0.0"
   }
