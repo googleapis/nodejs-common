@@ -4,6 +4,14 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.7.4](https://www.github.com/googleapis/nodejs-common/compare/v3.7.3...v3.7.4) (2021-10-26)
+
+
+### Bug Fixes
+
+* allow authentication with custom endpoint ([#698](https://www.github.com/googleapis/nodejs-common/issues/698)) ([4c0f7ec](https://www.github.com/googleapis/nodejs-common/commit/4c0f7ec0c6ebedc34eaaab79fc053e7e889e243d))
+* update table.create to not reset id ([#700](https://www.github.com/googleapis/nodejs-common/issues/700)) ([b1ceb53](https://www.github.com/googleapis/nodejs-common/commit/b1ceb532ac7bf4852f430c83af5a71618ed42f54))
+
 ### [3.7.4](https://www.github.com/googleapis/nodejs-common/compare/v3.7.3...v3.7.4) (2021-10-06)
 
 
