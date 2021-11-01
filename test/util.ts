@@ -1204,6 +1204,12 @@ describe('common/util', () => {
       assert.strictEqual(util.shouldRetryRequest(error), true);
     });
 
+    it('should return true with error code 504', () => {
+      const error = new ApiError('504');
+      error.code = 504;
+      assert.strictEqual(util.shouldRetryRequest(error), true);
+    });
+
     it('should detect rateLimitExceeded reason', () => {
       const rateLimitError = new ApiError('Rate limit error without code.');
       rateLimitError.errors = [{reason: 'rateLimitExceeded'}];
