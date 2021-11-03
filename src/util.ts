@@ -544,7 +544,7 @@ export class Util {
    */
   shouldRetryRequest(err?: ApiError) {
     if (err) {
-      if ([408, 429, 500, 502, 503].indexOf(err.code!) !== -1) {
+      if ([408, 429, 500, 502, 503, 504].indexOf(err.code!) !== -1) {
         return true;
       }
 
