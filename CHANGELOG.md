@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+### [3.8.1](https://www.github.com/googleapis/nodejs-common/compare/v3.8.0...v3.8.1) (2021-11-03)
+
+
+### Bug Fixes
+
+* disable retrying no response if autoRetry is set to false ([#707](https://www.github.com/googleapis/nodejs-common/issues/707)) ([150b2b0](https://www.github.com/googleapis/nodejs-common/commit/150b2b02d80dd9a3218f21d32fea2198845b8863))
+
 ## [3.8.0](https://www.github.com/googleapis/nodejs-common/compare/v3.7.3...v3.8.0) (2021-11-01)
 
 
