@@ -1325,6 +1325,10 @@ describe('common/util', () => {
           0 //autoRetry was set to false, so shouldn't retry
         );
         assert.strictEqual(
+          config.noResponseRetries,
+          0 //autoRetry was set to false, so shouldn't retry
+        );
+        assert.strictEqual(
           config.retryDelayMultiplier,
           retryOptionsConfig.retryOptions.retryDelayMultiplier
         );

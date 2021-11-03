@@ -784,6 +784,7 @@ export class Util {
     const options = {
       request: teenyRequest.defaults(requestDefaults),
       retries: autoRetryValue !== false ? maxRetryValue : 0,
+      noResponseRetries: autoRetryValue !== false ? maxRetryValue : 0,
       shouldRetryFn(httpRespMessage: r.Response) {
         const err = util.parseHttpRespMessage(httpRespMessage).err;
         if (config.retryOptions?.retryableErrorFn) {
