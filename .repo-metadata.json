@@ -7,5 +7,5 @@
   "distribution_name": "@google-cloud/common",
   "client_documentation": "https://googleapis.dev/nodejs/common/latest",
   "api_shortname": "common",
-  "library_type": ""
+  "library_type": "CORE"
 }
