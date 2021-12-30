@@ -1,9 +1,11 @@
 {
   "name": "common",
   "name_pretty": "Google Cloud Common",
-  "release_level": "ga",
+  "release_level": "stable",
   "language": "nodejs",
   "repo": "googleapis/nodejs-common",
   "distribution_name": "@google-cloud/common",
-  "client_documentation": "https://googleapis.dev/nodejs/common/latest"
+  "client_documentation": "https://googleapis.dev/nodejs/common/latest",
+  "api_shortname": "common",
+  "library_type": "CORE"
 }
