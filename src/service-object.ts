@@ -99,8 +99,8 @@ export interface ServiceObjectConfig {
 
   /**
    * Override of projectId, used to allow access to resources in another project.
-   * For example, a BigQuery dataset in another project that the user has been
-   * granted authorizatio to access.
+   * For example, a BigQuery dataset in another project to which the user has been
+   * granted permission.
    */
   projectId?: string;
 }
