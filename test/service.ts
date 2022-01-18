@@ -533,6 +533,31 @@ describe('Service', () => {
 
           service.request_(reqOpts, assert.ifError);
         });
+
+        it('should use projectId override', done => {
+          const config = extend({}, CONFIG, {projectIdRequired: true});
+          const service = new Service(config, OPTIONS);
+          const projectOverride = 'turing';
+
+          reqOpts.projectId = projectOverride;
+
+          const expectedUri = [
+            service.baseUrl,
+            'projects',
+            projectOverride,
+            reqOpts.uri,
+          ].join('/');
+
+          service.makeAuthenticatedRequest = (
+            reqOpts_: DecorateRequestOptions
+          ) => {
+            assert.strictEqual(reqOpts_.uri, expectedUri);
+
+            done();
+          };
+
+          service.request_(reqOpts, assert.ifError);
+        });
       });
     });
 

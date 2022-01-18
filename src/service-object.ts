@@ -96,6 +96,13 @@ export interface ServiceObjectConfig {
    * for completion.
    */
   pollIntervalMs?: number;
+
+  /**
+   * Override of projectId, used to allow access to resources in another project.
+   * For example, a BigQuery dataset in another project to which the user has been
+   * granted permission.
+   */
+  projectId?: string;
 }
 
 export interface Methods {
@@ -157,6 +164,7 @@ class ServiceObject<T = any> extends EventEmitter {
   private createMethod?: Function;
   protected methods: Methods;
   interceptors: Interceptor[];
+  projectId?: string;
 
   /*
    * @constructor
@@ -186,6 +194,7 @@ class ServiceObject<T = any> extends EventEmitter {
     this.methods = config.methods || {};
     this.interceptors = [];
     this.pollIntervalMs = config.pollIntervalMs;
+    this.projectId = config.projectId;
 
     if (config.methods) {
       // This filters the ServiceObject instance (e.g. a "File") to only have
@@ -545,6 +554,10 @@ class ServiceObject<T = any> extends EventEmitter {
     callback?: BodyResponseCallback
   ): void | r.Request {
     reqOpts = extend(true, {}, reqOpts);
+
+    if (this.projectId) {
+      reqOpts.projectId = this.projectId;
+    }
 
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
     const uriComponents = [this.baseUrl, this.id || '', reqOpts.uri];

@@ -198,8 +198,13 @@ export class Service {
     const uriComponents = [this.baseUrl];
 
     if (this.projectIdRequired) {
-      uriComponents.push('projects');
-      uriComponents.push(this.projectId);
+      if (reqOpts.projectId) {
+        uriComponents.push('projects');
+        uriComponents.push(reqOpts.projectId);
+      } else {
+        uriComponents.push('projects');
+        uriComponents.push(this.projectId);
+      }
     }
 
     uriComponents.push(reqOpts.uri);

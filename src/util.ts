@@ -219,6 +219,7 @@ export interface DecorateRequestOptions extends r.CoreOptions {
   uri: string;
   interceptors_?: Interceptor[];
   shouldReturnStream?: boolean;
+  projectId?: string;
 }
 
 export interface ParsedHttpResponseBody {
