@@ -534,7 +534,7 @@ describe('Service', () => {
           service.request_(reqOpts, assert.ifError);
         });
 
-        it('should not include the projectId if override', done => {
+        it('should use projectId override', done => {
           const config = extend({}, CONFIG, {projectIdRequired: true});
           const service = new Service(config, OPTIONS);
           const projectOverride = 'turing';
