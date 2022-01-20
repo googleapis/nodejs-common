@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.9.0](https://github.com/googleapis/nodejs-common/compare/v3.8.1...v3.9.0) (2022-01-19)
+
+
+### Features
+
+* add optional projectId override in service object ([#722](https://github.com/googleapis/nodejs-common/issues/722)) ([4908d85](https://github.com/googleapis/nodejs-common/commit/4908d859c55a3ed40dd82849c7f2658840c920c1))
+
 ### [3.8.1](https://www.github.com/googleapis/nodejs-common/compare/v3.8.0...v3.8.1) (2021-11-03)
 
 
