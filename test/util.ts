@@ -607,7 +607,7 @@ describe('common/util', () => {
       const fakeStream = new stream.Writable();
       const error = new Error('Error.');
       fakeStream.write = () => false;
-      dup.end = () => {};
+      dup.end = () => dup;
 
       stub('handleResp', (err, res, body, callback) => {
         callback(error);
