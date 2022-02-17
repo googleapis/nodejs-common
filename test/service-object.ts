@@ -23,6 +23,7 @@ import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
 import * as r from 'teeny-request';
 import * as sinon from 'sinon';
+import {AuthClient, OAuth2Client} from 'google-auth-library';
 
 import {Service} from '../src';
 import * as SO from '../src/service-object';

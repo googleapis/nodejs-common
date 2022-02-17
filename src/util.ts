@@ -19,7 +19,7 @@
 import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as ent from 'ent';
 import * as extend from 'extend';
-import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
+import {AuthClient, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library';
 import * as r from 'teeny-request';
 import * as retryRequest from 'retry-request';
@@ -157,10 +157,10 @@ export interface MakeAuthenticatedRequestFactoryConfig
   stream?: Duplexify;
 
   /**
-   * A pre-instantiated GoogleAuth client that should be used.
+   * A pre-instantiated `AuthClient` or `GoogleAuth` client that should be used.
    * A new will be created if this is not set.
    */
-  authClient?: GoogleAuth;
+  authClient?: AuthClient | GoogleAuth;
 }
 
 export interface MakeAuthenticatedRequestOptions {
@@ -591,8 +591,28 @@ export class Util {
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
       delete googleAutoAuthConfig.projectId;
     }
-    const authClient =
-      googleAutoAuthConfig.authClient || new GoogleAuth(googleAutoAuthConfig);
+
+    let authClient: GoogleAuth;
+
+    if (googleAutoAuthConfig.authClient instanceof GoogleAuth) {
+      // Use an existing `GoogleAuth`
+      authClient = googleAutoAuthConfig.authClient;
+    } else if (googleAutoAuthConfig.authClient) {
+      // Pass an `AuthClient` to `GoogleAuth`
+      const config = {
+        ...googleAutoAuthConfig,
+        auth: googleAutoAuthConfig.authClient,
+      };
+
+      // 'authClient' is 'auth' in GoogleAuth. Removing to avoid
+      // any potential param naming conflict.
+      delete config.authClient;
+
+      authClient = new GoogleAuth(config);
+    } else {
+      // Create a new `GoogleAuth` with provided options
+      authClient = new GoogleAuth(googleAutoAuthConfig);
+    }
 
     /**
      * The returned function that will make an authenticated request.
@@ -659,7 +679,7 @@ export class Util {
             // A projectId was required, but we don't have one.
             // Re-use the "Could not load the default credentials error" if
             // auto auth failed.
-            err = err || e;
+            err = err || (e as Error);
           }
         }
 

@@ -17,6 +17,7 @@ import {describe, it, before, beforeEach, after} from 'mocha';
 import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
 import {Request} from 'teeny-request';
+import {AuthClient, GoogleAuth, OAuth2Client} from 'google-auth-library';
 
 import {Interceptor} from '../src';
 import {ServiceConfig, ServiceOptions} from '../src/service';
@@ -69,7 +70,7 @@ describe('Service', () => {
   };
 
   const OPTIONS = {
-    authClient: {getCredentials: () => {}},
+    authClient: new GoogleAuth(),
     credentials: {},
     keyFile: {},
     email: 'email',
@@ -130,11 +131,39 @@ describe('Service', () => {
       assert.strictEqual(service.authClient, OPTIONS.authClient);
     });
 
-    it('should allow passing a custom GoogleAuth client', () => {
-      const authClient = {getCredentials: () => {}};
-      const cfg = Object.assign({}, {authClient}, CONFIG);
-      const service = new Service(cfg);
-      assert.strictEqual(service.authClient, authClient);
+    describe('`AuthClient` support', () => {
+      // Using a custom `AuthClient` to ensure any `AuthClient` would work
+      class CustomAuthClient extends AuthClient {
+        async getAccessToken() {
+          return {token: '', res: undefined};
+        }
+
+        async getRequestHeaders() {
+          return {};
+        }
+
+        request = OAuth2Client.prototype.request.bind(this);
+      }
+
+      it('should accept an `AuthClient` passed to config', async () => {
+        const authClient = new CustomAuthClient();
+        const serviceObject = new Service({...CONFIG, authClient});
+
+        // The custom `AuthClient` should be passed to `GoogleAuth` and used internally
+        const client = await serviceObject.authClient.getClient();
+
+        assert.strictEqual(client, authClient);
+      });
+
+      it('should accept an `AuthClient` passed to options', async () => {
+        const authClient = new CustomAuthClient();
+        const serviceObject = new Service(CONFIG, {authClient});
+
+        // The custom `AuthClient` should be passed to `GoogleAuth` and used internally
+        const client = await serviceObject.authClient.getClient();
+
+        assert.strictEqual(client, authClient);
+      });
     });
 
     it('should localize the baseUrl', () => {
