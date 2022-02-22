@@ -111,7 +111,7 @@ export interface MakeAuthenticatedRequest {
   getCredentials: (
     callback: (err?: Error | null, credentials?: CredentialBody) => void
   ) => void;
-  authClient: GoogleAuth;
+  authClient: GoogleAuth<AuthClient>;
 }
 
 export interface Abortable {
@@ -125,7 +125,7 @@ export interface PackageJson {
 }
 
 export interface MakeAuthenticatedRequestFactoryConfig
-  extends GoogleAuthOptions {
+  extends Omit<GoogleAuthOptions, 'authClient'> {
   /**
    * Automatically retry requests if the response is related to rate limits or
    * certain intermittent server errors. We will exponentially backoff
@@ -592,26 +592,19 @@ export class Util {
       delete googleAutoAuthConfig.projectId;
     }
 
-    let authClient: GoogleAuth;
+    let authClient: GoogleAuth<AuthClient>;
 
     if (googleAutoAuthConfig.authClient instanceof GoogleAuth) {
       // Use an existing `GoogleAuth`
       authClient = googleAutoAuthConfig.authClient;
-    } else if (googleAutoAuthConfig.authClient) {
-      // Pass an `AuthClient` to `GoogleAuth`
+    } else {
+      // Pass an `AuthClient` to `GoogleAuth`, if available
       const config = {
         ...googleAutoAuthConfig,
-        auth: googleAutoAuthConfig.authClient,
+        authClient: googleAutoAuthConfig.authClient,
       };
 
-      // 'authClient' is 'auth' in GoogleAuth. Removing to avoid
-      // any potential param naming conflict.
-      delete config.authClient;
-
       authClient = new GoogleAuth(config);
-    } else {
-      // Create a new `GoogleAuth` with provided options
-      authClient = new GoogleAuth(googleAutoAuthConfig);
     }
 
     /**

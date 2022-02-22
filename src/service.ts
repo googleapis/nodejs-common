@@ -62,7 +62,7 @@ export interface ServiceConfig {
   authClient?: AuthClient | GoogleAuth;
 }
 
-export interface ServiceOptions extends GoogleAuthOptions {
+export interface ServiceOptions extends Omit<GoogleAuthOptions, 'authClient'> {
   authClient?: AuthClient | GoogleAuth;
   interceptors_?: Interceptor[];
   email?: string;
@@ -81,7 +81,7 @@ export class Service {
   private projectIdRequired: boolean;
   providedUserAgent?: string;
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
-  authClient: GoogleAuth;
+  authClient: GoogleAuth<AuthClient>;
   private getCredentials: {};
   readonly apiEndpoint: string;
   timeout?: number;
