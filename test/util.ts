@@ -720,15 +720,12 @@ describe('common/util', () => {
     } as any;
 
     it('should create an authClient', done => {
-      const config = {
-        test: true,
-        authClient: undefined,
-      } as MakeAuthenticatedRequestFactoryConfig;
+      const config = {test: true} as MakeAuthenticatedRequestFactoryConfig;
 
       sandbox
         .stub(fakeGoogleAuth, 'GoogleAuth')
         .callsFake((config_: GoogleAuthOptions) => {
-          assert.deepStrictEqual(config_, config);
+          assert.deepStrictEqual(config_, {...config, authClient: undefined});
           setImmediate(done);
           return authClient;
         });
