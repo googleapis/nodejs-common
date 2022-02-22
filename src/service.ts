@@ -18,7 +18,7 @@
 
 import arrify = require('arrify');
 import * as extend from 'extend';
-import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
+import {AuthClient, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as r from 'teeny-request';
 
 import {Interceptor} from './service-object';
@@ -57,13 +57,13 @@ export interface ServiceConfig {
   packageJson: PackageJson;
 
   /**
-   * Reuse an existing GoogleAuth client instead of creating a new one.
+   * Reuse an existing `AuthClient` or `GoogleAuth` client instead of creating a new one.
    */
-  authClient?: GoogleAuth;
+  authClient?: AuthClient | GoogleAuth;
 }
 
-export interface ServiceOptions extends GoogleAuthOptions {
-  authClient?: GoogleAuth;
+export interface ServiceOptions extends Omit<GoogleAuthOptions, 'authClient'> {
+  authClient?: AuthClient | GoogleAuth;
   interceptors_?: Interceptor[];
   email?: string;
   token?: string;
@@ -81,7 +81,7 @@ export class Service {
   private projectIdRequired: boolean;
   providedUserAgent?: string;
   makeAuthenticatedRequest: MakeAuthenticatedRequest;
-  authClient: GoogleAuth;
+  authClient: GoogleAuth<AuthClient>;
   private getCredentials: {};
   readonly apiEndpoint: string;
   timeout?: number;

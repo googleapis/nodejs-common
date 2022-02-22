@@ -16,7 +16,12 @@ import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as assert from 'assert';
 import {describe, it, before, beforeEach, afterEach} from 'mocha';
 import * as extend from 'extend';
-import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
+import {
+  AuthClient,
+  GoogleAuth,
+  GoogleAuthOptions,
+  OAuth2Client,
+} from 'google-auth-library';
 import * as nock from 'nock';
 import * as proxyquire from 'proxyquire';
 import * as r from 'teeny-request';
@@ -113,6 +118,18 @@ describe('common/util', () => {
   }
 
   const fakeGoogleAuth = {
+    // Using a custom `AuthClient` to ensure any `AuthClient` would work
+    AuthClient: class CustomAuthClient extends AuthClient {
+      async getAccessToken() {
+        return {token: '', res: undefined};
+      }
+
+      async getRequestHeaders() {
+        return {};
+      }
+
+      request = OAuth2Client.prototype.request.bind(this);
+    },
     GoogleAuth: class {
       constructor(config?: GoogleAuthOptions) {
         return new GoogleAuth(config);
@@ -590,7 +607,7 @@ describe('common/util', () => {
       const fakeStream = new stream.Writable();
       const error = new Error('Error.');
       fakeStream.write = () => false;
-      dup.end = () => {};
+      dup.end = () => dup;
 
       stub('handleResp', (err, res, body, callback) => {
         callback(error);
@@ -704,6 +721,24 @@ describe('common/util', () => {
 
     it('should create an authClient', done => {
       const config = {test: true} as MakeAuthenticatedRequestFactoryConfig;
+
+      sandbox
+        .stub(fakeGoogleAuth, 'GoogleAuth')
+        .callsFake((config_: GoogleAuthOptions) => {
+          assert.deepStrictEqual(config_, {...config, authClient: undefined});
+          setImmediate(done);
+          return authClient;
+        });
+
+      util.makeAuthenticatedRequestFactory(config);
+    });
+
+    it('should pass an `AuthClient` to `GoogleAuth` when provided', done => {
+      const customAuthClient = new fakeGoogleAuth.AuthClient();
+
+      const config: MakeAuthenticatedRequestFactoryConfig = {
+        authClient: customAuthClient,
+      };
 
       sandbox
         .stub(fakeGoogleAuth, 'GoogleAuth')

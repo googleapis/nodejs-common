@@ -19,7 +19,7 @@
 import {replaceProjectIdToken} from '@google-cloud/projectify';
 import * as ent from 'ent';
 import * as extend from 'extend';
-import {GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
+import {AuthClient, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import {CredentialBody} from 'google-auth-library';
 import * as r from 'teeny-request';
 import * as retryRequest from 'retry-request';
@@ -111,7 +111,7 @@ export interface MakeAuthenticatedRequest {
   getCredentials: (
     callback: (err?: Error | null, credentials?: CredentialBody) => void
   ) => void;
-  authClient: GoogleAuth;
+  authClient: GoogleAuth<AuthClient>;
 }
 
 export interface Abortable {
@@ -125,7 +125,7 @@ export interface PackageJson {
 }
 
 export interface MakeAuthenticatedRequestFactoryConfig
-  extends GoogleAuthOptions {
+  extends Omit<GoogleAuthOptions, 'authClient'> {
   /**
    * Automatically retry requests if the response is related to rate limits or
    * certain intermittent server errors. We will exponentially backoff
@@ -157,10 +157,10 @@ export interface MakeAuthenticatedRequestFactoryConfig
   stream?: Duplexify;
 
   /**
-   * A pre-instantiated GoogleAuth client that should be used.
+   * A pre-instantiated `AuthClient` or `GoogleAuth` client that should be used.
    * A new will be created if this is not set.
    */
-  authClient?: GoogleAuth;
+  authClient?: AuthClient | GoogleAuth;
 }
 
 export interface MakeAuthenticatedRequestOptions {
@@ -591,8 +591,21 @@ export class Util {
     if (googleAutoAuthConfig.projectId === '{{projectId}}') {
       delete googleAutoAuthConfig.projectId;
     }
-    const authClient =
-      googleAutoAuthConfig.authClient || new GoogleAuth(googleAutoAuthConfig);
+
+    let authClient: GoogleAuth<AuthClient>;
+
+    if (googleAutoAuthConfig.authClient instanceof GoogleAuth) {
+      // Use an existing `GoogleAuth`
+      authClient = googleAutoAuthConfig.authClient;
+    } else {
+      // Pass an `AuthClient` to `GoogleAuth`, if available
+      const config = {
+        ...googleAutoAuthConfig,
+        authClient: googleAutoAuthConfig.authClient,
+      };
+
+      authClient = new GoogleAuth(config);
+    }
 
     /**
      * The returned function that will make an authenticated request.
@@ -659,7 +672,7 @@ export class Util {
             // A projectId was required, but we don't have one.
             // Re-use the "Could not load the default credentials error" if
             // auto auth failed.
-            err = err || e;
+            err = err || (e as Error);
           }
         }
 
