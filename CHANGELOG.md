@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [3.10.0](https://github.com/googleapis/nodejs-common/compare/v3.9.0...v3.10.0) (2022-02-22)
+
+
+### Features
+
+* Support `AuthClient` for `authClient` ([#732](https://github.com/googleapis/nodejs-common/issues/732)) ([d4c39f3](https://github.com/googleapis/nodejs-common/commit/d4c39f385ea715c79f9bae1853748700dc96c152))
+
 ## [3.9.0](https://github.com/googleapis/nodejs-common/compare/v3.8.1...v3.9.0) (2022-01-19)
 
 
