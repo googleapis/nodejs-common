@@ -35,7 +35,7 @@ const spawnp = (
   args: string[],
   options: cp.SpawnOptions = {}
 ) => {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     cp.spawn(command, args, Object.assign(options, {stdio: 'inherit'}))
       .on('close', code => {
         if (code === 0) {
