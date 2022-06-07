@@ -4,6 +4,24 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [4.0.0](https://github.com/googleapis/nodejs-common/compare/v3.10.0...v4.0.0) (2022-06-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* update library to use Node 12 (#749)
+
+### Bug Fixes
+
+* **deps:** update dependency @google-cloud/promisify to v3 ([#746](https://github.com/googleapis/nodejs-common/issues/746)) ([8333d1d](https://github.com/googleapis/nodejs-common/commit/8333d1d4dc02a623b7dd1034e019170cfde8db3a))
+* **deps:** update dependency retry-request to v5 ([#748](https://github.com/googleapis/nodejs-common/issues/748)) ([e07fe0f](https://github.com/googleapis/nodejs-common/commit/e07fe0f711b2ba7e367879abe995dddc7a5fefa7))
+* **deps:** update dependency teeny-request to v8 ([#751](https://github.com/googleapis/nodejs-common/issues/751)) ([4317850](https://github.com/googleapis/nodejs-common/commit/4317850e1c1b6510681b567f9f2961f255134450))
+
+
+### Build System
+
+* update library to use Node 12 ([#749](https://github.com/googleapis/nodejs-common/issues/749)) ([3d5acce](https://github.com/googleapis/nodejs-common/commit/3d5accebfd198f33fc93a7dc7e8cd2d1cb7064f5))
+
 ## [3.10.0](https://github.com/googleapis/nodejs-common/compare/v3.9.0...v3.10.0) (2022-02-22)
 
 
