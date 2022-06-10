@@ -161,6 +161,11 @@ export interface MakeAuthenticatedRequestFactoryConfig
    * A new will be created if this is not set.
    */
   authClient?: AuthClient | GoogleAuth;
+
+  /**
+   * Determines if a projectId is required for authenticated requests. Defaults to `true`.
+   */
+  projectIdRequired?: boolean;
 }
 
 export interface MakeAuthenticatedRequestOptions {
@@ -646,7 +651,7 @@ export class Util {
       const callback =
         typeof optionsOrCallback === 'function' ? optionsOrCallback : undefined;
 
-      const onAuthenticated = (
+      const onAuthenticated = async (
         err: Error | null,
         authenticatedReqOpts?: DecorateRequestOptions
       ) => {
@@ -670,9 +675,21 @@ export class Util {
             err = null;
           } catch (e) {
             // A projectId was required, but we don't have one.
-            // Re-use the "Could not load the default credentials error" if
-            // auto auth failed.
-            err = err || (e as Error);
+            try {
+              // Attempt to get the `projectId`
+              projectId = await authClient.getProjectId();
+
+              authenticatedReqOpts = util.decorateRequest(
+                authenticatedReqOpts!,
+                projectId
+              );
+
+              err = null;
+            } catch (e) {
+              // Re-use the "Could not load the default credentials error" if
+              // auto auth failed.
+              err = err || (e as Error);
+            }
           }
         }
 
@@ -711,23 +728,55 @@ export class Util {
         }
       };
 
-      Promise.all([
-        config.projectId && config.projectId !== '{{projectId}}'
-          ? // The user provided a project ID. We don't need to check with the
-            // auth client, it could be incorrect.
-            new Promise(resolve => resolve(config.projectId))
-          : authClient.getProjectId(),
-        reqConfig.customEndpoint && reqConfig.useAuthWithCustomEndpoint !== true
-          ? // Using a custom API override. Do not use `google-auth-library` for
-            // authentication. (ex: connecting to a local Datastore server)
-            new Promise(resolve => resolve(reqOpts))
-          : authClient.authorizeRequest(reqOpts),
-      ])
-        .then(([_projectId, authorizedReqOpts]) => {
-          projectId = _projectId as string;
-          onAuthenticated(null, authorizedReqOpts as DecorateRequestOptions);
-        })
-        .catch(onAuthenticated);
+      const prepareRequest = async () => {
+        try {
+          const getProjectId = async () => {
+            if (config.projectId && config.projectId !== '{{projectId}}') {
+              // The user provided a project ID. We don't need to check with the
+              // auth client, it could be incorrect.
+              return config.projectId;
+            }
+
+            if (config.projectIdRequired === false) {
+              // A projectId is not required. Return the default.
+              return config.projectId;
+            }
+
+            return authClient.getProjectId();
+          };
+
+          const authorizeRequest = async () => {
+            if (
+              reqConfig.customEndpoint &&
+              !reqConfig.useAuthWithCustomEndpoint
+            ) {
+              // Using a custom API override. Do not use `google-auth-library` for
+              // authentication. (ex: connecting to a local Datastore server)
+              return reqOpts;
+            } else {
+              return authClient.authorizeRequest(reqOpts);
+            }
+          };
+
+          const [_projectId, authorizedReqOpts] = await Promise.all([
+            getProjectId(),
+            authorizeRequest(),
+          ]);
+
+          if (_projectId) {
+            projectId = _projectId;
+          }
+
+          return onAuthenticated(
+            null,
+            authorizedReqOpts as DecorateRequestOptions
+          );
+        } catch (e) {
+          return onAuthenticated(e as Error);
+        }
+      };
+
+      prepareRequest();
 
       if (stream!) {
         return stream!;
