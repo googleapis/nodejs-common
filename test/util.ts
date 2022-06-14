@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {replaceProjectIdToken} from '@google-cloud/projectify';
+import {
+  MissingProjectIdError,
+  replaceProjectIdToken,
+} from '@google-cloud/projectify';
 import * as assert from 'assert';
 import {describe, it, before, beforeEach, afterEach} from 'mocha';
 import * as extend from 'extend';
@@ -43,6 +46,7 @@ import {
   ParsedHttpRespMessage,
   Util,
 } from '../src/util';
+import {DEFAULT_PROJECT_ID_TOKEN} from '../src/service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const duplexify: DuplexifyConstructor = require('duplexify');
@@ -752,7 +756,7 @@ describe('common/util', () => {
     });
 
     it('should not pass projectId token to google-auth-library', done => {
-      const config = {projectId: '{{projectId}}'};
+      const config = {projectId: DEFAULT_PROJECT_ID_TOKEN};
 
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth').callsFake(config_ => {
         assert.strictEqual(config_.projectId, undefined);
@@ -764,10 +768,10 @@ describe('common/util', () => {
     });
 
     it('should not remove projectId from config object', done => {
-      const config = {projectId: '{{projectId}}'};
+      const config = {projectId: DEFAULT_PROJECT_ID_TOKEN};
 
       sandbox.stub(fakeGoogleAuth, 'GoogleAuth').callsFake(() => {
-        assert.strictEqual(config.projectId, '{{projectId}}');
+        assert.strictEqual(config.projectId, DEFAULT_PROJECT_ID_TOKEN);
         setImmediate(done);
         return authClient;
       });
@@ -897,7 +901,7 @@ describe('common/util', () => {
       });
     });
 
-    describe('needs authentication', () => {
+    describe('authentication', () => {
       it('should pass correct args to authorizeRequest', done => {
         const fake = extend(true, authClient, {
           authorizeRequest: async (rOpts: {}) => {
@@ -967,6 +971,65 @@ describe('common/util', () => {
 
           makeAuthenticatedRequest(reqOpts, {
             onAuthenticated: assert.ifError,
+          });
+        });
+
+        it('should use default `projectId` and not call `authClient#getProjectId` when !`projectIdRequired`', done => {
+          const getProjectIdSpy = sandbox.spy(authClient, 'getProjectId');
+
+          sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
+
+          const config = {
+            customEndpoint: true,
+            projectIdRequired: false,
+          };
+
+          stub('decorateRequest', (reqOpts, projectId) => {
+            assert.strictEqual(projectId, DEFAULT_PROJECT_ID_TOKEN);
+          });
+
+          const makeAuthenticatedRequest =
+            util.makeAuthenticatedRequestFactory(config);
+
+          makeAuthenticatedRequest(reqOpts, {
+            onAuthenticated: e => {
+              assert.ifError(e);
+              assert(getProjectIdSpy.notCalled);
+              done(e);
+            },
+          });
+        });
+
+        it('should fallback to checking for a `projectId` on when missing a `projectId` when !`projectIdRequired`', done => {
+          const getProjectIdSpy = sandbox.spy(authClient, 'getProjectId');
+
+          sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
+
+          const config = {
+            customEndpoint: true,
+            projectIdRequired: false,
+          };
+
+          const decorateRequestStub = sandbox.stub(util, 'decorateRequest');
+
+          decorateRequestStub.onFirstCall().callsFake(() => {
+            throw new MissingProjectIdError();
+          });
+
+          decorateRequestStub.onSecondCall().callsFake((reqOpts, projectId) => {
+            assert.strictEqual(projectId, AUTH_CLIENT_PROJECT_ID);
+            return reqOpts;
+          });
+
+          const makeAuthenticatedRequest =
+            util.makeAuthenticatedRequestFactory(config);
+
+          makeAuthenticatedRequest(reqOpts, {
+            onAuthenticated: e => {
+              assert.ifError(e);
+              assert(getProjectIdSpy.calledOnce);
+              done(e);
+            },
           });
         });
       });
