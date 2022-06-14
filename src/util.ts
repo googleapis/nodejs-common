@@ -16,7 +16,10 @@
  * @module common/util
  */
 
-import {replaceProjectIdToken} from '@google-cloud/projectify';
+import {
+  replaceProjectIdToken,
+  MissingProjectIdError,
+} from '@google-cloud/projectify';
 import * as ent from 'ent';
 import * as extend from 'extend';
 import {AuthClient, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
@@ -651,6 +654,10 @@ export class Util {
       const callback =
         typeof optionsOrCallback === 'function' ? optionsOrCallback : undefined;
 
+      async function setProjectId() {
+        projectId = await authClient.getProjectId();
+      }
+
       const onAuthenticated = async (
         err: Error | null,
         authenticatedReqOpts?: DecorateRequestOptions
@@ -668,26 +675,33 @@ export class Util {
 
         if (!err || autoAuthFailed) {
           try {
+            // Try with existing `projectId` value
             authenticatedReqOpts = util.decorateRequest(
               authenticatedReqOpts!,
               projectId
             );
+
             err = null;
           } catch (e) {
-            // A projectId was required, but we don't have one.
-            try {
-              // Attempt to get the `projectId`
-              projectId = await authClient.getProjectId();
+            if (e instanceof MissingProjectIdError) {
+              // A `projectId` was required, but we don't have one.
+              try {
+                // Attempt to get the `projectId`
+                await setProjectId();
 
-              authenticatedReqOpts = util.decorateRequest(
-                authenticatedReqOpts!,
-                projectId
-              );
+                authenticatedReqOpts = util.decorateRequest(
+                  authenticatedReqOpts!,
+                  projectId
+                );
 
-              err = null;
-            } catch (e) {
-              // Re-use the "Could not load the default credentials error" if
-              // auto auth failed.
+                err = null;
+              } catch (e) {
+                // Re-use the "Could not load the default credentials error" if
+                // auto auth failed.
+                err = err || (e as Error);
+              }
+            } else {
+              // Some other error unrelated to missing `projectId`
               err = err || (e as Error);
             }
           }
@@ -742,7 +756,7 @@ export class Util {
               return config.projectId;
             }
 
-            return authClient.getProjectId();
+            return setProjectId();
           };
 
           const authorizeRequest = async () => {
