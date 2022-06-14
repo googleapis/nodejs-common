@@ -30,6 +30,7 @@ import {Duplex, DuplexOptions, Readable, Transform, Writable} from 'stream';
 import {teenyRequest} from 'teeny-request';
 
 import {Interceptor} from './service-object';
+import {DEFAULT_PROJECT_ID_TOKEN} from './service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const duplexify: DuplexifyConstructor = require('duplexify');
@@ -596,7 +597,7 @@ export class Util {
     config: MakeAuthenticatedRequestFactoryConfig
   ) {
     const googleAutoAuthConfig = extend({}, config);
-    if (googleAutoAuthConfig.projectId === '{{projectId}}') {
+    if (googleAutoAuthConfig.projectId === DEFAULT_PROJECT_ID_TOKEN) {
       delete googleAutoAuthConfig.projectId;
     }
 
@@ -745,7 +746,10 @@ export class Util {
       const prepareRequest = async () => {
         try {
           const getProjectId = async () => {
-            if (config.projectId && config.projectId !== '{{projectId}}') {
+            if (
+              config.projectId &&
+              config.projectId !== DEFAULT_PROJECT_ID_TOKEN
+            ) {
               // The user provided a project ID. We don't need to check with the
               // auth client, it could be incorrect.
               return config.projectId;
@@ -753,7 +757,7 @@ export class Util {
 
             if (config.projectIdRequired === false) {
               // A projectId is not required. Return the default.
-              return config.projectId;
+              return DEFAULT_PROJECT_ID_TOKEN;
             }
 
             return setProjectId();
