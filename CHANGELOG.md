@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [4.0.1](https://github.com/googleapis/nodejs-common/compare/v4.0.0...v4.0.1) (2022-06-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @google-cloud/projectify to v3 ([#754](https://github.com/googleapis/nodejs-common/issues/754)) ([d9a74ec](https://github.com/googleapis/nodejs-common/commit/d9a74ec0cb232cdb44b36f2e4ea11c7435d28099))
+
 ## [4.0.0](https://github.com/googleapis/nodejs-common/compare/v3.10.0...v4.0.0) (2022-06-07)
 
 
