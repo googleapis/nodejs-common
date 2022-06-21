@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [4.0.2](https://github.com/googleapis/nodejs-common/compare/v4.0.1...v4.0.2) (2022-06-21)
+
+
+### Bug Fixes
+
+* Requests Respect `config.projectIdRequired` === `false` ([#753](https://github.com/googleapis/nodejs-common/issues/753)) ([41934ef](https://github.com/googleapis/nodejs-common/commit/41934efbbc3e2b62f97142d46ae594d243ed31b8))
+
 ## [4.0.1](https://github.com/googleapis/nodejs-common/compare/v4.0.0...v4.0.1) (2022-06-13)
 
 
