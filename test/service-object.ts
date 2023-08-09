@@ -23,7 +23,6 @@ import * as extend from 'extend';
 import * as proxyquire from 'proxyquire';
 import * as r from 'teeny-request';
 import * as sinon from 'sinon';
-import {AuthClient, OAuth2Client} from 'google-auth-library';
 
 import {Service} from '../src';
 import * as SO from '../src/service-object';
@@ -293,10 +292,13 @@ describe('ServiceObject', () => {
       sandbox
         .stub(ServiceObject.prototype, 'request')
         .callsFake((reqOpts, callback) => {
-          assert.strictEqual(reqOpts.method, 'DELETE');
-          assert.strictEqual(reqOpts.uri, '');
+          assert.strictEqual(
+            (reqOpts as DecorateRequestOptions).method,
+            'DELETE'
+          );
+          assert.strictEqual((reqOpts as DecorateRequestOptions).uri, '');
           done();
-          callback(null, null, {} as r.Response);
+          (callback as any)(null, null, {} as r.Response);
         });
       serviceObject.delete(assert.ifError);
     });
@@ -306,9 +308,12 @@ describe('ServiceObject', () => {
       sandbox
         .stub(ServiceObject.prototype, 'request')
         .callsFake((reqOpts, callback) => {
-          assert.deepStrictEqual(reqOpts.qs, options);
+          assert.deepStrictEqual(
+            (reqOpts as DecorateRequestOptions).qs,
+            options
+          );
           done();
-          callback(null, null, {} as r.Response);
+          (callback as any)(null, null, {} as r.Response);
         });
       serviceObject.delete(options, assert.ifError);
     });
@@ -330,10 +335,16 @@ describe('ServiceObject', () => {
             serviceObject.methods.delete,
             cachedMethodConfig
           );
-          assert.deepStrictEqual(reqOpts_.uri, 'v2');
-          assert.deepStrictEqual(reqOpts_.method, 'PATCH');
+          assert.deepStrictEqual(
+            (reqOpts_ as DecorateRequestOptions).uri,
+            'v2'
+          );
+          assert.deepStrictEqual(
+            (reqOpts_ as DecorateRequestOptions).method,
+            'PATCH'
+          );
           done();
-          callback(null, null, null!);
+          (callback as any)(null, null, null!);
         });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
@@ -368,9 +379,12 @@ describe('ServiceObject', () => {
       sandbox
         .stub(ServiceObject.prototype, 'request')
         .callsFake((reqOpts, callback) => {
-          assert.strictEqual(reqOpts.qs.ignoreNotFound, undefined);
+          assert.strictEqual(
+            (reqOpts as DecorateRequestOptions).qs.ignoreNotFound,
+            undefined
+          );
           done();
-          callback(null, null, {} as r.Response);
+          (callback as any)(null, null, {} as r.Response);
         });
       serviceObject.delete(options, assert.ifError);
     });
@@ -394,13 +408,13 @@ describe('ServiceObject', () => {
             serviceObject.methods.delete,
             cachedMethodConfig
           );
-          assert.deepStrictEqual(reqOpts_.qs, {
+          assert.deepStrictEqual((reqOpts_ as DecorateRequestOptions).qs, {
             defaultProperty: true,
             optionalProperty: true,
             thisPropertyWasOverridden: true,
           });
           done();
-          callback(null, null, null!);
+          (callback as any)(null, null, null!);
         });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
@@ -445,7 +459,7 @@ describe('ServiceObject', () => {
         .callsFake((options_, callback) => {
           assert.deepStrictEqual(options_, options);
           done();
-          callback(null, null, {} as r.Response);
+          (callback as any)(null, null, {} as r.Response);
         });
       serviceObject.exists(options, assert.ifError);
     });
@@ -648,9 +662,9 @@ describe('ServiceObject', () => {
         callback
       ) {
         assert.strictEqual(this, serviceObject);
-        assert.strictEqual(reqOpts.uri, '');
+        assert.strictEqual((reqOpts as DecorateRequestOptions).uri, '');
         done();
-        callback(null, null, {} as r.Response);
+        (callback as any)(null, null, {} as r.Response);
       });
       serviceObject.getMetadata(() => {});
     });
@@ -660,9 +674,12 @@ describe('ServiceObject', () => {
       sandbox
         .stub(ServiceObject.prototype, 'request')
         .callsFake((reqOpts, callback) => {
-          assert.deepStrictEqual(reqOpts.qs, options);
+          assert.deepStrictEqual(
+            (reqOpts as DecorateRequestOptions).qs,
+            options
+          );
           done();
-          callback(null, null, {} as r.Response);
+          (callback as any)(null, null, {} as r.Response);
         });
       serviceObject.getMetadata(options, assert.ifError);
     });
@@ -683,9 +700,12 @@ describe('ServiceObject', () => {
             serviceObject.methods.getMetadata,
             cachedMethodConfig
           );
-          assert.deepStrictEqual(reqOpts_.uri, 'v2');
+          assert.deepStrictEqual(
+            (reqOpts_ as DecorateRequestOptions).uri,
+            'v2'
+          );
           done();
-          callback(null, null, null!);
+          (callback as any)(null, null, null!);
         });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
@@ -712,13 +732,13 @@ describe('ServiceObject', () => {
             serviceObject.methods.getMetadata,
             cachedMethodConfig
           );
-          assert.deepStrictEqual(reqOpts_.qs, {
+          assert.deepStrictEqual((reqOpts_ as DecorateRequestOptions).qs, {
             defaultProperty: true,
             optionalProperty: true,
             thisPropertyWasOverridden: true,
           });
           done();
-          callback(null, null, null!);
+          (callback as any)(null, null, null!);
         });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
@@ -866,11 +886,14 @@ describe('ServiceObject', () => {
         callback
       ) {
         assert.strictEqual(this, serviceObject);
-        assert.strictEqual(reqOpts.method, 'PATCH');
-        assert.strictEqual(reqOpts.uri, '');
-        assert.deepStrictEqual(reqOpts.json, metadata);
+        assert.strictEqual((reqOpts as DecorateRequestOptions).method, 'PATCH');
+        assert.strictEqual((reqOpts as DecorateRequestOptions).uri, '');
+        assert.deepStrictEqual(
+          (reqOpts as DecorateRequestOptions).json,
+          metadata
+        );
         done();
-        callback(null, null, {} as r.Response);
+        (callback as any)(null, null, {} as r.Response);
       });
       serviceObject.setMetadata(metadata, () => {});
     });
@@ -881,9 +904,12 @@ describe('ServiceObject', () => {
       sandbox
         .stub(ServiceObject.prototype, 'request')
         .callsFake((reqOpts, callback) => {
-          assert.deepStrictEqual(reqOpts.qs, options);
+          assert.deepStrictEqual(
+            (reqOpts as DecorateRequestOptions).qs,
+            options
+          );
           done();
-          callback(null, null, {} as r.Response);
+          (callback as any)(null, null, {} as r.Response);
         });
       serviceObject.setMetadata(metadata, options, () => {});
     });
@@ -904,10 +930,16 @@ describe('ServiceObject', () => {
             serviceObject.methods.setMetadata,
             cachedMethodConfig
           );
-          assert.deepStrictEqual(reqOpts_.uri, 'v2');
-          assert.deepStrictEqual(reqOpts_.method, 'PUT');
+          assert.deepStrictEqual(
+            (reqOpts_ as DecorateRequestOptions).uri,
+            'v2'
+          );
+          assert.deepStrictEqual(
+            (reqOpts_ as DecorateRequestOptions).method,
+            'PUT'
+          );
           done();
-          callback(null, null, null!);
+          (callback as any)(null, null, null!);
         });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
@@ -933,13 +965,13 @@ describe('ServiceObject', () => {
             serviceObject.methods.setMetadata,
             cachedMethodConfig
           );
-          assert.deepStrictEqual(reqOpts_.qs, {
+          assert.deepStrictEqual((reqOpts_ as DecorateRequestOptions).qs, {
             defaultProperty: true,
             optionalProperty: true,
             thisPropertyWasOverridden: true,
           });
           done();
-          callback(null, null, null!);
+          (callback as any)(null, null, null!);
         });
 
       const serviceObject = new ServiceObject(CONFIG) as FakeServiceObject;
