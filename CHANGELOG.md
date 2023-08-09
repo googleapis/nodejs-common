@@ -4,6 +4,17 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [5.0.0](https://github.com/googleapis/nodejs-common/compare/v4.0.3...v5.0.0) (2023-08-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* upgrade to Node 14 ([#782](https://github.com/googleapis/nodejs-common/issues/782))
+
+### Miscellaneous Chores
+
+* Upgrade to Node 14 ([#782](https://github.com/googleapis/nodejs-common/issues/782)) ([9651316](https://github.com/googleapis/nodejs-common/commit/96513160dd3d9deabc4e4f30509386a2171bb50e))
+
 ## [4.0.3](https://github.com/googleapis/nodejs-common/compare/v4.0.2...v4.0.3) (2022-08-23)
 
 
