@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@google-cloud/projectify": "^3.0.0",
-    "@google-cloud/promisify": "^3.0.0",
+    "@google-cloud/promisify": "^4.0.0",
     "arrify": "^2.0.1",
     "duplexify": "^4.1.1",
     "ent": "^2.2.0",
