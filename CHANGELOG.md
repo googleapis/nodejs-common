@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [5.0.1](https://github.com/googleapis/nodejs-common/compare/v5.0.0...v5.0.1) (2023-10-26)
+
+
+### Bug Fixes
+
+* **deps:** Update dependency retry-request to v7 ([#794](https://github.com/googleapis/nodejs-common/issues/794)) ([beb2e1c](https://github.com/googleapis/nodejs-common/commit/beb2e1cefab2c6012beb4fdc92f239f4195d6a04))
+
 ## [5.0.0](https://github.com/googleapis/nodejs-common/compare/v4.0.3...v5.0.0) (2023-08-09)
 
 
