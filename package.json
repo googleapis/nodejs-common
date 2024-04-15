@@ -36,15 +36,14 @@
     "@google-cloud/promisify": "^4.0.0",
     "arrify": "^2.0.1",
     "duplexify": "^4.1.1",
-    "ent": "^2.2.0",
     "extend": "^3.0.2",
     "google-auth-library": "^9.0.0",
+    "html-entities": "^2.5.2",
     "retry-request": "^7.0.0",
     "teeny-request": "^9.0.0"
   },
   "devDependencies": {
     "@compodoc/compodoc": "^1.1.11",
-    "@types/ent": "^2.2.1",
     "@types/extend": "^3.0.1",
     "@types/mocha": "^9.0.0",
     "@types/mv": "^2.1.0",
