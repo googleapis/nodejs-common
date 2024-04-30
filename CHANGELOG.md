@@ -4,6 +4,13 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [5.0.2](https://github.com/googleapis/nodejs-common/compare/v5.0.1...v5.0.2) (2024-04-30)
+
+
+### Bug Fixes
+
+* Replace ent with html-entities ([7ec0a32](https://github.com/googleapis/nodejs-common/commit/7ec0a324d8e41e5c74ab8ac08b94fca9514ae893))
+
 ## [5.0.1](https://github.com/googleapis/nodejs-common/compare/v5.0.0...v5.0.1) (2023-10-26)
 
 
