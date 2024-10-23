@@ -21,5 +21,5 @@ logging.basicConfig(level=logging.DEBUG)
 
 common_templates = gcp.CommonTemplates()
 templates = common_templates.node_library()
-s.copy(templates)
+s.copy(templates, excludes = [".github/ISSUE_TEMPLATE", ".github/workflows/issues-no-repro.yaml", ".github/scripts/close-invalid-link.cjs"])
 node.fix()
