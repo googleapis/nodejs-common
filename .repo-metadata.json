@@ -7,5 +7,6 @@
   "distribution_name": "@google-cloud/common",
   "client_documentation": "https://googleapis.dev/nodejs/common/latest",
   "api_shortname": "common",
+  "codeowner_team": "@googleapis/jsteam-handwritten-libraries"
   "library_type": "CORE"
 }
