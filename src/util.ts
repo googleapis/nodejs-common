@@ -796,7 +796,7 @@ export class Util {
         }
       };
 
-      prepareRequest();
+      void prepareRequest();
 
       if (stream!) {
         return stream!;

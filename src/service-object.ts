@@ -408,7 +408,7 @@ class ServiceObject<T = any> extends EventEmitter {
             args.push(options);
           }
           args.push(onCreate);
-          self.create(...args);
+          void self.create(...args);
           return;
         }
         callback!(err, null, metadata as r.Response);
