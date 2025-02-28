@@ -17,7 +17,7 @@
  */
 
 import {promisifyAll} from '@google-cloud/promisify';
-import * as arrify from 'arrify';
+import arrify from 'arrify'
 import {EventEmitter} from 'events';
 import * as extend from 'extend';
 import * as r from 'teeny-request';

@@ -16,7 +16,7 @@
  * @module common/service
  */
 
-import * as arrify from 'arrify';
+import arrify from 'arrify'
 import * as extend from 'extend';
 import {AuthClient, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as r from 'teeny-request';
