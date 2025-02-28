@@ -16,7 +16,7 @@
  * @module common/service
  */
 
-import arrify from 'arrify'
+const arrify = require('arrify');
 import * as extend from 'extend';
 import {AuthClient, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as r from 'teeny-request';
