@@ -895,7 +895,7 @@ describe('ServiceObject', () => {
         done();
         (callback as any)(null, null, {} as r.Response);
       });
-      serviceObject.setMetadata(metadata, () => {});
+      void serviceObject.setMetadata(metadata, () => {});
     });
 
     it('should accept options', done => {
