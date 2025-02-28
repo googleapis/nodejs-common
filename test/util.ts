@@ -43,7 +43,7 @@ import {
   GoogleInnerError,
   MakeAuthenticatedRequestFactoryConfig,
   MakeRequestConfig,
-  ParsedHttpRespMessage,
+  ParsedHttpRespMessage, ParsedHttpResponseBody,
   Util,
 } from '../src/util';
 import {DEFAULT_PROJECT_ID_TOKEN} from '../src/service';
@@ -103,7 +103,7 @@ describe('common/util', () => {
   let util: Util & {[index: string]: Function};
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function stub(method: keyof Util, meth: (...args: any[]) => void) {
+  function stub(method: keyof Util, meth: (...args: any[]) => any) {
     return sandbox.stub(util, method).callsFake(meth);
   }
 
@@ -129,7 +129,7 @@ describe('common/util', () => {
       }
 
       async getRequestHeaders() {
-        return {};
+        return {} as Headers;
       }
 
       request = OAuth2Client.prototype.request.bind(this);

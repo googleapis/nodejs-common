@@ -16,7 +16,7 @@
  * @module common/service
  */
 
-import arrify = require('arrify');
+import * as arrify from 'arrify';
 import * as extend from 'extend';
 import {AuthClient, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as r from 'teeny-request';
@@ -105,7 +105,7 @@ export class Service {
     this.baseUrl = config.baseUrl;
     this.apiEndpoint = config.apiEndpoint;
     this.timeout = options.timeout;
-    this.globalInterceptors = arrify(options.interceptors_!);
+    this.globalInterceptors = (arrify as unknown as (arg1: any) => [])(options.interceptors_!);
     this.interceptors = [];
     this.packageJson = config.packageJson;
     this.projectId = options.projectId || DEFAULT_PROJECT_ID_TOKEN;
@@ -226,7 +226,7 @@ export class Service {
 
     const requestInterceptors = this.getRequestInterceptors();
 
-    arrify(reqOpts.interceptors_!).forEach(interceptor => {
+    (arrify as unknown as (arg1: any) => any[])(reqOpts.interceptors_!).forEach(interceptor => {
       if (typeof interceptor.request === 'function') {
         requestInterceptors.push(interceptor.request);
       }

@@ -143,7 +143,7 @@ describe('Service', () => {
         }
 
         async getRequestHeaders() {
-          return {};
+          return {} as Headers;
         }
 
         request = OAuth2Client.prototype.request.bind(this);
