@@ -66,7 +66,7 @@ export class Operation<T = any> extends ServiceObject<T> {
       {
         baseUrl: '',
       },
-      config
+      config,
     );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -79,17 +79,17 @@ export interface DuplexifyConstructor {
   obj(
     writable?: Writable | false | null,
     readable?: Readable | false | null,
-    options?: DuplexifyOptions
+    options?: DuplexifyOptions,
   ): Duplexify;
   new (
     writable?: Writable | false | null,
     readable?: Readable | false | null,
-    options?: DuplexifyOptions
+    options?: DuplexifyOptions,
   ): Duplexify;
   (
     writable?: Writable | false | null,
     readable?: Readable | false | null,
-    options?: DuplexifyOptions
+    options?: DuplexifyOptions,
   ): Duplexify;
 }
 
@@ -102,18 +102,18 @@ export interface MakeAuthenticatedRequest {
   (reqOpts: DecorateRequestOptions): Duplexify;
   (
     reqOpts: DecorateRequestOptions,
-    options?: MakeAuthenticatedRequestOptions
+    options?: MakeAuthenticatedRequestOptions,
   ): void | Abortable;
   (
     reqOpts: DecorateRequestOptions,
-    callback?: BodyResponseCallback
+    callback?: BodyResponseCallback,
   ): void | Abortable;
   (
     reqOpts: DecorateRequestOptions,
-    optionsOrCallback?: MakeAuthenticatedRequestOptions | BodyResponseCallback
+    optionsOrCallback?: MakeAuthenticatedRequestOptions | BodyResponseCallback,
   ): void | Abortable | Duplexify;
   getCredentials: (
-    callback: (err?: Error | null, credentials?: CredentialBody) => void
+    callback: (err?: Error | null, credentials?: CredentialBody) => void,
   ) => void;
   authClient: GoogleAuth<AuthClient>;
 }
@@ -214,9 +214,9 @@ export interface MakeWritableStreamOptions {
     fnobj: {
       onAuthenticated(
         err: Error | null,
-        authenticatedReqOpts?: r.Options
+        authenticatedReqOpts?: r.Options,
       ): void;
-    }
+    },
   ): void;
 }
 
@@ -280,7 +280,7 @@ export class ApiError extends Error {
    */
   static createMultiErrorMessage(
     err: GoogleErrorBody,
-    errors?: GoogleInnerError[]
+    errors?: GoogleInnerError[],
   ): string {
     const messages: Set<string> = new Set();
 
@@ -301,7 +301,7 @@ export class ApiError extends Error {
     if (messageArr.length > 1) {
       messageArr = messageArr.map((message, i) => `    ${i + 1}. ${message}`);
       messageArr.unshift(
-        'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n'
+        'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n',
       );
       messageArr.push('\n');
     }
@@ -392,7 +392,7 @@ export class Util {
     err: Error | null,
     resp?: r.Response | null,
     body?: ResponseBody,
-    callback?: BodyResponseCallback
+    callback?: BodyResponseCallback,
   ) {
     callback = callback || util.noop;
 
@@ -400,7 +400,7 @@ export class Util {
       true,
       {err: err || null},
       resp && util.parseHttpRespMessage(resp),
-      body && util.parseHttpRespBody(body)
+      body && util.parseHttpRespBody(body),
     );
     // Assign the parsed body to resp.body, even if { json: false } was passed
     // as a request option.
@@ -490,7 +490,7 @@ export class Util {
   makeWritableStream(
     dup: Duplexify,
     options: MakeWritableStreamOptions,
-    onComplete?: Function
+    onComplete?: Function,
   ) {
     onComplete = onComplete || util.noop;
 
@@ -594,7 +594,7 @@ export class Util {
    * @param {array} config.scopes - Array of scopes required for the API.
    */
   makeAuthenticatedRequestFactory(
-    config: MakeAuthenticatedRequestFactoryConfig
+    config: MakeAuthenticatedRequestFactoryConfig,
   ) {
     const googleAutoAuthConfig = extend({}, config);
     if (googleAutoAuthConfig.projectId === DEFAULT_PROJECT_ID_TOKEN) {
@@ -626,19 +626,21 @@ export class Util {
      * authenticated request options.
      */
     function makeAuthenticatedRequest(
-      reqOpts: DecorateRequestOptions
+      reqOpts: DecorateRequestOptions,
     ): Duplexify;
     function makeAuthenticatedRequest(
       reqOpts: DecorateRequestOptions,
-      options?: MakeAuthenticatedRequestOptions
+      options?: MakeAuthenticatedRequestOptions,
     ): void | Abortable;
     function makeAuthenticatedRequest(
       reqOpts: DecorateRequestOptions,
-      callback?: BodyResponseCallback
+      callback?: BodyResponseCallback,
     ): void | Abortable;
     function makeAuthenticatedRequest(
       reqOpts: DecorateRequestOptions,
-      optionsOrCallback?: MakeAuthenticatedRequestOptions | BodyResponseCallback
+      optionsOrCallback?:
+        | MakeAuthenticatedRequestOptions
+        | BodyResponseCallback,
     ): void | Abortable | Duplexify {
       let stream: Duplexify;
       let projectId: string;
@@ -661,7 +663,7 @@ export class Util {
 
       const onAuthenticated = async (
         err: Error | null,
-        authenticatedReqOpts?: DecorateRequestOptions
+        authenticatedReqOpts?: DecorateRequestOptions,
       ) => {
         const authLibraryError = err;
         const autoAuthFailed =
@@ -679,7 +681,7 @@ export class Util {
             // Try with existing `projectId` value
             authenticatedReqOpts = util.decorateRequest(
               authenticatedReqOpts!,
-              projectId
+              projectId,
             );
 
             err = null;
@@ -692,7 +694,7 @@ export class Util {
 
                 authenticatedReqOpts = util.decorateRequest(
                   authenticatedReqOpts!,
-                  projectId
+                  projectId,
                 );
 
                 err = null;
@@ -738,7 +740,7 @@ export class Util {
                 apiResponseError = authLibraryError;
               }
               callback!(apiResponseError, ...params);
-            }
+            },
           );
         }
       };
@@ -787,7 +789,7 @@ export class Util {
 
           return onAuthenticated(
             null,
-            authorizedReqOpts as DecorateRequestOptions
+            authorizedReqOpts as DecorateRequestOptions,
           );
         } catch (e) {
           return onAuthenticated(e as Error);
@@ -835,7 +837,7 @@ export class Util {
   makeRequest(
     reqOpts: DecorateRequestOptions,
     config: MakeRequestConfig,
-    callback: BodyResponseCallback
+    callback: BodyResponseCallback,
   ): void | Abortable {
     let autoRetryValue = AUTO_RETRY_DEFAULT;
     if (
@@ -843,7 +845,7 @@ export class Util {
       config.retryOptions?.autoRetry !== undefined
     ) {
       throw new ApiError(
-        'autoRetry is deprecated. Use retryOptions.autoRetry instead.'
+        'autoRetry is deprecated. Use retryOptions.autoRetry instead.',
       );
     } else if (config.autoRetry !== undefined) {
       autoRetryValue = config.autoRetry;
@@ -854,7 +856,7 @@ export class Util {
     let maxRetryValue = MAX_RETRY_DEFAULT;
     if (config.maxRetries && config.retryOptions?.maxRetries) {
       throw new ApiError(
-        'maxRetries is deprecated. Use retryOptions.maxRetries instead.'
+        'maxRetries is deprecated. Use retryOptions.maxRetries instead.',
       );
     } else if (config.maxRetries) {
       maxRetryValue = config.maxRetries;
@@ -999,7 +1001,7 @@ export class Util {
    */
   maybeOptionsOrCallback<T = {}, C = (err?: Error) => void>(
     optionsOrCallback?: T | C,
-    cb?: C
+    cb?: C,
   ): [T, C] {
     return typeof optionsOrCallback === 'function'
       ? [{} as T, optionsOrCallback as C]

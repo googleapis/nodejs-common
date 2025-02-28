@@ -42,12 +42,12 @@ const makeAuthRequestFactoryCache = util.makeAuthenticatedRequestFactory;
 let makeAuthenticatedRequestFactoryOverride:
   | null
   | ((
-      config: MakeAuthenticatedRequestFactoryConfig
+      config: MakeAuthenticatedRequestFactoryConfig,
     ) => MakeAuthenticatedRequest);
 
 util.makeAuthenticatedRequestFactory = function (
   this: Util,
-  config: MakeAuthenticatedRequestFactoryConfig
+  config: MakeAuthenticatedRequestFactoryConfig,
 ) {
   if (makeAuthenticatedRequestFactoryOverride) {
     return makeAuthenticatedRequestFactoryOverride.call(this, config);
@@ -98,7 +98,7 @@ describe('Service', () => {
       const authenticatedRequest = {} as MakeAuthenticatedRequest;
 
       makeAuthenticatedRequestFactoryOverride = (
-        config: MakeAuthenticatedRequestFactoryConfig
+        config: MakeAuthenticatedRequestFactoryConfig,
       ) => {
         const expectedConfig = extend({}, CONFIG, {
           authClient: OPTIONS.authClient,
@@ -305,7 +305,7 @@ describe('Service', () => {
       service.interceptors = [{request}];
 
       const originalGlobalInterceptors = [].slice.call(
-        service.globalInterceptors
+        service.globalInterceptors,
       );
       const originalLocalInterceptors = [].slice.call(service.interceptors);
 
@@ -313,7 +313,7 @@ describe('Service', () => {
 
       assert.deepStrictEqual(
         service.globalInterceptors,
-        originalGlobalInterceptors
+        originalGlobalInterceptors,
       );
       assert.deepStrictEqual(service.interceptors, originalLocalInterceptors);
     });
@@ -399,7 +399,7 @@ describe('Service', () => {
       const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
       service.makeAuthenticatedRequest = (
         reqOpts_: DecorateRequestOptions,
-        callback: BodyResponseCallback
+        callback: BodyResponseCallback,
       ) => {
         assert.notStrictEqual(reqOpts_, reqOpts);
         assert.strictEqual(reqOpts_.uri, expectedUri);
@@ -503,7 +503,7 @@ describe('Service', () => {
       service.makeAuthenticatedRequest = (reqOpts: DecorateRequestOptions) => {
         assert.strictEqual(
           reqOpts.headers!['User-Agent'],
-          `${providedUserAgent} ${userAgent}`
+          `${providedUserAgent} ${userAgent}`,
         );
         done();
       };
@@ -516,7 +516,7 @@ describe('Service', () => {
         const pkg = service.packageJson;
         assert.strictEqual(
           reqOpts.headers!['x-goog-api-client'],
-          `gl-node/${process.versions.node} gccl/${pkg.version}`
+          `gl-node/${process.versions.node} gccl/${pkg.version}`,
         );
         done();
       };
@@ -533,7 +533,7 @@ describe('Service', () => {
           const expectedUri = [service.baseUrl, reqOpts.uri].join('/');
 
           service.makeAuthenticatedRequest = (
-            reqOpts_: DecorateRequestOptions
+            reqOpts_: DecorateRequestOptions,
           ) => {
             assert.strictEqual(reqOpts_.uri, expectedUri);
 
@@ -557,7 +557,7 @@ describe('Service', () => {
           ].join('/');
 
           service.makeAuthenticatedRequest = (
-            reqOpts_: DecorateRequestOptions
+            reqOpts_: DecorateRequestOptions,
           ) => {
             assert.strictEqual(reqOpts_.uri, expectedUri);
 
@@ -582,7 +582,7 @@ describe('Service', () => {
           ].join('/');
 
           service.makeAuthenticatedRequest = (
-            reqOpts_: DecorateRequestOptions
+            reqOpts_: DecorateRequestOptions,
           ) => {
             assert.strictEqual(reqOpts_.uri, expectedUri);
 
@@ -694,7 +694,7 @@ describe('Service', () => {
       const response = {body: {abc: '123'}, statusCode: 200};
       Service.prototype.request_ = (
         reqOpts: DecorateRequestOptions,
-        callback: Function
+        callback: Function,
       ) => {
         assert.strictEqual(reqOpts, fakeOpts);
         callback(null, response.body, response);

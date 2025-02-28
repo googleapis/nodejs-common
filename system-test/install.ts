@@ -33,7 +33,7 @@ const npm = os.platform() === 'win32' ? 'npm.cmd' : 'npm';
 const spawnp = (
   command: string,
   args: string[],
-  options: cp.SpawnOptions = {}
+  options: cp.SpawnOptions = {},
 ) => {
   return new Promise<void>((resolve, reject) => {
     cp.spawn(command, args, Object.assign(options, {stdio: 'inherit'}))
