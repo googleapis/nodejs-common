@@ -4,6 +4,17 @@
 
 [1]: https://www.npmjs.com/package/@google-cloud/common?activeTab=versions
 
+## [6.0.0](https://github.com/googleapis/nodejs-common/compare/v5.0.2...v6.0.0) (2025-03-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Upgrade to Node version 18 ([#834](https://github.com/googleapis/nodejs-common/issues/834))
+
+### Miscellaneous Chores
+
+* Upgrade to Node version 18 ([#834](https://github.com/googleapis/nodejs-common/issues/834)) ([e831600](https://github.com/googleapis/nodejs-common/commit/e831600a89bc20f20293749bc0788d643d8baffd))
+
 ## [5.0.2](https://github.com/googleapis/nodejs-common/compare/v5.0.1...v5.0.2) (2024-04-30)
 
 
