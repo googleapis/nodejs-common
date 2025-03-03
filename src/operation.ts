@@ -66,7 +66,7 @@ export class Operation<T = any> extends ServiceObject<T> {
       {
         baseUrl: '',
       },
-      config
+      config,
     );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,7 +106,7 @@ export class Operation<T = any> extends ServiceObject<T> {
         this.completeListeners++;
         if (!this.hasActiveListeners) {
           this.hasActiveListeners = true;
-          this.startPolling_();
+          void this.startPolling_();
         }
       }
     });
@@ -125,7 +125,7 @@ export class Operation<T = any> extends ServiceObject<T> {
    * @private
    */
   protected poll_(callback: MetadataCallback): void {
-    this.getMetadata((err: ApiError, body: Metadata) => {
+    void this.getMetadata((err: ApiError, body: Metadata) => {
       if (err || body!.error) {
         callback(err || (body!.error as Error));
         return;

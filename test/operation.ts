@@ -101,7 +101,7 @@ describe('Operation', () => {
         },
         (err: Error) => {
           assert.strictEqual(err, error);
-        }
+        },
       );
     });
 

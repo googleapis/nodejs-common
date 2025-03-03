@@ -44,6 +44,7 @@ import {
   MakeAuthenticatedRequestFactoryConfig,
   MakeRequestConfig,
   ParsedHttpRespMessage,
+  ParsedHttpResponseBody,
   Util,
 } from '../src/util';
 import {DEFAULT_PROJECT_ID_TOKEN} from '../src/service';
@@ -95,7 +96,7 @@ function fakeReplaceProjectIdToken() {
   return (replaceProjectIdTokenOverride || replaceProjectIdToken).apply(
     null,
     // eslint-disable-next-line prefer-spread, prefer-rest-params
-    arguments
+    arguments,
   );
 }
 
@@ -103,7 +104,7 @@ describe('common/util', () => {
   let util: Util & {[index: string]: Function};
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function stub(method: keyof Util, meth: (...args: any[]) => void) {
+  function stub(method: keyof Util, meth: (...args: any[]) => any) {
     return sandbox.stub(util, method).callsFake(meth);
   }
 
@@ -114,7 +115,7 @@ describe('common/util', () => {
 
     errors = errors.map((error, i) => `    ${i + 1}. ${error}`);
     errors.unshift(
-      'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n'
+      'Multiple errors occurred during the request. Please see the `errors` array for complete details.\n',
     );
     errors.push('\n');
 
@@ -129,7 +130,7 @@ describe('common/util', () => {
       }
 
       async getRequestHeaders() {
-        return {};
+        return {} as Headers;
       }
 
       request = OAuth2Client.prototype.request.bind(this);
@@ -369,7 +370,7 @@ describe('common/util', () => {
           assert.deepStrictEqual(body, fakeResponse.body);
           assert.deepStrictEqual(resp, fakeResponse);
           done();
-        }
+        },
       );
     });
 
@@ -439,7 +440,7 @@ describe('common/util', () => {
           }
 
           done();
-        }
+        },
       );
     });
   });
@@ -513,20 +514,20 @@ describe('common/util', () => {
           assert.strictEqual(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (mp[0] as any)['Content-Type'],
-            'application/json'
+            'application/json',
           );
           assert.strictEqual(mp[0].body, JSON.stringify(metadata));
 
           assert.strictEqual(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (mp[1] as any)['Content-Type'],
-            'application/octet-stream'
+            'application/octet-stream',
           );
           // (is a writable stream:)
           assert.strictEqual(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             typeof (mp[1].body as any)._writableState,
-            'object'
+            'object',
           );
 
           done();
@@ -619,7 +620,7 @@ describe('common/util', () => {
 
       requestOverride = (
         reqOpts: DecorateRequestOptions,
-        callback: (err: Error) => void
+        callback: (err: Error) => void,
       ) => {
         callback(error);
       };
@@ -654,7 +655,7 @@ describe('common/util', () => {
 
       requestOverride = (
         reqOpts: DecorateRequestOptions,
-        callback: (err: Error | null, res: r.Response) => void
+        callback: (err: Error | null, res: r.Response) => void,
       ) => {
         callback(null, fakeResponse);
       };
@@ -689,7 +690,7 @@ describe('common/util', () => {
 
       requestOverride = (
         reqOpts: DecorateRequestOptions,
-        callback: () => void
+        callback: () => void,
       ) => {
         callback();
       };
@@ -782,7 +783,7 @@ describe('common/util', () => {
     it('should return a function', () => {
       assert.strictEqual(
         typeof util.makeAuthenticatedRequestFactory({}),
-        'function'
+        'function',
       );
     });
 
@@ -826,7 +827,7 @@ describe('common/util', () => {
         makeAuthenticatedRequest(fakeReqOpts, {
           onAuthenticated(
             err: Error,
-            authenticatedReqOpts: DecorateRequestOptions
+            authenticatedReqOpts: DecorateRequestOptions,
           ) {
             assert.ifError(err);
             assert.strictEqual(authenticatedReqOpts, decoratedRequest);
@@ -853,7 +854,7 @@ describe('common/util', () => {
         makeAuthenticatedRequest(reqOpts, {
           onAuthenticated(
             err: Error,
-            authenticatedReqOpts: DecorateRequestOptions
+            authenticatedReqOpts: DecorateRequestOptions,
           ) {
             assert.ifError(err);
             assert.deepStrictEqual(reqOpts, authenticatedReqOpts);
@@ -945,7 +946,7 @@ describe('common/util', () => {
           });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-            {customEndpoint: true}
+            {customEndpoint: true},
           );
 
           makeAuthenticatedRequest(reqOpts, {
@@ -1046,7 +1047,7 @@ describe('common/util', () => {
         it('should attempt request anyway', done => {
           sandbox.stub(fakeGoogleAuth, 'GoogleAuth').returns(authClient);
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-            {}
+            {},
           );
 
           const correctReqOpts = {} as DecorateRequestOptions;
@@ -1068,7 +1069,7 @@ describe('common/util', () => {
 
         it('should block 401 API errors', done => {
           const authClientError = new Error(
-            'Could not load the default credentials'
+            'Could not load the default credentials',
           );
           authClient.authorizeRequest = async () => {
             throw authClientError;
@@ -1084,7 +1085,7 @@ describe('common/util', () => {
           });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-            {}
+            {},
           );
           makeAuthenticatedRequest(
             {} as DecorateRequestOptions,
@@ -1093,7 +1094,7 @@ describe('common/util', () => {
               assert.strictEqual(arg2, makeRequestArg2);
               assert.strictEqual(arg3, makeRequestArg3);
               done();
-            }
+            },
           );
         });
 
@@ -1112,7 +1113,7 @@ describe('common/util', () => {
           });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-            {}
+            {},
           );
           makeAuthenticatedRequest(
             {} as DecorateRequestOptions,
@@ -1121,7 +1122,7 @@ describe('common/util', () => {
               assert.strictEqual(arg2, makeRequestArg2);
               assert.strictEqual(arg3, makeRequestArg3);
               done();
-            }
+            },
           );
         });
 
@@ -1133,7 +1134,7 @@ describe('common/util', () => {
           });
 
           const makeAuthenticatedRequest = util.makeAuthenticatedRequestFactory(
-            {}
+            {},
           );
           makeAuthenticatedRequest(fakeReqOpts, {
             onAuthenticated(err) {
@@ -1240,7 +1241,7 @@ describe('common/util', () => {
           const mar = util.makeAuthenticatedRequestFactory({});
           const authenticatedRequest = mar(
             reqOpts,
-            assert.ifError
+            assert.ifError,
           ) as Abortable;
 
           authenticatedRequest.abort(); // done()
@@ -1383,7 +1384,7 @@ describe('common/util', () => {
     function testNoRetryRequestConfig(done: () => void) {
       return (
         reqOpts: DecorateRequestOptions,
-        config: retryRequest.Options
+        config: retryRequest.Options,
       ) => {
         assert.strictEqual(config.retries, 0);
         done();
@@ -1416,27 +1417,27 @@ describe('common/util', () => {
     function testRetryOptions(done: () => void) {
       return (
         reqOpts: DecorateRequestOptions,
-        config: retryRequest.Options
+        config: retryRequest.Options,
       ) => {
         assert.strictEqual(
           config.retries,
-          0 //autoRetry was set to false, so shouldn't retry
+          0, //autoRetry was set to false, so shouldn't retry
         );
         assert.strictEqual(
           config.noResponseRetries,
-          0 //autoRetry was set to false, so shouldn't retry
+          0, //autoRetry was set to false, so shouldn't retry
         );
         assert.strictEqual(
           config.retryDelayMultiplier,
-          retryOptionsConfig.retryOptions.retryDelayMultiplier
+          retryOptionsConfig.retryOptions.retryDelayMultiplier,
         );
         assert.strictEqual(
           config.totalTimeout,
-          retryOptionsConfig.retryOptions.totalTimeout
+          retryOptionsConfig.retryOptions.totalTimeout,
         );
         assert.strictEqual(
           config.maxRetryDelay,
-          retryOptionsConfig.retryOptions.maxRetryDelay
+          retryOptionsConfig.retryOptions.maxRetryDelay,
         );
         done();
       };
@@ -1552,7 +1553,7 @@ describe('common/util', () => {
           util.makeRequest(
             {method: 'POST'} as DecorateRequestOptions,
             {stream: userStream},
-            util.noop
+            util.noop,
           );
         });
 
@@ -1565,7 +1566,7 @@ describe('common/util', () => {
               requestStream.abort = done;
               return requestStream;
             },
-            {defaults: () => requestOverride}
+            {defaults: () => requestOverride},
           );
 
           util.makeRequest(reqOpts, {stream: userStream}, util.noop);
@@ -1581,7 +1582,7 @@ describe('common/util', () => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           reqOpts,
           {},
-          assert.ifError
+          assert.ifError,
         );
       });
 
@@ -1590,7 +1591,7 @@ describe('common/util', () => {
         util.makeRequest(
           reqOpts,
           customRetryRequestFunctionConfig,
-          assert.ifError
+          assert.ifError,
         );
       });
 
@@ -1628,12 +1629,12 @@ describe('common/util', () => {
         const reqOptsWithRetrySettings = extend(
           {},
           reqOpts,
-          customRetryRequestConfig
+          customRetryRequestConfig,
         );
         util.makeRequest(
           reqOptsWithRetrySettings,
           noRetryRequestConfig,
-          assert.ifError
+          assert.ifError,
         );
       });
 
@@ -1653,7 +1654,7 @@ describe('common/util', () => {
         retryRequestOverride = (
           rOpts: DecorateRequestOptions,
           opts: MakeRequestConfig,
-          callback: r.RequestCallback
+          callback: r.RequestCallback,
         ) => {
           callback(error, fakeResponse, body);
         };
@@ -1677,7 +1678,7 @@ describe('common/util', () => {
         {
           autoPaginate: true,
         } as DecorateRequestOptions,
-        projectId
+        projectId,
       );
 
       assert.strictEqual(decoratedReqOpts.autoPaginate, undefined);
@@ -1688,7 +1689,7 @@ describe('common/util', () => {
         {
           autoPaginateVal: true,
         } as DecorateRequestOptions,
-        projectId
+        projectId,
       );
 
       assert.strictEqual(decoratedReqOpts.autoPaginateVal, undefined);
@@ -1699,7 +1700,7 @@ describe('common/util', () => {
         {
           objectMode: true,
         } as DecorateRequestOptions,
-        projectId
+        projectId,
       );
 
       assert.strictEqual(decoratedReqOpts.objectMode, undefined);
@@ -1712,7 +1713,7 @@ describe('common/util', () => {
             autoPaginate: true,
           },
         } as DecorateRequestOptions,
-        projectId
+        projectId,
       );
 
       assert.strictEqual(decoratedReqOpts.qs.autoPaginate, undefined);
@@ -1725,7 +1726,7 @@ describe('common/util', () => {
             autoPaginateVal: true,
           },
         } as DecorateRequestOptions,
-        projectId
+        projectId,
       );
 
       assert.strictEqual(decoratedReqOpts.qs.autoPaginateVal, undefined);
@@ -1738,7 +1739,7 @@ describe('common/util', () => {
             autoPaginate: true,
           },
         } as DecorateRequestOptions,
-        projectId
+        projectId,
       );
 
       assert.strictEqual(decoratedReqOpts.json.autoPaginate, undefined);
@@ -1751,7 +1752,7 @@ describe('common/util', () => {
             autoPaginateVal: true,
           },
         } as DecorateRequestOptions,
-        projectId
+        projectId,
       );
 
       assert.strictEqual(decoratedReqOpts.json.autoPaginateVal, undefined);
@@ -1915,7 +1916,7 @@ describe('common/util', () => {
       const callback = () => {};
       const [opts, cb] = util.maybeOptionsOrCallback(
         optionsOrCallback,
-        callback
+        callback,
       );
       assert.strictEqual(opts, optionsOrCallback);
       assert.strictEqual(cb, callback);

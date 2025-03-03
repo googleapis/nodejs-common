@@ -16,7 +16,7 @@
  * @module common/service
  */
 
-import arrify = require('arrify');
+const arrify = require('arrify');
 import * as extend from 'extend';
 import {AuthClient, GoogleAuth, GoogleAuthOptions} from 'google-auth-library';
 import * as r from 'teeny-request';
@@ -105,7 +105,9 @@ export class Service {
     this.baseUrl = config.baseUrl;
     this.apiEndpoint = config.apiEndpoint;
     this.timeout = options.timeout;
-    this.globalInterceptors = arrify(options.interceptors_!);
+    this.globalInterceptors = (arrify as unknown as (arg1: any) => [])(
+      options.interceptors_!,
+    );
     this.interceptors = [];
     this.packageJson = config.packageJson;
     this.projectId = options.projectId || DEFAULT_PROJECT_ID_TOKEN;
@@ -159,7 +161,7 @@ export class Service {
   getProjectId(): Promise<string>;
   getProjectId(callback: (err: Error | null, projectId?: string) => void): void;
   getProjectId(
-    callback?: (err: Error | null, projectId?: string) => void
+    callback?: (err: Error | null, projectId?: string) => void,
   ): Promise<string> | void {
     if (!callback) {
       return this.getProjectIdAsync();
@@ -187,11 +189,11 @@ export class Service {
   private request_(reqOpts: StreamRequestOptions): r.Request;
   private request_(
     reqOpts: DecorateRequestOptions,
-    callback: BodyResponseCallback
+    callback: BodyResponseCallback,
   ): void;
   private request_(
     reqOpts: DecorateRequestOptions | StreamRequestOptions,
-    callback?: BodyResponseCallback
+    callback?: BodyResponseCallback,
   ): void | r.Request {
     reqOpts = extend(true, {}, reqOpts, {timeout: this.timeout});
     const isAbsoluteUrl = reqOpts.uri.indexOf('http') === 0;
@@ -226,11 +228,13 @@ export class Service {
 
     const requestInterceptors = this.getRequestInterceptors();
 
-    arrify(reqOpts.interceptors_!).forEach(interceptor => {
-      if (typeof interceptor.request === 'function') {
-        requestInterceptors.push(interceptor.request);
-      }
-    });
+    (arrify as unknown as (arg1: any) => any[])(reqOpts.interceptors_!).forEach(
+      interceptor => {
+        if (typeof interceptor.request === 'function') {
+          requestInterceptors.push(interceptor.request);
+        }
+      },
+    );
 
     requestInterceptors.forEach(requestInterceptor => {
       reqOpts = requestInterceptor(reqOpts);
@@ -264,7 +268,7 @@ export class Service {
    */
   request(
     reqOpts: DecorateRequestOptions,
-    callback: BodyResponseCallback
+    callback: BodyResponseCallback,
   ): void {
     Service.prototype.request_.call(this, reqOpts, callback);
   }
